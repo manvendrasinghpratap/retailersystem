@@ -1,0 +1,98 @@
+<nav class="navbar navbar-light navbar-expand-lg topnav-menu">
+    <div class="collapse navbar-collapse" id="topnav-menu-content">
+        <ul class="navbar-nav">
+
+            <!-- Dashboard -->
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle arrow-none {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}"  id="topnav-dashboard" role="button">
+                    <i data-feather="home"></i>
+                    <span data-key="t-dashboard">@lang('translation.Dashboards')</span>
+                </a>
+            </li>
+              @if(Auth::user()->user_type < 3 && Auth::user()->designation_id != 12)
+                <!-- Bulk Offers -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle arrow-none {{ request()->routeIs('bulk-offers.index') ? 'active' : '' }}" href="{{ route('bulk-offers.index') }}" id="topnav-bulk-offers" role="button">
+                        <i data-feather="gift"></i>
+                        <span data-key="t-bulk-offers">@lang('translation.bulk_offers')</span>
+                    </a>
+                </li>
+            @endif
+             <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle arrow-none {{ request()->routeIs('customer.index') ? 'active' : '' }}" href="{{ route('customer.index') }}" id="topnav-customers" role="button">
+                    <i data-feather="users"></i>
+                    <span data-key="t-customers">@lang('translation.customers')</span>
+                </a>
+            </li>
+
+            <!-- Master -->
+            {{-- <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle arrow-none" href="javascript:void(0);" id="topnav-master" role="button">
+                    <i data-feather="lock"></i>
+                    <span data-key="t-master">@lang('translation.master')</span>
+                    <div class="arrow-down"></div>
+                </a>
+                <div class="dropdown-menu" aria-labelledby="topnav-master">
+                    <a href="{{ route('menu.category') }}" class="dropdown-item" data-key="t-menu-categories">@lang('translation.menu_categories')</a>
+                </div>
+            </li> --}}
+
+            <!-- Management -->
+            @php
+            // Check if current route is under management
+            $managementRoutes = ['staff', 'menuitems', 'menu.category'];
+            @endphp
+            @if(Auth::user()->user_type < 3 && Auth::user()->designation_id != 12)
+                <li class="nav-item dropdown {{ in_array(Route::currentRouteName(), $managementRoutes) ? 'active' : '' }}">
+                    <a class="nav-link dropdown-toggle arrow-none" href="javascript:void(0);" id="topnav-management" role="button">
+                        <i data-feather="box"></i>
+                        <span data-key="t-management">@lang('translation.management')</span>
+                        <div class="arrow-down"></div>
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="topnav-management">
+                        <a href="{{ route('staff') }}" class="dropdown-item {{ Route::currentRouteName() == 'staff' ? 'active' : '' }}" data-key="t-staff">@lang('translation.staffmanagement')</a>
+                        <a href="{{ route('menuitems') }}" class="dropdown-item {{ Route::currentRouteName() == 'menuitems' ? 'active' : '' }}" data-key="t-products">@lang('translation.productmanagement')</a>
+                        {{-- <a href="{{ route('customer.index') }}" class="dropdown-item {{ Route::currentRouteName() == 'customer.index' ? 'active' : '' }}" data-key="t-customers">@lang('translation.customermanagement')</a> --}}
+                        <a href="{{ route('menu.category') }}" class="dropdown-item {{ Route::currentRouteName() == 'menu.category' ? 'active' : '' }}" data-key="t-menu-categories">@lang('translation.categoriesmanagement')</a>
+                    </div>
+             </li>
+            @endif
+            <!-- Orders -->
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle arrow-none {{ request()->routeIs('order.index') ? 'active' : '' }}" href="{{ route('order.index') }}" id="topnav-orders" role="button">
+                    <i data-feather="shopping-bag"></i>
+                    <span data-key="t-orders">@lang('translation.orders')</span>
+                </a>
+            </li>
+            @php $salesRoutes = ['sales.stockloading', 'sales.unsoldstockreturn','sales.index'];  @endphp
+             @if(Auth::user()->user_type < 3 && Auth::user()->designation_id != 12)
+                <li class="nav-item dropdown {{ in_array(Route::currentRouteName(), $salesRoutes) ? 'active' : '' }}">
+                    <a class="nav-link dropdown-toggle arrow-none" href="javascript:void(0);" id="topnav-sales" role="button">
+                        <i data-feather="box"></i>
+                        <span data-key="t-sales">@lang('translation.sales')</span>
+                        <div class="arrow-down"></div>
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="topnav-management">
+                        <a href="{{ route('sales.index') }}" class="dropdown-item {{ Route::currentRouteName() == 'sales.index' ? 'active' : '' }}" data-key="t-staff">@lang('translation.sales') @lang('translation.listing')</a>
+                        <a href="{{ route('sales.stockloading') }}" class="dropdown-item {{ Route::currentRouteName() == 'sales.stockloading' ? 'active' : '' }}" data-key="t-staff">@lang('translation.stock_loading')</a>
+                        <a href="{{ route('sales.unsoldstockreturn') }}" class="dropdown-item {{ Route::currentRouteName() == 'sales.unsoldstockreturn' ? 'active' : '' }}" data-key="t-products">@lang('translation.unsold_stock_return')</a>
+                    </div>
+             </li>
+            @endif
+            @php $reportRoutes = ['report.sales'];  @endphp
+            @if(Auth::user()->user_type < 3 && Auth::user()->designation_id != 12)
+                <li class="nav-item dropdown {{ in_array(Route::currentRouteName(), $reportRoutes) ? 'active' : '' }}">
+                    <a class="nav-link dropdown-toggle arrow-none" href="javascript:void(0);" id="topnav-sales" role="button">
+                        <i data-feather="box"></i>
+                        <span data-key="t-sales">@lang('translation.report')</span>
+                        <div class="arrow-down"></div>
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="topnav-management">
+                        <a href="{{ route('report.sales') }}" class="dropdown-item {{ Route::currentRouteName() == 'report.sales' ? 'active' : '' }}" data-key="t-staff">@lang('translation.dailysales')</a>
+                    </div>
+             </li>
+            @endif
+
+        </ul>
+    </div>
+</nav>

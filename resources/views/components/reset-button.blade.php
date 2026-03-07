@@ -1,0 +1,1 @@
+<button type="reset" {{ $attributes->merge(['class' => 'btn btn-secondary']) }}>{{ $slot ?? 'Reset' }}</button>

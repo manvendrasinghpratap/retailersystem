@@ -1,0 +1,550 @@
+
+@media (min-width: 700px) and (max-width: 1439px) {
+    .snare-before.snare-after {
+        padding-left: 160px;
+        padding-right: 160px;
+    }
+}
+
+@media (min-width: 1921px) {
+    .page-menu2-wrap .bottom > div {
+        width: 33.3% !important;
+        max-width: unset !important;
+    }
+}
+
+@media (max-width: 1440px) {
+    .header-2 .menu-primary-menu {
+        padding: 0 15px;
+        gap: 15px;
+    }
+    .header-top {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    .gallery-wrap {
+        padding-left: 0;
+        padding-right: 0;
+    }
+    .header-2 .header-right {
+        margin-left: 15px;
+    }
+    .snare-circle::before {
+        display: none;
+    }
+    .wg-chef .top .content {
+        padding-top: 15px;
+        margin-left: -50px;
+    }
+    .road-map .swiper-button-prev {
+        left: 0;
+    }
+    .road-map .swiper-button-next {
+        right: 0;
+    }
+    .wg-reservations.style-1::before {
+        display: none;
+    }
+    .wg-reservations.style-1 .content {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    .chef-item-full .content {
+        margin-top: 70px;
+        flex-grow: 1;
+        margin-left: -300px;
+    }
+    .wg-shop-detail .content-inner {
+        padding-left: 0;
+    }
+    .page-menu1-wrap .right .wrap {
+        padding-left: 30px;
+        padding-right: 30px;
+    }
+    .wg-404 .content {
+        padding-top: 50px;
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+}
+
+@media (max-width: 1200px) {
+    .header-top > div {
+        flex-wrap: wrap;
+        gap: 15px !important;
+    }
+    .portfolio-item.style-carousel,
+    .portfolio-item.style-three-colums,
+    .portfolio-mansonry .portfolio-item,
+    .portfolio-full-width .portfolio-item,
+    .wg-information {
+        width: 100%;
+    }
+    .header-top > .right {
+        justify-content: end;
+    }
+    .header-top > .right .wg-information {
+        flex-direction: row-reverse;
+    }
+    .wg-about-hour,
+    .header.is-fixed.is-small .header-inner .site-logo-wrap,
+    .header.is-fixed.is-small .header-inner .header-left,
+    .header.is-fixed.is-small .header-inner .menu-primary-menu,
+    .header.is-fixed.is-small .header-inner .header-right {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    .wg-our-menu .box-menu,
+    .wg-location .box-map,
+    .wg-reservations .image,
+    .wg-open-hours .image {
+        margin: 0;
+        width: 100%;
+    }
+    .header-2 .wg-information {
+        display: none;
+    }
+    .wg-about-hour {
+        padding-top: 30px;
+        padding-bottom: 30px;
+    }
+    .portfolio-wrap {
+        flex-wrap: wrap;
+    }
+    .portfolio-item {
+        width: 50%;
+    }
+    .widget-tabs.style-1 > .bottom .widget-content-tab {
+        padding: 30px;
+    }
+    .wg-reservations.style-1 .content {
+        padding-top: 70px;
+        padding-bottom: 50px;
+    }
+    .wg-reservations.style-1 .image {
+        width: unset;
+    }
+    .page-menu2-wrap .widget-tabs .bottom {
+        flex-wrap: wrap;
+        gap: 15px;justify-content: space-between;
+    }
+    .page-menu2-wrap .widget-tabs .bottom .image {
+        order: 1;
+        width: 48%;
+    }
+    .page-menu2-wrap .widget-tabs .bottom .widget-content-tab {
+        order: 2;
+        width: 100%;
+        max-width: unset;
+    }
+    .wg-fomr-book form .columns {
+        padding-right: 0;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    .wg-fomr-book form .phone, 
+    .wg-fomr-book form .name {
+        width: 48%;
+    }
+    .wg-fomr-book form .bot,
+    .wg-fomr-book form .time, 
+    .wg-fomr-book form .hour, 
+    .wg-fomr-book form .event-number {
+        width: 23%;
+    }
+    .gallery-item {
+        margin-bottom: 30px;
+    }
+}
+
+@media (max-width: 1180px) {
+    .services-detail-item:hover .content .wrap {
+        padding-top: 40px;
+        padding-bottom: 40px;
+    }
+}
+
+@media (max-width: 1024px) {
+    .header-right.type-1 {
+        padding: 39px 22px 44px 40px;
+    }
+    .event-grid {
+        flex-wrap: wrap;
+    }
+    .event-grid > div {
+        width: 50%;
+    }
+    .wg-testimonial {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    .widget-tabs.style-1 > .bottom,
+    .wg-about-hour > .wrap {
+        flex-wrap: wrap;
+    }
+    .wg-about-hour .left,
+    .wg-about-hour .right {
+        order: 1;
+        width: 50% !important;
+        max-width: none;
+    }
+    .widget-tabs.style-1 > .bottom .widget-content-tab,
+    .wg-about-hour .center  {
+        order: 2;
+        text-align: center;
+        margin-left: 0;
+        margin-right: 0;
+    }
+    .widget-tabs.style-1 > .bottom .image {
+        display: none;
+    }
+    .wg-location.style-1 .widget-tabs img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .wg-reservations.style-1 .image img {
+        height: 771px;
+        object-fit: cover;
+    }
+    .chef-item .content {
+        padding-top: 50px;
+    }
+}
+
+@media (max-width: 991px) {
+    .wg-private-event .content {
+        padding-top: 0 !important;
+        margin-bottom: 30px;
+    }
+    .tf-mouse,
+    .main-nav {
+        display: none;
+    }
+    .mobile-button {
+        display: block;
+    }
+    .swiper-button,
+    .swiper-button-next,
+    .swiper-button-prev,
+    .swiper-pagination {
+        display: none !important;
+    }
+    .header-right {
+        padding-right: 0 !important;
+        padding-left: 15px !important;
+        padding-top: 39px !important;
+        padding-bottom: 44px !important;
+    }
+    .header-inner-wrap {
+        justify-content: space-between;
+    }
+    .footer .footer-right::after,
+    .footer .footer-left::after {
+        display: none;
+    }
+    .widget-menu-tab {
+        padding-left: 15px;
+        padding-right: 15px;
+        gap: 15px;
+        justify-content: center;
+    }
+    .wg-reservations.style-2 form .t1 ,
+    .page-menu1-wrap .right .list-menu,
+    .chef-item-full,
+    .wg-chef .top {
+        flex-wrap: wrap;
+    }
+    .wg-chef .top > div {
+        width: 100% !important;
+        margin-left: 0 !important;
+        padding-left: 15px;
+        padding-right: 15px;
+        margin-bottom: 30px !important;
+    }
+    .all-chefs .text {
+        position: unset;
+        transform: none;
+        font-size: 30px;
+        line-height: 40px;
+    }
+    .chef-item-full > div {
+        width: 100% !important;
+    }
+    .chef-item-full .content {
+        margin-top: 15px;
+        margin-left: 0;
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    .wg-service-slider .box-line-under::after {
+        width: unset;
+        left: 15px;
+        right: 15px;
+        transform: none;
+    }
+    .page-menu1-wrap > .left {
+        width: 35%;
+    }
+    .page-menu1-wrap > .right {
+        width: 65%;
+    }
+    .page-menu3-wrap .menu-wrap {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+    .page-menu3-wrap .menu-wrap.right {
+        padding-top: 100px;
+    }
+    .page-title .content {
+        padding-top: 100px !important;
+        padding-bottom: 100px !important;
+    }
+    .wg-about-us .image {
+        margin-top: 30px;
+    }
+}
+
+@media (max-width: 820px) {
+    .main-sidebar {
+        margin-top: 30px;
+    }
+    .shop-item.style-list .content {
+        flex-wrap: wrap;
+    }
+    .cart-item {
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 768px) {
+    .header-2 .header-top .left ul {
+        flex-wrap: wrap;
+    }
+    .snare-half > img {
+        display: none;
+    }
+    .quantity {
+        width: 110px;
+    }
+}
+
+@media (max-width: 700px) {
+    br,
+    .header-language,
+    .header-clock,
+    .canvas,
+    .header-search,
+    .header-top {
+        display: none;
+    }
+    .header-left,
+    .header-right {
+        border: none;
+    }
+    #site-logo {
+        left: 0;
+        transform: none;
+    }
+    .site-logo-wrap {
+        border: none;
+        padding: 10px 46px 9px 15px;
+    }
+    .footer-1 .footer-bottom,
+    .meta {
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    .footer .footer-right,
+    .footer .footer-center,
+    .footer .footer-left {
+        margin-top: 0;
+        text-align: start !important;
+        margin-bottom: 15px;
+    }
+    .box-icon {
+        margin-bottom: 50px;
+    }
+    .featured-countdown .countdown__item::after,
+    .dot-after::after,
+    .snare-before::before,
+    .snare-after::after {
+        display: none;
+    }
+    .contact-item,
+    .wg-our-menu .content {
+        margin-bottom: 40px;
+    }
+    .widget-menu-tab {
+        padding-top: 20px;
+        flex-wrap: wrap;
+    }
+    .widget-content-tab {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+    .wg-reservations .image {
+        margin-top: 40px;
+    }
+    .wg-location .box-map {
+        height: 500px;
+    }
+    .featured-countdown .countdown__timer,
+    .page-menu1-wrap,
+    form .columns,
+    .wg-reservations.style-1,
+    .wg-action form {
+        flex-wrap: wrap;
+    }
+    .page-menu1-wrap > div,
+    .event-grid > div,
+    .wg-action form .button-two-line,
+    .portfolio-item,
+    .wg-about-hour .left,
+    .wg-about-hour .right {
+        width: 100% !important;
+    }   
+    .wg-reservations.style-1 .image img,
+    .wg-location.style-1 .widget-tabs img {
+        height: unset;
+    }
+    .coming-soon-wrap {
+        padding-top: 100px;
+        padding-bottom: 100px;
+    }
+    .coming-soon-wrap .desc {
+        font-size: 30px;
+        line-height: 40px;
+    }
+    .services-detail-item .content {
+        position: unset;
+    }
+    .page-menu2-wrap .button-bot,
+    .banner-page .content {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    .footer p,
+    .footer-1 .logo-footer,
+    .shop-item.style-list .price {
+        text-align: center;
+    }
+    .widget-tabs.style-2 .widget-menu-tab .item-title,
+    .wg-fomr-book form .bot,
+    .widget-tabs.style-1 > .bottom .image,
+    .page-menu2-wrap .widget-tabs .bottom .image,
+    .widget-menu-tab .item-title
+    .wg-fomr-book form .bot,
+    .wg-fomr-book form .time, 
+    .wg-fomr-book form .hour, 
+    .wg-fomr-book form .event-number,
+    .wg-fomr-book form .phone, 
+    .wg-fomr-book form .name {
+        width: 100%;
+    }
+    .related-post {
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 50px;
+    }
+    .po-sticky {
+        position: unset !important;
+        width: unset !important;
+        margin-top: 0 !important;
+        transform: none !important;
+    }
+    .wg-404 .title img {
+        width: 180px;
+    }
+    .wg-404 .title::after {
+        transform: translateX(175px);
+        top: 0;
+        font-size: 165px;
+    }
+    .wg-404 .title::before {
+        transform: translateX(-175px);
+        top: 0;
+        font-size: 165px;
+    }
+    .swiper-wrapper {
+        padding-bottom: 0 !important;
+    }
+    .reservations-location .map-box {
+        width: 345px;
+        height: 345px;
+        margin-bottom: 30px;
+    }
+    .wg-location {
+        padding-bottom: 70px;
+    }
+    .wg-about-slider,
+    .wg-private-event.style-1,
+    .wg-about-us,
+    .wg-our-menu,
+    .wg-reservations {
+        padding-top: 70px;
+    }
+    .wg-service-slider,
+    .wg-location.t1,
+    .wg-philosophy,
+    .road-map,
+    .reservations-location,
+    .our-menu {
+        padding-top: 70px;
+        padding-bottom: 70px;
+    }
+    .page-title .content .heading {
+        font-size: 50px;
+        line-height: 70px;
+    }
+    .wg-location.style-1 .widget-content-tab .h-full {
+        height: 433px;
+    }
+    .portfolio-item.style-carousel.type3 .content,
+    .portfolio-item.style-carousel.type2 .content,
+    .portfolio-item.style-carousel .content {
+        left: 15px;
+        right: 15px;
+    }
+    .wg-blog.full-width .content {
+        flex-wrap: wrap;
+        gap: 30px;
+    }
+    .wg-blockquote {
+        padding-left: 30px !important;
+        padding-right: 30px !important;
+    }
+    .wg-blockquote .icon {
+        bottom: 50px !important;
+        right: 30px !important;
+        top: unset !important;
+    }
+    .wg-comment > a {
+        right: 0px;
+        top: 30px;
+    }
+    .footer-1 .widget-social,
+    .footer-1 .footer-bottom {
+        justify-content: center;
+    }
+    .footer-1 p {
+        padding-right: 0;
+    }
+    .footer .footer-title {
+        margin-top: 45px;
+        text-align: center;
+    }
+    .logo-footer {
+        margin-bottom: 0 !important;
+    }
+    .footer-1 .footer-title::after {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+}
+
+@media (min-width: 600px) and (max-width: 768px) {
+    .gallery-wrap .row > * {
+        max-width: 50%;
+    }
+}

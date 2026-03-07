@@ -1,0 +1,1 @@
+<button type="submit" value="{{ $label }}" {{ $attributes->merge(['class' => 'btn btn-primary']) }} >{{ $label }}</button>
