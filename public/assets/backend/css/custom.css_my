@@ -587,8 +587,8 @@ li.paddingbottom10px {
 .highcharts-credits{display:none !important;}
 .overflowx{overflow-x:auto !important;}
 #sidebar-menu .has-arrow:after{ position: absolute; margin-right: 0 !important;right: 0;top: 10px; }.logo-txt{margin-left: 0px !important;}.center{text-align: center !important;}.page-title-box {    padding-bottom: 10px !important;}
-.themebutton{background-color: #28bebd;border-color: #28bebd;}
-.btn-primary{background-color: #28bebd!important; border-color: #28bebd !important;}
+.themebutton{background-color: #4dabff;border-color: #4dabff;}
+.btn-primary{background-color: #4dabff!important; border-color: #4dabff !important;}
 
 body[data-sidebar-size=sm]{ min-height: 100% !important }
 .dropdown-menu-lg{
@@ -613,7 +613,7 @@ body[data-sidebar-size=sm]{ min-height: 100% !important }
 }
 /* Active menu link */
 .nav-link.active {
-    background-color: #A3ECEC; /* light version of #28BEBd */
+    background-color: #A3ECEC; /* light version of #4dabff */
     color: #028B8B; /* darker shade for text */
     font-weight: bold;
     border-radius: 5px; /* optional, rounded edges */

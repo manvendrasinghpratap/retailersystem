@@ -1,9 +1,9 @@
-@if(Route::has('subscription.statusUpdate'))
+@if(Route::has('administrator.subscription.statusUpdate'))
 <script>
 function  statusSwitch(data,id) {
 		var selectedStatus = data ? 1:0;
 		$.ajax({
-			url: '{{ route("subscription.statusUpdate") }}',
+			url: '{{ route("administrator.subscription.statusUpdate") }}',
 			type: 'POST',
 			data: {
 				id: id,
@@ -156,6 +156,170 @@ function changeStatus(data,id, url = '')
     });
 });
 
-            
+        <!--------------------------------------------- account Change Password Start----------------------------->
+			
+				$(document).on('click', '.saveaccountpassword', function(e) {
+                    e.preventDefault(); // Prevent form submission
+                    let changepassworduserid    = $("#changepassworduserid").val().trim();
+                    let password                = $("#password").val().trim();
+                    let confirmPassword         = $("#password_confirmation").val().trim();
+                    let isValid = true;
+
+                    $(".error_password, .error_confirm_password").text(""); // Clear previous errors
+
+                    if (password === "") {
+                        $(".error_password").text("Password is required.");
+                        isValid = false;
+                    }
+                    else if (password.length < 6) {
+                        $(".error_password").text("Password must be at least 6 characters.");
+                        isValid = false;
+                    }
+
+                    if (confirmPassword === "") {
+                    $(".error_password_confirmation").text("Confirm Password is required.");
+                    isValid = false;
+                    }
+
+                    if (password !== "" && confirmPassword !== "" && password !== confirmPassword) {
+                    $(".error_password_confirmation").text("Passwords do not match.");
+                    isValid = false;
+                    }
+
+                    if (isValid) {
+                        $('#exampleModal').modal('hide');
+                            $.ajax({
+                                url: "{{ route('administrator.user.updatepassword') }}",
+                                type: 'POST',
+                                data: {
+                                    staff_id: changepassworduserid,
+                                    password: password,
+                                    _token: '{{ csrf_token() }}'
+                                },
+                                success: function(response) {
+                                    Swal.fire(
+                                        'Success!',
+                                        response.message || 'Record has been deleted.',
+                                        'success'
+                                    );
+                                },
+                                error: function(xhr) {
+                                    Swal.fire(
+                                        'Error!',
+                                        'Something went wrong.',
+                                        'error'
+                                    );
+                                }
+                            });
+
+                    }
+            });
+			
+			
+			
+			<!--------------------------------------------- Account Change Password End----------------------------->
+			
+			$(document).on('click', '.accountsubscriptionpaymentdetails', function(e) {
+					let accountSubscriptionId = $(this).attr('data-subscriptionid');
+					 $('#getsubscriptionpricemodalpopup').modal('show');
+					 $.ajax({
+                        url: "{{ route('administrator.accountsubscriptionpaymentdetails') }}",
+                        type: 'POST',
+                        data: {
+                            accountSubscriptionId: accountSubscriptionId,
+                            _token: '{{ csrf_token() }}'
+                        },
+                        success: function(response) {
+							$('.showsubscriptionpriceinmodalpopup').html(response.html);
+                        },
+                        error: function(xhr) {
+                            Swal.fire(
+								'Error!',
+								'Something went wrong.',
+								'error'
+							);
+                        }
+                    });
+					// $('.showsubscriptionpriceinmodalpopup').html('showsubscriptionpriceinmodalpopup');
+					
+
+            });
+
+            <!--------------------------------------------- Get Subscription price Start getsubscriptionprice----------------------------->
+			
+			$(document).on('change', '.getsubscriptionprice', function(e) {
+					$('.posandtransferamount').val(0);
+					$('.calculatepayableamount').val(0);
+					 $('.errormsgonexceedpaymen').html('');
+                    let subscriptionid    = $(".subscription_id").val().trim();
+                    $.ajax({
+                        url: "{{ route('administrator.getsubscriptionprice') }}",
+                        type: 'POST',
+                        data: {
+                            subscriptionid: subscriptionid,
+                            _token: '{{ csrf_token() }}'
+                        },
+                        success: function(response) {
+							$('.subscrptionprice').val(response.price);
+							$('#mainsubscrptionprice').val(response.price);
+							$('.mainamountpayable').html(response.price)
+							$('.amountpayable').html(response.price)
+							$('.posandtransferamount').val(0);
+							$('.calculatepayableamount').val(0);
+                        },
+                        error: function(xhr) {
+                            Swal.fire(
+								'Error!',
+								'Something went wrong.',
+								'error'
+							);
+                        }
+                    });
+
+            });
+
+            <!--------------------------------------------- Get Subscription price End----------------------------->
+
+             $(document).on('click', '.deleteData', function() {
+					var deleteId = $(this).data('deleteid');
+					var routeUrl = $(this).data('routeurl');
+					Swal.fire({
+					title: 'Are you sure?',
+					text: "You won't be able to revert this!",
+					icon: 'warning',
+					showCancelButton: true,
+					confirmButtonColor: '#3085d6',
+					cancelButtonColor: '#d33',
+					confirmButtonText: 'Yes, delete it!'
+					}).then((result) => {
+					if (result.isConfirmed) {
+					// if confirmed, do AJAX delete
+					$.ajax({
+						url: routeUrl,
+						type: 'POST',
+						data: {
+							id: deleteId,
+							_token: '{{ csrf_token() }}' // CSRF token required
+						},
+						success: function(response) {
+							Swal.fire(
+								'Deleted!',
+								response.message || 'Record has been deleted.',
+								'success'
+							).then(function() {
+								location.reload(); // reload after delete
+							});
+						},
+						error: function(xhr) {
+							Swal.fire(
+								'Error!',
+								'Something went wrong.',
+								'error'
+							);
+						}
+					});
+					}
+					});
+			});	
             
 </script>

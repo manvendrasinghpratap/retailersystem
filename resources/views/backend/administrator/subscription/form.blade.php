@@ -11,12 +11,11 @@
         <div class="col-lg-12">
             <div class="card">
                 <div class="card-header">
-                    <h4 class="card-title d-inline-block">{{array_key_exists('routeTitle',$breadcrumb)?$breadcrumb['routeTitle']:''}}</h4>
+                    <h4 class="card-title d-inline-block">{{ ($breadcrumb['title'] ?? '') . (isset($subscription) ? ' - Edit : '.\App\Helpers\Settings::getEncodeCode($subscription->id) : '') }}</h4>
                 </div>
                 <div class="card-body">
                     <div>
-                        <form method="POST" action="{{ $route == 'add' ? route('subscription.store') : route('subscription.update') }}"
-                            enctype="multipart/form-data" class="needs-validation" novalidate>
+                        <form method="POST" action="{{ isset($breadcrumb['route2']) ? route($breadcrumb['route2']) : '#' }}" enctype="multipart/form-data" class="needs-validation" novalidate autocomplete="false" onSubmit="return validate();">
                             <input type="hidden" value="{{ isset($subscription) ? $subscription->id : '' }}" name="subscription_id" id="subscription_id" />
                             @csrf
                             <div class="row">
@@ -26,7 +25,7 @@
                                 <x-textarea-input name="description" label="{{ __('translation.description') }}" value="{{ $subscription->description ?? '' }}" mainrows="12" />
                             </div>
                             <div class="row">
-                                <x-form-buttons submitText="{{$submitText??'Save'}}" resetText="Cancel" url="{{route('subscription')}}" class="btn-success" />
+                                <x-form-buttons submitText="{{ isset($subscription) ? 'Update' : 'Save' }}" resetText="Cancel" url="{{route('administrator.subscription')}}" class="btn-success" />
                             </div>
                         </form>
                     </div>

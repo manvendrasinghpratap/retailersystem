@@ -22,7 +22,7 @@ class RoleMiddleware
             return redirect('/login');
         }
         // Check if user has one of the allowed roles
-        if (!in_array(Auth::user()->user_type, $roles)) {
+        if (!in_array(Auth::user()->user_type_id, $roles)) {
             return abort(403);
             return response()->json(['message' => 'Unauthorized url access.'], 403);
         }

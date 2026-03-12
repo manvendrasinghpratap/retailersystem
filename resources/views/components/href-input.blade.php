@@ -33,6 +33,9 @@
         @case('login')
             <i class="fas fa-sign-in-alt action-btn text-primary" title="Login"></i>            
         @break
+        @case('label')
+             @if(!empty($label) && $label !='' && $label != null){{ $label }}@endif          
+        @break
         @default
             <i class="fas action-btn text-success" title="View">{{ $label }}</i>
     @endswitch

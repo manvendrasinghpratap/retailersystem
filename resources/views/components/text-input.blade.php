@@ -30,6 +30,9 @@
     >
 
     {{-- Validation Error --}}
+      <div class="invalid-feedback">
+        @error($name) {{ $message }} @enderror
+    </div>
     @error($name)
         <div class="invalid-feedback d-block mt-1">{{ $message }}</div>
     @enderror

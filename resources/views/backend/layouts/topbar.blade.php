@@ -13,7 +13,7 @@
             $avatarUrl = $defaultAvatarPath;
         }
 
-        $isAdministrator = Auth::user()->user_type == \Config::get('constants.superadmin') ? 'administrator' : 'admin';
+        $isAdministrator = Auth::user()->user_type_id == \Config::get('constants.superadmin') ? 'administrator' : 'admin';
 
         // $unreadCount = OrderNotification::where('is_read', false)->count();
         // $latestNotifications = OrderNotification::latest()->take(5)->get();
@@ -24,13 +24,13 @@
             <div class="navbar-brand-box">
                 <a href="{{ url("/$isAdministrator") }}" class="logo- logo-dark-">
                     <span class="logo-sm"> 
-                        <img src="{{ asset('assets/images/fav.png') }}" alt="" height="50">
+                        <img src="{{ asset('assets/images/logo.png') }}" alt="" height="50">
                     </span>
                 </a>
 
                 <a href="{{ url("/$isAdministrator") }}" class="logo logo-light ">
                     <span class="logo-sm">
-                        <img src="{{ asset('assets/images/fav.png') }}" alt="" height="50">
+                        <img src="{{ asset('assets/images/logo.png') }}" alt="" height="50">
                     </span>
                 </a>
             </div>

@@ -30,7 +30,7 @@
                                 <div class="form-group mb-3">
                                 	<label class="d-inline-block w-100">&nbsp;</label>
                                     <x-filter-submit-button name="submit" label="Filter" value="Filter" class=""/>
-                                     <x-filter-href-button name="reset" href="{{ route(array_key_exists('route',$breadcrumb)?$breadcrumb['route']:'') }}" label="Reset" class=""/>
+                                     <x-filter-href-button name="reset" href="{{ route(array_key_exists('reset_route',$breadcrumb)?$breadcrumb['reset_route']:'') }}" label="Reset" class=""/>
                                 </div>
                             </div>
                         </div>
@@ -53,7 +53,7 @@
                             <th>Sr.</th>
                             <th>Name</th>
                             <th>Email</th>
-                            <th>Mobile</th>
+                            <th>Cell Phone</th>
                             <th>Username</th>
                             <th>Subscription Plan</th>
                             <th>Sub.Start Date</th>
@@ -72,15 +72,15 @@
                             <td>{{ $i++ }}</td>
                             <td>{{ $account->name }}</td>
                             <td>{{ $account->user->email }}</td>
-                            <td>{{ $account->user->mobile_no }}</td>
+                            <td>{{ $account->user->detail->cell_phone }}</td>
                             <td>
-                                <x-href-input name="edit" label="{{ $account->user->username }}"  href="javascript:void(0);" class="btn- btn-secondary- error changepassword" data-id="{{ $account->user_id }}" data-orderid="{{ $account->user_id }}"  data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="Click here to Change Password" />
+                                <x-href-input name="edit" action="label"  :label="$account->user->username"  href="javascript:void(0);" class="btn- btn-secondary- error changepassword" data-id="{{ $account->user_id }}" data-orderid="{{ $account->user_id }}"  data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="Click here to Change Password" />
                             </td>  
                             <td>
-                            @if(!empty($account->user->subscriptionplan))
-                            <x-href-input name="edit" label="{{ $account->user->subscriptionplan->name ?? '' }}"  href="javascript:void(0)" class="btn btn-primary" />
+                            @if($account->user?->subscriptionStatus)
+                            <x-href-input name="edit" action="label" :label="$account->user?->subscriptionStatus->subscription->subscription_name" href="javascript:void(0)" class="btn btn-primary" />
                             @else
-                            <x-href-input name="edit" label="{{ __('translation.subscribenow') }}"  href="{{ route('subscribe',\App\Helpers\Settings::getEncodeCode($account->id)) }}" class="btn btn-danger" />
+                            <x-href-input name="edit" action="label" :label="__('translation.subscribenow')"  href="{{ route('administrator.subscribe',\App\Helpers\Settings::getEncodeCode($account->id)) }}" class="btn btn-danger" />
                             @endif
                             </td>
                             <td>{{ (!empty($account->subscriptiondetails->start_date)) ? App\Helpers\Settings::getFormattedDate($account->subscriptiondetails->start_date):''  }}</td>
@@ -90,8 +90,8 @@
                             <td><button  class="btn {{ (array_key_exists($account->status,$account_status) && $account->status == 1)? 'btn-primary':'btn-danger' }}">{{ (array_key_exists($account->status,$account_status))? $account_status[$account->status]:'' }}</button></td>
                             <td>{{ App\Helpers\Settings::getFormattedDatetime($account->created_at)}}</td>
                             <td>
-                                <x-href-input name="edit" label="Edit"  required href="{{ route('account.edit',['id' => \App\Helpers\Settings::getEncodeCode($account->id)]) }}" />
-                                <x-deletehref-input name="DeleteButton" label="Delete" required href="javascript:void(0)" class="deleteData"  data-deleteid="{{ $account->id }}"  data-routeurl="{{ route('account.destroy') }}"/>
+                                <x-href-input name="edit" label="Edit"  required href="{{ route('administrator.account.edit',['id' => \App\Helpers\Settings::getEncodeCode($account->id)]) }}" />
+                                <x-deletehref-input name="DeleteButton" label="Delete" required href="javascript:void(0)" class="deleteData"  data-deleteid="{{ $account->id }}"  data-routeurl="{{ route('administrator.account.destroy') }}"/>
                             </td>
                         </tr>
                         @endforeach

@@ -22,28 +22,36 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): RedirectResponse
+   public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        $user = auth()->user();
+
+        return redirect($this->redirectByRole($user));
     }
 
+    
     public function modellogin(Request $request)
     {
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required'],
         ]);
+
         $remember = $request->boolean('remember');
+
         if (Auth::attempt($credentials, $remember)) {
+
             $request->session()->regenerate();
+
+            $user = Auth::user();
 
             return response()->json([
                 'status' => true,
-                'redirect' => url('/'),
+                'redirect' => $this->redirectByRole($user),
             ]);
         }
 
@@ -66,5 +74,23 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/');
+    }
+
+    private function redirectByRole($user)
+    {
+        switch ($user->user_type_id) {
+
+            case 1:
+                return route('administrator.dashboard');
+
+            case 2:
+                return route('admin.dashboard');
+
+            case 3:
+                return route('dashboard');
+
+            default:
+                return route('home');
+        }
     }
 }

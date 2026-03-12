@@ -2,9 +2,10 @@
     <div class="container d-flex justify-content-between align-items-center">
 
         <!-- Left: Brand / Logo -->
-        <div class="navbar-left">
+        <div class="navbar-left width20per">
             <a class="navbar-brand fw-bold text-primary fs-25px" href="{{ url('/') }}">
-                <i class="fa-solid fa-heart-pulse"></i> {{ config('app.name', 'HealthCMS') }}
+                <img src="{{ asset('assets/images/logo.png') }}" alt="{{ config('app.name', 'Retailer	System') }}" class="img-fluid logowidth">
+                {{ config('app.name', 'Retailer	System') }}
             </a>
         </div>
 
@@ -16,8 +17,9 @@
             <div class="collapse navbar-collapse" id="menu">
                 <ul class="navbar-nav ms-auto align-items-center">
                     <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#how">How It Works</a></li>
                     <li class="nav-item"><a class="nav-link" href="#pricing">Pricing</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#how">How It Works</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#testimonials">Customers</a></li>
                     <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>                  
                     @auth
                         <!-- Dropdown submenu for logged-in users -->

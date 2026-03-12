@@ -10,12 +10,12 @@
         <div class="col-lg-12">
             <div class="card">
                 <div class="card-header">
-                    <h4 class="card-title">{{$breadcrumb['routeTitle']}}
+                    <h4 class="card-title">{{$breadcrumb['title']}}
                     </h4>
                 </div>
-                 @include('frontend.components.sessionmessage')
+                 {{-- @include('frontend.components.sessionmessage') --}}
                 <div class="card-body">
-                        <form method="POST" action="{{ $route == 'add' ? route('store.subscribe') : route('store.subscribe') }}" enctype="multipart/form-data" class="needs-validation" novalidate onSubmit="return validatedata();">
+                        <form method="POST" action="{{ $route == 'add' ? route('administrator.store.subscribe') : route('administrator.store.subscribe') }}" class="needs-validation" novalidate onSubmit="return validatedata();">
                             <input type="hidden" value="{{$accountId}}" name="account"  id="account_id" />
                             <input type="hidden" value="" id="mainsubscrptionprice" name="mainsubscrptionprice" class="mainsubscrptionprice">
                             <input type="hidden" value="" id="subscrptionprice" name="subscrptionprice" class="subscrptionprice">
@@ -49,7 +49,7 @@
                                 <x-text-input name="transfer" label="Transfer" value="{{ $accountdetails->user->pos ?? 0 }}" class="posandtransferamount setdefaultzero onlyinteger" required/>
                             </div>
                             <div class="row">
-                                <x-form-buttons submitText="{{$submitText}}" resetText="Cancel" url="{{route('accounts')}}" class="btn-success" />
+                                <x-form-buttons submitText="{{$submitText}}" resetText="Cancel" url="{{route('administrator.accounts')}}" class="btn-success" />
                             </div>
                         </form>
                     <!-- end card -->
@@ -128,8 +128,6 @@
 
             }else{
                 let finalamounttobepaidafterdiscount = subscrptionprice - $(this).val();
-            //console.log(finalamounttobepaidafterdiscount);
-
                 $('.subscrptionprice').val(finalamounttobepaidafterdiscount);
                 $('.amountpayable').html(finalamounttobepaidafterdiscount);
             }

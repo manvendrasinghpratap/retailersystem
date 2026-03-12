@@ -84,7 +84,7 @@
                 <div class="modal-body showsubscriptionpriceinmodalpopup">
                 </div>
                 <div class="modal-footer">
-					 <x-href-input name="Close" label="Close" href="javascript::void(0);" class="btn btn-secondary" data-bs-dismiss="modal"/>
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>

@@ -16975,3 +16975,63 @@ footer {
     font-size: 25px;
     font-weight: bolder;
 }
+.width20per{    width: 20% !important;}
+.width30per{    width: 30% !important;}
+
+.logowidth {
+    width: 20% !important;
+    display: inline;
+    height: auto;
+}
+.card:hover{
+    transform: translateY(-5px);
+    transition: 0.3s ease;
+}
+.pricing .card{
+    transition: all 0.3s ease;
+}
+
+.pricing .card:hover{
+    transform: translateY(-8px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+}
+#how .card{
+    transition: all 0.3s ease;
+}
+
+#how .card:hover{
+    transform: translateY(-6px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+.feature-card{
+    transition: 0.3s;
+}
+
+.feature-card:hover{
+    transform: translateY(-6px);
+    box-shadow: 0 12px 25px rgba(0,0,0,0.15);
+}
+
+.hero-section{
+background: linear-gradient(135deg,#6366f1,#06b6d4,#9333ea);
+background-size:400% 400%;
+animation:gradientMove 12s ease infinite;
+}
+
+@keyframes gradientMove{
+0%{background-position:0% 50%}
+50%{background-position:100% 50%}
+100%{background-position:0% 50%}
+}
+
+/* floating image */
+
+.hero-img{
+animation:float 6s ease-in-out infinite;
+}
+
+@keyframes float{
+0%{transform:translateY(0)}
+50%{transform:translateY(-15px)}
+100%{transform:translateY(0)}
+}

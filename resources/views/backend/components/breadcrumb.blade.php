@@ -5,12 +5,10 @@
             <h4 class="mb-sm-0 font-size-18">
                 {{ !empty($breadcrumb) && array_key_exists('title', $breadcrumb) ? $breadcrumb['title'] : '' }}
             </h4>
-            @if(!empty($breadcrumb) && array_key_exists('route2', $breadcrumb))
+            @if(!empty($breadcrumb) && array_key_exists('route1', $breadcrumb))
            <div class="page-title-right">
             <span>
-                <a class="btn btn-success waves-effect waves-light"
-                href="{{ !empty($breadcrumb) && array_key_exists('route2', $breadcrumb) ? route($breadcrumb['route2']) : url('/') }}">{{ !empty($breadcrumb) && array_key_exists('route2Title', $breadcrumb) ? $breadcrumb['route2Title'] : '' }}
-            </a>
+                <a class="btn btn-success waves-effect waves-light" href="{{ !empty($breadcrumb['route1']) ? route($breadcrumb['route1']) : url('/') }}">{{ $breadcrumb['route1Title'] ?? '' }}</a>
             </span>
                 </ul>
             </div>

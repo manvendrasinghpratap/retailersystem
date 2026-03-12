@@ -10,7 +10,7 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h4 class="card-title d-inline-block">Filter</h4>
+                    <h4 class="card-title d-inline-block">@lang('translation.filter')</h4>
                     {{-- <div class="d-inline-block ">
                         <a href="javascript:void(0);" title="Download as PDF" id="downloadpdf"
                             data-downloadroutepdf = "{{ route('downloadsubscriptionpdf') }}" class="downloadpdf"
@@ -29,7 +29,7 @@
                                 <div class="form-group mb-3">
                                 	<label class="d-inline-block w-100">&nbsp;</label>
                                      <x-filter-submit-button name="submit" label="Filter" value="Filter" class=""/>
-                                     <x-filter-href-button name="reset" href="{{ route(array_key_exists('route',$breadcrumb)?$breadcrumb['route']:'') }}" label="Reset" class=""/>
+                                     <x-filter-href-button name="reset" href="{{ isset($breadcrumb['reset_route']) ? route($breadcrumb['reset_route']) : '#' }}" label="Reset" class=""/>
                                 </div>
                             </div>
                         </div>
@@ -42,7 +42,7 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h4 class="card-title d-inline-block">{{array_key_exists('listing',$breadcrumb)?$breadcrumb['listing']:''}}</h4>
+                    <h4 class="card-title d-inline-block">{{array_key_exists('title',$breadcrumb)?$breadcrumb['title']:''}}</h4>
                 </div>
                 <div class="card-body">
                     <div class="table-container">
@@ -51,11 +51,11 @@
                         <tr>
                             <th>Sr.</th>
                             <th>Name</th>
-                            <th>Description</th>
                             <th>Price @lang('translation.b_ngn')</th>
                             <th>Duration (Month)</th>
-                            <th>Status </th>
+                            <th>Description</th>
                             <th>Created At </th>
+                            <th>Status </th>
                             <th>Action</th>
                         </tr>
                         </thead>
@@ -63,19 +63,19 @@
                         @php($i=1)
                         @foreach($subscriptionList as $plan)
                         <tr>
-                            <td>{{ $i++ }}</td>
+                            <td>{{ $loop->iteration }}</td>
                             <td>{{ $plan->name }}</td>
-                            <td>{{ $plan->description }}</td>
                             <td>{{ $plan->price }}</td>
                             <td>{{ $plan->duration }}</td>
+                            <td>{{ $plan->description }}</td>
+                            <td>{{ App\Helpers\Settings::getFormattedDatetime($plan->created_at)}}</td>
                             <td>
                                 <input type="checkbox" id="switch3{{$plan->id}}" onchange="statusSwitch(this.checked,{{ $plan->id }})" switch="bool"  @if($plan->status=='1') checked @endif/>
                                 <label for="switch3{{$plan->id}}" data-on-label="Yes" data-off-label="No"></label>
                             </td>
-                            <td>{{ App\Helpers\Settings::getFormattedDatetime($plan->created_at)}}</td>
                             <td>
-                                <x-href-input name="edit" label="Edit"  required href="{{ route('subscription.edit',['id' => \App\Helpers\Settings::getEncodeCode($plan->id)]) }}" />
-                                <x-deletehref-input name="DeleteButton" label="Delete" required href="javascript:void(0)" class="deleteData"  data-deleteid="{{ $plan->id }}"  data-routeurl="{{ route('subscription.destroy') }}"/> 
+                                <x-href-input name="edit" label="Edit"  required href="{{ route('administrator.subscription.edit',['id' => \App\Helpers\Settings::getEncodeCode($plan->id)]) }}" />
+                                <x-deletehref-input name="DeleteButton" label="Delete" required href="javascript:void(0)" class="deleteData"  data-deleteid="{{ $plan->id }}"  data-routeurl="{{ route('administrator.subscription.destroy') }}"/> 
                             </td>
                         </tr>
                         @endforeach

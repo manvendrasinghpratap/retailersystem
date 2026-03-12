@@ -296,5 +296,42 @@ function setupSelect2WithValidation(formSelector) {
     });
 }
 
+function validatePassword(){
+
+        let valid = true;
+
+        let password = $('#password');
+        let confirm = $('#password_confirmation');
+
+        // reset
+        password.removeClass('is-invalid');
+        confirm.removeClass('is-invalid');
+
+        password.next('.invalid-feedback').html('');
+        confirm.next('.invalid-feedback').html('');
+
+        let newpassword = password.val();
+        let confirmpassword = confirm.val();
+
+        // password word check
+        if(newpassword.toLowerCase().includes("password")){
+            password.addClass('is-invalid');
+            password.next('.invalid-feedback')
+                .html('New password should not contain the word "password".');
+            valid = false;
+        }
+
+        // password match check
+        if(newpassword !== confirmpassword){
+            confirm.addClass('is-invalid');
+            confirm.next('.invalid-feedback')
+                .html('Password and confirm password do not match.');
+            valid = false;
+        }
+
+        return valid;
+
+}
+
 
 		

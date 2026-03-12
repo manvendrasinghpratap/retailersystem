@@ -11,6 +11,7 @@ use App\Services\TwilioService;
 use Twilio\Rest\Client;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
+
 class Settings
 {
 
@@ -38,6 +39,35 @@ class Settings
         return $pdf;
     }
 	
+   public static function updateBreadcrumbRoute($breadcrumb, $routes, $values)
+    {
+        foreach ($routes as $i => $key) {
+            $breadcrumb[$key] = $values[$i] ?? $breadcrumb[$key];
+        }
+
+        return $breadcrumb;
+    }
+
+    public static function roleRedirect($page, $message = null, $type = 'success')
+    {
+        $prefix = '';
+        if (Auth::check()) {
+            if (Auth::user()->user_type_id == config('constants.superadmin')) {
+                $prefix = 'administrator.';
+            } elseif (Auth::user()->user_type_id == config('constants.admin')) {
+                $prefix = 'admin.';
+            }
+        }
+
+        $route = $prefix . $page;
+        
+
+        return $message
+        ? redirect()->route($route)->with($type, $message)
+        : redirect()->route($route);
+    }
+
+
 	public static function getPunchIn($attendanceData,$staffId,$monthdate, $csvornot = 1){
         $punchInDate = ''; 
         $br  = '<br>';  
