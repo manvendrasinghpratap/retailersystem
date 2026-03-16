@@ -58,6 +58,7 @@
                 <div class="modal-body">
                     <form name="changepasswordform" id="changepasswordform">
                         <input type="hidden" name="changepassworduserid" id="changepassworduserid" value="" />
+                        <input type="hidden" name="changepasswordrouteurl" id="changepasswordrouteurl" value="" />
 						<x-text-input name="password" label="New Password" value="" id="password" required class="password form-control" mainrows="12"/>
 						<x-text-input name="password_confirmation" label="Confirm New Password" id="password_confirmation" value="" required class="password form-control" mainrows="12"/>                        
                     </form>

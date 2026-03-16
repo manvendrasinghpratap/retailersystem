@@ -74,7 +74,7 @@
                             <td>{{ $account->user->email }}</td>
                             <td>{{ $account->user->detail->cell_phone }}</td>
                             <td>
-                                <x-href-input name="edit" action="label"  :label="$account->user->username"  href="javascript:void(0);" class="btn- btn-secondary- error changepassword" data-id="{{ $account->user_id }}" data-orderid="{{ $account->user_id }}"  data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="Click here to Change Password" />
+                                <x-href-input name="edit" action="label"  :label="$account->user->username" data-routeurl="{{ route('administrator.user.updatepassword') }}"  href="javascript:void(0);" class="btn- btn-secondary- error changepassword" data-id="{{ $account->user_id }}" data-orderid="{{ $account->user_id }}"  data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="Click here to Change Password" />
                             </td>  
                             <td>
                             @if($account->user?->subscriptionStatus)

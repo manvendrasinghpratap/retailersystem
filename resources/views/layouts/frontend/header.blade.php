@@ -1,6 +1,8 @@
+@php
+$redirectUrl = auth()->check() && auth()->user()->user_type_id == 1 ? 'administrator.' : 'admin.';
+@endphp
 <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
     <div class="container d-flex justify-content-between align-items-center">
-
         <!-- Left: Brand / Logo -->
         <div class="navbar-left width20per">
             <a class="navbar-brand fw-bold text-primary fs-25px" href="{{ url('/') }}">
@@ -28,8 +30,8 @@
                                 {{ Auth::user()->name ?? 'Account' }}
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown" style="width: 100%;">
-                                <li><a class="dropdown-item" href="{{-- route('dashboard') --}}">Dashboard</a></li>
-                                <li><a class="dropdown-item" href="{{-- route('profile') --}}">My Account</a></li>
+                                <li><a class="dropdown-item" href="{{ route($redirectUrl.'dashboard') }}">@lang('translation.dashboard')</a></li>
+                                <li><a class="dropdown-item" href="{{ route($redirectUrl.'profile') }}">@lang('translation.myaccount')</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <form method="POST" action="{{ route('logout') }}">

@@ -15,13 +15,13 @@
         <div class="d-flex">
             <!-- LOGO -->
             <div class="navbar-brand-box">
-                <a href="{{ url("/administrator") }}" class="">
+                <a href="{{ url('/'.App\Helpers\Settings::getUserRole()) }}" class="">
                     <span class="logo-sm">
                         <img src="{{ URL::asset('assets/images/logo.png') }}" alt="" height="30"><span class="d-none d-xl-inline-block ms-1 fw-medium" style="color: white; font-size:15px;"> {{ \Config::get('constants.websitename')}}</span>
                     </span>
                 </a>
 
-                <a href="{{ url("/administrator") }}" class="logo logo-light ">
+                <a href="{{ url('/'.App\Helpers\Settings::getUserRole()) }}" class="logo logo-light ">
                     <span class="logo-sm">
                         <img src="{{ URL::asset('assets/images/logo.png') }}" alt="" height="30">
                     </span>
@@ -31,15 +31,15 @@
         <div class="d-flex">
             <div class="dropdown d-inline-block">
                 <button type="button" class="btn header-item bg-soft-light border-start border-end" id="page-header-user-dropdown" data-bs-toggle="dropdown" aria-haspopup="true"                  aria-expanded="false">
-                    <img class="rounded-circle header-profile-user" src="{{ $avatarUrl ?? asset('images/default-avatar.png') }}" alt="User Avatar">
+                    <img class="rounded-circle header-profile-user" src="{{ $avatarUrl ?? asset('images/default.png') }}" alt="User Avatar">
                     <span class="d-none d-xl-inline-block ms-1 fw-medium">
-                        {{ Auth::user()->name }}
+                        {{ Auth::user()->name }} 
                     </span>
                     <i class="mdi mdi-chevron-down d-none d-xl-inline-block"></i>
                 </button>
                 <div class="dropdown-menu dropdown-menu-end">
-                    <a class="dropdown-item" href="{{ route('administrator.profile') }}"><i class="mdi mdi-face-profile font-size-16 align-middle me-1"></i>@lang('translation.profile')</a>
-                    <a class="dropdown-item" href="{{ route('administrator.change-password') }}"><i class="mdi mdi-lock font-size-16 align-middle me-1"></i>@lang('translation.change_password')</a>
+                    <a class="dropdown-item" href="{{ route(App\Helpers\Settings::getUserRole().'.profile') }}"><i class="mdi mdi-face-profile font-size-16 align-middle me-1"></i>@lang('translation.profile')</a>
+                    <a class="dropdown-item" href="{{ route(App\Helpers\Settings::getUserRole().'.change-password') }}"><i class="mdi mdi-lock font-size-16 align-middle me-1"></i>@lang('translation.change_password')</a>
                     <a class="dropdown-item" href="{{ url('/') }}"><i class="mdi mdi-web font-size-16 align-middle me-1"></i>@lang('translation.frontend')</a>
                     <div class="dropdown-divider"></div>
 

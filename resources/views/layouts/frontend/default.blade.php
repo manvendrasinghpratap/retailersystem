@@ -76,11 +76,8 @@
             </div>
 
             <!-- Right Image -->
-            <div class="col-lg-6 text-center mt-4 mt-lg-0">                
-                <img src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf"
-                class="img-fluid rounded shadow"
-                alt="African girl working in a retail shop using POS system"
-                >
+            <div class="col-lg-6 text-center mt-4 mt-lg-0">
+                <img src="{{ asset('assets/images/celeberation.png') }}" class="img-fluid rounded shadow" alt="African girl working in a retail shop using POS system">
             </div>
 
         </div>

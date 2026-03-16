@@ -33,11 +33,11 @@
 
                             <x-input-field 
                                 id="email"
-                                label="Email"
-                                type="email"
-                                name="email"
+                                :label="__('translation.emailorusername')"
+                                type="text"
+                                name="login"
                                 value="{{ old('email') }}"
-                                placeholder="{{ __('translation.enter_email') }}"
+                                placeholder="{{ __('translation.emailorusername') }}"
                                 autofocus
                                 class="form-control"
                                 autocomplete="new-email"

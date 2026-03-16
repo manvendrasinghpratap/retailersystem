@@ -1,241 +1,242 @@
 jQuery(document).ready(function () {
-        $('.datepicker').datepicker({
-            dateFormat: 'dd/mm/yy',
-            changeMonth: true,
-            changeYear: true,
-			defaultViewDate: { year: new Date().getFullYear()-20, month: 01, day: 01 },
-			yearRange: "-80:+0", 
-        }).val();
-        $('.downloadpdf').on('click', function() {
-            var downloadroutepdf = $(this).attr("data-downloadroutepdf");
-            var queryString = new URL(window.location).search;
-            var current = downloadroutepdf;
-            linkhref =
-                `${current}${current.includes('?') ? queryString.replace('?', '&') : queryString}`;
-            window.open(linkhref, '_blank');
-        });
-        $('.calculateage').on('change', function() {
-            calculateage();
-        });
-
-        function calculateage(){
-            var age = 0;
-            if ($('#birth_date').length) 
-            {
-                var start = $('#birth_date').val();
-                var dateArray = start.split('-');
-                let fyear = parseInt(dateArray[0]);
-                var currentYear = new Date().getFullYear();
-                if (fyear > 1900 && fyear <= currentYear) {
-                    var newdate = dateArray[0] + ' ' + dateArray[1] + ' ' + dateArray[2];
-                    var dob = new Date(newdate);
-                    var today = new Date();
-                    var age = Math.floor((today - dob) / (365.25 * 24 * 60 * 60 * 1000));
-                    if (age < 0) age = 0;
-                }
-                $('#age_adult').val(age);
-            }
-        }
-
+    $('.datepicker').datepicker({
+        dateFormat: 'dd/mm/yy',
+        changeMonth: true,
+        changeYear: true,
+        defaultViewDate: { year: new Date().getFullYear() - 20, month: 01, day: 01 },
+        yearRange: "-80:+0",
+    }).val();
+    $('.downloadpdf').on('click', function () {
+        var downloadroutepdf = $(this).attr("data-downloadroutepdf");
+        var queryString = new URL(window.location).search;
+        var current = downloadroutepdf;
+        linkhref =
+            `${current}${current.includes('?') ? queryString.replace('?', '&') : queryString}`;
+        window.open(linkhref, '_blank');
+    });
+    $('.calculateage').on('change', function () {
         calculateage();
-		$('.close').on('click',function(){
-            $('.alert').hide();
-        });	
-		flatdatepickr();		
-			
+    });
+
+    function calculateage() {
+        var age = 0;
+        if ($('#birth_date').length) {
+            var start = $('#birth_date').val();
+            var dateArray = start.split('-');
+            let fyear = parseInt(dateArray[0]);
+            var currentYear = new Date().getFullYear();
+            if (fyear > 1900 && fyear <= currentYear) {
+                var newdate = dateArray[0] + ' ' + dateArray[1] + ' ' + dateArray[2];
+                var dob = new Date(newdate);
+                var today = new Date();
+                var age = Math.floor((today - dob) / (365.25 * 24 * 60 * 60 * 1000));
+                if (age < 0) age = 0;
+            }
+            $('#age_adult').val(age);
+        }
+    }
+
+    calculateage();
+    $('.close').on('click', function () {
+        $('.alert').hide();
+    });
+    flatdatepickr();
+
 });
 
-	function flatdatepickr(){	
-        $(".flatdatepickr").each(function() {
-                const $input = $(this);
+function flatdatepickr() {
+    $(".flatdatepickr").each(function () {
+        const $input = $(this);
 
-                const minDate = $input.attr("data-mindate") || "1970-01-01";
-                const maxDate = $input.attr("data-maxdate") || 'today';
+        const minDate = $input.attr("data-mindate") || "1970-01-01";
+        const maxDate = $input.attr("data-maxdate") || 'today';
 
-                const defaultDateNull = $input.attr("data-defaultdatenull");
-                const defaultDate = (defaultDateNull && defaultDateNull.toLowerCase() === "blank")
-                ? null
-                : $input.val() || null;
+        const defaultDateNull = $input.attr("data-defaultdatenull");
+        const defaultDate = (defaultDateNull && defaultDateNull.toLowerCase() === "blank")
+            ? null
+            : $input.val() || null;
 
-                flatpickr(this, {
-                dateFormat: "d/m/Y",
-                minDate: minDate,
-                maxDate: maxDate,
-                allowInput: false,
-                defaultDate: defaultDate,
-                });
-        });			
-		
-		$(".flatdatepickrto").each(function() {			
-		var minDate = $(this).attr("data-mindate"); // Get the data-year attribute for each input
-		var maxDate = $(this).attr("data-maxdate"); // Get the data-year attribute for each input
+        flatpickr(this, {
+            dateFormat: "d/m/Y",
+            minDate: minDate,
+            maxDate: maxDate,
+            allowInput: false,
+            defaultDate: defaultDate,
+        });
+    });
 
-		flatpickr(".flatdatepickrto", {
-				dateFormat: "d/m/Y", // Flatpickr uses d/m/Y for dd/mm/yy
-				maxDate: maxDate,
-				minDate: minDate, 
-				allowInput: false,
-				defaultDate: $(this).val() ? $(this).val() : null, // Set only if value exists
-				onOpen: function(selectedDates, dateStr, instance) {
-				//console.log("Default Date for this field:", defaultDate); // Debugging
-				}
-				
-			});
-		});
-	} 
-		
-		
-    $(document).ready(function() {
-        $(".suffix").select2({
+    $(".flatdatepickrto").each(function () {
+        var minDate = $(this).attr("data-mindate"); // Get the data-year attribute for each input
+        var maxDate = $(this).attr("data-maxdate"); // Get the data-year attribute for each input
+
+        flatpickr(".flatdatepickrto", {
+            dateFormat: "d/m/Y", // Flatpickr uses d/m/Y for dd/mm/yy
+            maxDate: maxDate,
+            minDate: minDate,
+            allowInput: false,
+            defaultDate: $(this).val() ? $(this).val() : null, // Set only if value exists
+            onOpen: function (selectedDates, dateStr, instance) {
+                //console.log("Default Date for this field:", defaultDate); // Debugging
+            }
+
+        });
+    });
+}
+
+
+$(document).ready(function () {
+    $(".suffix").select2({
         placeholder: "Select Title",
         allowClear: true
-        });
-        $(".state").select2({
+    });
+    $(".state").select2({
         placeholder: "Select State",
         allowClear: true
-        });
-        $(".country").select2({
+    });
+    $(".country").select2({
         placeholder: "Select Country",
         allowClear: true
-        });
-        $(".local_government").select2({
+    });
+    $(".local_government").select2({
         placeholder: "Select Local Government",
         allowClear: true
-        });
-        $(".account_status").select2({
+    });
+    $(".account_status").select2({
         placeholder: "Select Account Status",
         allowClear: true
-        });
-        $(".subscription_id").select2({
+    });
+    $(".subscription_id").select2({
         placeholder: "Select Subscription",
         allowClear: true
-        });
-        $(".accountstatus").select2({
+    });
+    $(".accountstatus").select2({
         placeholder: "Select Status",
         allowClear: true
-        }); 
-        $(".menucategory").select2({
+    });
+    $(".menucategory").select2({
         placeholder: "Select Category",
         allowClear: true
-        }); 
-        $(".products").select2({
+    });
+    $(".products").select2({
         placeholder: "Select Product",
         allowClear: true
-        }); 
-        $(".customer").select2({
+    });
+    $(".customer").select2({
         placeholder: "Select Customer",
         allowClear: true
-        }); 
-        $(".staff").select2({
+    });
+    $(".staff").select2({
         placeholder: "Select Staff",
         allowClear: true
-        }); 
-        $(".sales_executive").select2({
+    });
+    $(".sales_executive").select2({
         placeholder: "Select Sales Executive",
         allowClear: true
-        }); 
-        
-        $(".payment_way").select2({
+    });
+
+    $(".payment_way").select2({
         placeholder: "Select Payment Way",
         allowClear: true
-        }); 
-        $(".designation").select2({
+    });
+    $(".designation").select2({
         placeholder: "Select Designation",
         allowClear: true
-        }); 
-        $(".is_ative").select2({
+    });
+    $(".is_ative").select2({
         placeholder: "Select Status",
         allowClear: true
-        }); 
-        $(".payment_status").select2({
-            placeholder:'Select Payment Status',
-            allowClear:true,
-        });
-        $(".types").select2({
-            placeholder:'Select Type',
-            allowClear:true,
-        });
-        $(".customer_payment_method").select2({
-            placeholder:'Select Payment Method',
-            allowClear:true,
-        });
-        $(".disabledoption").select2({
+    });
+    $(".payment_status").select2({
+        placeholder: 'Select Payment Status',
+        allowClear: true,
+    });
+    $(".types").select2({
+        placeholder: 'Select Type',
+        allowClear: true,
+    });
+    $(".customer_payment_method").select2({
+        placeholder: 'Select Payment Method',
+        allowClear: true,
+    });
+    $(".disabledoption").select2({
         placeholder: "Select Option",
         allowClear: false,
         disabled: true
-        });
-        
-        
-        $('.staffname, .email, .password_confirmation, .password').bind("cut copy paste", function(e) {
-            e.preventDefault();
-        });
+    });
 
-        $(".changepassword").on("click", function() {
+
+    $('.staffname, .email, .password_confirmation, .password').bind("cut copy paste", function (e) {
+        e.preventDefault();
+    });
+
+    $(".changepassword").on("click", function () {
         $('#password').val('');
         $('#password_confirmation').val('');
         var ordid = $(this).attr("data-id");
+        var routeUrl = $(this).attr("data-routeurl");
         $('#changepassworduserid').val(ordid);
+        $('#changepasswordrouteurl').val(routeUrl);
         $('#exampleModal').modal('show');
-        });	
-        setdefaultvaluezero();
     });
+    setdefaultvaluezero();
+});
 
-    function setdefaultvaluezero(){
+function setdefaultvaluezero() {
     // $('.setdefaultzero').val(0); // Set default value to 0
-        $('.setdefaultzero').on('focus', function() {
-            if ($(this).val() == '0') {
-                $(this).val('');
-            }
-        });
-        $('.setdefaultzero').on('blur', function() {
-            if ($(this).val().trim() === '') {
-                $(this).val('0');
-            }
-        });
+    $('.setdefaultzero').on('focus', function () {
+        if ($(this).val() == '0') {
+            $(this).val('');
+        }
+    });
+    $('.setdefaultzero').on('blur', function () {
+        if ($(this).val().trim() === '') {
+            $(this).val('0');
+        }
+    });
+}
+
+function validateImageInput(fileInputSelector, errorContainerSelector, maxSizeMB = 2) {
+    const input = $(fileInputSelector)[0]; // raw DOM element
+    const file = input.files[0];
+    const errorContainer = $(errorContainerSelector);
+    const maxSize = maxSizeMB * 1024 * 1024; // Convert MB to bytes
+
+    if (!file) {
+        errorContainer.html("* Required.").addClass("error-color").show();
+        return false;
     }
 
-    function validateImageInput(fileInputSelector, errorContainerSelector, maxSizeMB = 2) {
-            const input = $(fileInputSelector)[0]; // raw DOM element
-            const file = input.files[0];
-            const errorContainer = $(errorContainerSelector);
-            const maxSize = maxSizeMB * 1024 * 1024; // Convert MB to bytes
-
-            if (!file) {
-                errorContainer.html("* Required.").addClass("error-color").show();
-                return false;
-            }
-
-            if (!file.type.startsWith('image/')) {
-                errorContainer.html("* Only valid image files are allowed (JPG, PNG, etc).").addClass("error-color").show();
-                return false;
-            }
-
-            if (file.size > maxSize) {
-                errorContainer.html(`* Maximum image size is ${maxSizeMB}MB.`).addClass("error-color").show();
-                return false;
-            }
-
-            errorContainer.hide();
-            return true;
+    if (!file.type.startsWith('image/')) {
+        errorContainer.html("* Only valid image files are allowed (JPG, PNG, etc).").addClass("error-color").show();
+        return false;
     }
 
-    function setupPdfDownload(selector, dataAttr) {
-        $(document).off('click', selector).on('click', selector, function(e) {
-            e.preventDefault();
-
-            var downloadUrl = $(this).attr(dataAttr);
-            if (!downloadUrl) return;
-
-            var queryString = window.location.search;
-            var linkHref = downloadUrl + (downloadUrl.includes('?') ? queryString.replace('?', '&') : queryString);
-            window.open(linkHref, '_blank');
-        });
+    if (file.size > maxSize) {
+        errorContainer.html(`* Maximum image size is ${maxSizeMB}MB.`).addClass("error-color").show();
+        return false;
     }
 
-    /**
- * Initialize Select2 for any given select element
- * @param {jQuery} select - jQuery selector for select element(s)
- */
+    errorContainer.hide();
+    return true;
+}
+
+function setupPdfDownload(selector, dataAttr) {
+    $(document).off('click', selector).on('click', selector, function (e) {
+        e.preventDefault();
+
+        var downloadUrl = $(this).attr(dataAttr);
+        if (!downloadUrl) return;
+
+        var queryString = window.location.search;
+        var linkHref = downloadUrl + (downloadUrl.includes('?') ? queryString.replace('?', '&') : queryString);
+        window.open(linkHref, '_blank');
+    });
+}
+
+/**
+* Initialize Select2 for any given select element
+* @param {jQuery} select - jQuery selector for select element(s)
+*/
 function initSelect2(select) {
     select.select2({
         placeholder: "Select an option",
@@ -244,7 +245,7 @@ function initSelect2(select) {
     });
 
     // Remove error class when changed
-    select.on('change', function() {
+    select.on('change', function () {
         $(this).next('.select2-container')
             .find('.select2-selection')
             .removeClass('error');
@@ -255,7 +256,7 @@ function initSelect2(select) {
  * Initialize Select2 for all .required-select on the page
  */
 function initAllSelect2() {
-    $('.required-select').each(function() {
+    $('.required-select').each(function () {
         initSelect2($(this));
     });
 }
@@ -268,7 +269,7 @@ function initAllSelect2() {
 function validateSelect2Form(formSelector) {
     var isValid = true;
 
-    $(formSelector).find('.required-select').each(function() {
+    $(formSelector).find('.required-select').each(function () {
         var value = $(this).val();
         var container = $(this).next('.select2-container');
 
@@ -289,49 +290,48 @@ function validateSelect2Form(formSelector) {
 function setupSelect2WithValidation(formSelector) {
     initAllSelect2();
 
-    $(formSelector).on('submit', function(e) {
+    $(formSelector).on('submit', function (e) {
         if (!validateSelect2Form(formSelector)) {
             e.preventDefault(); // stop form submit
         }
     });
 }
 
-function validatePassword(){
+function validatePassword() {
 
-        let valid = true;
+    let valid = true;
 
-        let password = $('#password');
-        let confirm = $('#password_confirmation');
+    let password = $('#password');
+    let confirm = $('#password_confirmation');
 
-        // reset
-        password.removeClass('is-invalid');
-        confirm.removeClass('is-invalid');
+    // reset
+    password.removeClass('is-invalid');
+    confirm.removeClass('is-invalid');
 
-        password.next('.invalid-feedback').html('');
-        confirm.next('.invalid-feedback').html('');
+    password.next('.invalid-feedback').html('');
+    confirm.next('.invalid-feedback').html('');
 
-        let newpassword = password.val();
-        let confirmpassword = confirm.val();
+    let newpassword = password.val();
+    let confirmpassword = confirm.val();
 
-        // password word check
-        if(newpassword.toLowerCase().includes("password")){
-            password.addClass('is-invalid');
-            password.next('.invalid-feedback')
-                .html('New password should not contain the word "password".');
-            valid = false;
-        }
+    // password word check
+    if (newpassword.toLowerCase().includes("password")) {
+        password.addClass('is-invalid');
+        password.next('.invalid-feedback')
+            .html('New password should not contain the word "password".');
+        valid = false;
+    }
 
-        // password match check
-        if(newpassword !== confirmpassword){
-            confirm.addClass('is-invalid');
-            confirm.next('.invalid-feedback')
-                .html('Password and confirm password do not match.');
-            valid = false;
-        }
+    // password match check
+    if (newpassword !== confirmpassword) {
+        confirm.addClass('is-invalid');
+        confirm.next('.invalid-feedback')
+            .html('Password and confirm password do not match.');
+        valid = false;
+    }
 
-        return valid;
+    return valid;
 
 }
 
 
-		

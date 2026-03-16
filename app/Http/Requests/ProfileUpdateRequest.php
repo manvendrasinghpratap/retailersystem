@@ -22,15 +22,15 @@ class ProfileUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'first_name'       => ['required', 'string', 'max:255'],
-            'last_name'        => ['required', 'string', 'max:255'],
-            'office_phone'     => ['required', 'string', 'max:20'],
-            'cell_phone'       => ['required', 'string', 'max:20'],
-            'whatsapp_number'  => ['required', 'string', 'max:20'],
-            'nin'              => ['required', 'string', 'max:50'],
-            'local_government' => ['required', 'string', 'max:255'],
-            'country'          => ['required', 'string', 'max:255'],
-            'state'            => ['required', 'string', 'max:255'],
+            'first_name'                    => ['required', 'string', 'max:255'],
+            'last_name'                     => ['required', 'string', 'max:255'],
+            'office_phone'                  => ['required', 'string', 'max:20'],
+            'cell_phone'                    => ['required', 'string', 'max:20'],
+            'whatsapp_number'               => ['required', 'string', 'max:20'],
+            'nin'                           => ['required', 'string', 'max:50'],
+            'local_government'              => ['required', 'string', 'max:255'],
+            'country_of_origin'             => ['required', 'string', 'max:255'],
+            'state_of_origin'               => ['required', 'string', 'max:255'],
         ];
     }
 }

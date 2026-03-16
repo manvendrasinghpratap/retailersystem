@@ -36,25 +36,25 @@ class AuthenticatedSessionController extends Controller
     
     public function modellogin(Request $request)
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
+        $request->validate([
+            'login' => ['required'], // email or username
             'password' => ['required'],
         ]);
-
+        $login = $request->input('login');
+        $field = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+        $credentials = [
+            $field => $login,
+            'password' => $request->password
+        ];
         $remember = $request->boolean('remember');
-
         if (Auth::attempt($credentials, $remember)) {
-
             $request->session()->regenerate();
-
             $user = Auth::user();
-
             return response()->json([
                 'status' => true,
                 'redirect' => $this->redirectByRole($user),
             ]);
         }
-
         return response()->json([
             'status' => false,
             'message' => 'The provided credentials do not match our records.',

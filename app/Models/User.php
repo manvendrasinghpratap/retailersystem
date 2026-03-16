@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Helpers\Settings;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use App\Helpers\Settings;
-use Illuminate\Support\Facades\Config;
+
 use App\Notifications\ResetUserPasswordNotification;
 
 class User extends Authenticatable
@@ -22,9 +25,21 @@ class User extends Authenticatable
      * The attributes that are mass assignable
      */
     protected $fillable = [
+        'account_id',
+        'user_type_id',
         'name',
+        'first_name',
+        'last_name',
         'email',
+        'username',
+        'mobile_no',
         'password',
+        'avatar',
+        'is_staff',
+        'is_active',
+        'status',
+        'designation_id',
+        'created_by'
     ];
 
     /**
@@ -47,10 +62,10 @@ class User extends Authenticatable
     }
 
     /*
-    |--------------------------------------------------------------------------
-    | Mutators
-    |--------------------------------------------------------------------------
-    */
+     |--------------------------------------------------------------------------
+     | Mutators
+     |--------------------------------------------------------------------------
+     */
 
     /**
      * Format first name
@@ -77,10 +92,10 @@ class User extends Authenticatable
     }
 
     /*
-    |--------------------------------------------------------------------------
-    | Accessors
-    |--------------------------------------------------------------------------
-    */
+     |--------------------------------------------------------------------------
+     | Accessors
+     |--------------------------------------------------------------------------
+     */
 
     /**
      * Get formatted staff name
@@ -109,10 +124,10 @@ class User extends Authenticatable
     }
 
     /*
-    |--------------------------------------------------------------------------
-    | Relationships
-    |--------------------------------------------------------------------------
-    */
+     |--------------------------------------------------------------------------
+     | Relationships
+     |--------------------------------------------------------------------------
+     */
 
     /**
      * User designation
@@ -127,7 +142,7 @@ class User extends Authenticatable
      */
     public function subscriptionplan()
     {
-        return $this->belongsTo(SubscriptionPlan::class, 'subscription_id', 'id');
+        return $this->belongsTo(SubscriptionPlan::class , 'subscription_id', 'id');
     }
 
     /**
@@ -135,7 +150,7 @@ class User extends Authenticatable
      */
     public function detail()
     {
-        return $this->hasOne(UserDetail::class, 'user_id');
+        return $this->hasOne(UserDetail::class , 'user_id');
     }
 
     /**
@@ -143,7 +158,7 @@ class User extends Authenticatable
      */
     public function subscriptionStatus()
     {
-        return $this->hasOne(UserAccountSubscription::class, 'user_id');
+        return $this->hasOne(UserAccountSubscription::class , 'user_id');
     }
 
     /**
@@ -151,14 +166,14 @@ class User extends Authenticatable
      */
     public function customer()
     {
-        return $this->hasOne(Customer::class, 'user_id');
+        return $this->hasOne(Customer::class , 'user_id');
     }
 
     /*
-    |--------------------------------------------------------------------------
-    | Notifications
-    |--------------------------------------------------------------------------
-    */
+     |--------------------------------------------------------------------------
+     | Notifications
+     |--------------------------------------------------------------------------
+     */
 
     /**
      * Send password reset notification
@@ -166,5 +181,27 @@ class User extends Authenticatable
     public function sendPasswordResetNotification($token)
     {
         $this->notify(new ResetUserPasswordNotification($token));
+    }
+
+    public static function createStaff($request, $filename)
+    {
+        $user = new self();
+
+        $user->account_id = Auth::user()->account_id;
+        $user->user_type_id = config('constants.staff');
+        $user->name = $request->suffix . ' ' . ucwords($request->first_name) . ' ' . ucwords($request->last_name);
+        $user->email = $request->email;
+        $user->username = $request->username;
+        $user->password = Hash::make($request->password);
+        $user->avatar = $filename;
+        $user->is_staff = config('constants.is_staff');
+        $user->is_active = $request->staffstatus;
+        $user->status = $request->staffstatus;
+        $user->designation_id = $request->designation_id;
+        $user->created_by = Auth::id();
+
+        $user->save();
+
+        return $user;
     }
 }

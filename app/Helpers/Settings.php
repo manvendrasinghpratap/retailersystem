@@ -67,6 +67,17 @@ class Settings
         : redirect()->route($route);
     }
 
+    public static function getUserRole()
+    {
+        $user = Auth::user();
+
+        return match ($user->user_type_id) {
+            config('constants.superadmin') => 'administrator',
+            config('constants.admin') => 'admin',
+            default => '',
+        };
+    }
+
 
 	public static function getPunchIn($attendanceData,$staffId,$monthdate, $csvornot = 1){
         $punchInDate = ''; 
@@ -161,7 +172,7 @@ class Settings
 		return $filename;
 	}
     public static function uploadimage($request, $fieldname, $pathname, $oldFilename = null)
-    {
+    {  
         $filename = '';
 
         if ($request->hasFile($fieldname)) {

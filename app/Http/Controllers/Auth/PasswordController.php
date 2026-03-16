@@ -7,6 +7,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
+use App\Helpers\Settings;
 
 class PasswordController extends Controller
 {
@@ -49,6 +50,7 @@ class PasswordController extends Controller
      */
     public function update(Request $request): RedirectResponse
     {
+    try {
         // Validate incoming request data
         $request->validateWithBag('updatePassword', [
             'current_password' => ['required'],
@@ -84,7 +86,11 @@ class PasswordController extends Controller
         /**
          * Redirect back with success message
          */
-        return redirect()->route('administrator.dashboard')->with('success', 'Password updated successfully.');
+        return Settings::roleRedirect('dashboard', 'Password updated successfully.');
+        } catch (\Exception $e) {
+
+        return Settings::roleRedirect('profile', 'Something went wrong!', 'error');
+    }
     }
 
     /**

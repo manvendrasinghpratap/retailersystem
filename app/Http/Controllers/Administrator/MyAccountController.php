@@ -24,15 +24,17 @@ use App\Models\UserAccountSubscription;
 use App\Models\SiteConfig;
 use DB;
 use PDF;
-
+use App\Services\UserService;
 class MyAccountController extends Controller
 {
     protected $breadcrumbAddNew;
     protected $breadcrumbListing;
     protected $breadcrumbSubscribeListing;
     protected $breadcrumbChangePassword;
+    protected $userService;
     
-    public function __construct(){
+    public function __construct(UserService $userService){
+        $this->userService = $userService;
         $this->middleware('auth');
         $this->breadcrumbAddNew = ['title' => __('translation.accounts'), 'route1' => 'administrator.account.add', 'route1Title' => __('translation.add_new_account'), 'route2' => 'administrator.account.add', 'route2Title' => __('translation.add_new_account'), 'reset_route' => 'administrator.accounts', 'reset_route_title' => __('translation.cancel')];
 
@@ -81,57 +83,35 @@ class MyAccountController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'first_name' => 'required',
-            'last_name' => 'required',
-            'office_phone' => 'required',
-            'cell_phone' => 'required',
-            'whatsapp_number' => 'required',
-            'nin' => 'required',
-            'local_government' => 'required',
-            'country' => 'required',
-            'state' => 'required',
-            'email' => 'required|unique:users|max:50',
-            'username' => 'required|unique:users|max:20',
-            'password' => 'required|confirmed|min:8',
-            'password_confirmation' => 'required',
-        ]);
         try {
-            $user                   = new User();
-            $user->name             = $request->input('suffix'). ' '.ucwords($request->input('first_name')).' '. ucwords($request->input('last_name'));
-            $user->email            = $request->input('email');  
-            $user->password         = Hash::make($request->input('password'));
-            $user->username         = $request->input('username');  
-            $user->user_type_id     = \Config::get('constants.admin');  
-            $user->is_active        = $request->input('is_active');   
-            $user->created_by        = Auth::user()->id;   
-            $user->save();
-
+            $request->validate([
+                'first_name' => 'required',
+                'last_name' => 'required',
+                'office_phone' => 'required',
+                'cell_phone' => 'required',
+                'whatsapp_number' => 'required',
+                'nin' => 'required',
+                'local_government' => 'required',
+                'country_of_origin' => 'required',
+                'state_of_origin' => 'required',
+                'email' => 'required|unique:users|max:50',
+                'username' => 'required|unique:users|max:20',
+                'password' => 'required|confirmed|min:8',
+                'password_confirmation' => 'required',
+            ]);
+            $filename = 'default.png';
+            if ($request->hasFile('avatar')) {
+                $filename = Settings::uploadimage($request, 'avatar', 'staff');
+            }
+            $user = $this->userService->createAdmin($request);
             $account = Account::createAccount($user, $request);
             $user->account_id           = $account->id;
             $user->save();
-
-            UserDetail::updateOrCreateDetail(
-                        $user->id,
-                        $request->only([
-                        'first_name',
-                        'last_name',
-                        'street_address',
-                        'office_phone',
-                        'cell_phone',
-                        'whatsapp_number',
-                        'local_government',
-                        'country',
-                        'state',
-                        'date_of_birth',
-                        'nin',
-                        'suffix'
-                        ])
-            ); 
+            $userDetail = UserDetail::updateOrCreateDetail($user->id, $request->all());
             return Settings::roleRedirect('accounts','Account Added Successfully.');
-        } catch (\Exception $e) {
-            return Settings::roleRedirect('accounts','Something went wrong!','error');
-        }
+            } catch (\Exception $e) {
+                return Settings::roleRedirect('accounts','Something went wrong!','error');
+            }
     }
 
     public function edit(Request $request, $id)
@@ -180,28 +160,23 @@ class MyAccountController extends Controller
     public function update(Request $request)
         {
             try {
-
                 $id = Settings::getDecodeCode($request->account);
-
                 $account = Account::findOrFail($id);
                 $user    = User::findOrFail($account->user_id);
-
                 $request->validate([
-                    'first_name'        => 'required',
-                    'last_name'         => 'required',
-                    'office_phone'      => 'required',
-                    'cell_phone'        => 'required',
-                    'whatsapp_number'   => 'required',
-                    'nin'               => 'required',
-                    'local_government'  => 'required',
-                    'country'           => 'required',
-                    'state'             => 'required',
-                    'email'             => 'required|email|max:50|unique:users,email,' . $user->id,
-                ]);
+                'first_name' => 'required',
+                'last_name' => 'required',
+                'office_phone' => 'required',
+                'cell_phone' => 'required',
+                'whatsapp_number' => 'required',
+                'nin' => 'required',
+                'local_government' => 'required',
+                'country_of_origin' => 'required',
+                'state_of_origin' => 'required',
+                'email'             => 'required|email|max:50|unique:users,email,' . $user->id,
+            ]);
 
-                $fullName = $request->suffix . ' ' .
-                            ucwords($request->first_name) . ' ' .
-                            ucwords($request->last_name);
+                $fullName = $request->suffix . ' ' . ucwords($request->first_name) . ' ' .ucwords($request->last_name);
 
                 /*
                 |--------------------------------------------------------------------------
@@ -230,25 +205,7 @@ class MyAccountController extends Controller
                 | Update User Details
                 |--------------------------------------------------------------------------
                 */
-
-                UserDetail::updateOrCreateDetail(
-                    $user->id,
-                    $request->only([
-                        'first_name',
-                        'last_name',
-                        'street_address',
-                        'office_phone',
-                        'cell_phone',
-                        'whatsapp_number',
-                        'local_government',
-                        'country',
-                        'state',
-                        'date_of_birth',
-                        'nin',
-                        'suffix'
-                    ])
-                );
-
+                $userDetail = UserDetail::updateOrCreateDetail($user->id, $request->all());
                 return Settings::roleRedirect('accounts', 'Account Updated Successfully.');
 
             } catch (\Exception $e) {

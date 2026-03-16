@@ -2,8 +2,11 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
 <meta charset="utf-8" />
-<!--<title> @yield('title') | Havana Bakery Shop | Admin Panel </title>-->
-<title> @lang('translation.webname') | @lang('translation.administrationpanel') | @yield('title')</title>
+<title>
+    @lang('translation.webname') |
+    {{ auth()->user()->user_type_id == 1 ? __('translation.administrationpanel') : __('translation.adminpanel') }}
+    | @yield('title')
+</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta content="@lang('translation.webname') | @lang('translation.administrationpanel')" name="description" />
 <meta content="@lang('translation.webname')" name="author" />
@@ -20,14 +23,14 @@
   @if(Auth::user()->user_type_id == 1)
     @include('backend.layouts.administrator.topbar')
   @else
-    {{-- @include('backend.layouts.topbar')   --}}
+   @include('backend.layouts.administrator.topbar')
   @endif
   <div class="topnav">
     <div class="container-fluid"> 
       @if(Auth::user()->user_type_id == 1)
-            @include('backend.layouts.administrator.menubar')  
+          @include('backend.layouts.administrator.menubar')  
      @else
-            {{-- @include('backend.layouts.menubar')   --}}
+          @include('backend.layouts.menubar')
     @endif
           
     </div>

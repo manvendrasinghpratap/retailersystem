@@ -161,6 +161,7 @@ function changeStatus(data,id, url = '')
 				$(document).on('click', '.saveaccountpassword', function(e) {
                     e.preventDefault(); // Prevent form submission
                     let changepassworduserid    = $("#changepassworduserid").val().trim();
+                    let changepasswordrouteurl  = $("#changepasswordrouteurl").val().trim();
                     let password                = $("#password").val().trim();
                     let confirmPassword         = $("#password_confirmation").val().trim();
                     let isValid = true;
@@ -189,7 +190,7 @@ function changeStatus(data,id, url = '')
                     if (isValid) {
                         $('#exampleModal').modal('hide');
                             $.ajax({
-                                url: "{{ route('administrator.user.updatepassword') }}",
+                                url: changepasswordrouteurl,
                                 type: 'POST',
                                 data: {
                                     staff_id: changepassworduserid,

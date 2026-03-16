@@ -25,7 +25,7 @@
                                 <form id="loginForm" method="POST" action="{{ route('model.login') }}" autocomplete="off">
                                     @csrf
                                     <div id="login-error" class="text-danger mb-2" style="display:none;"></div>
-                                    <x-input-field id="email" :labelstatus="false" type="email" name="email" value="{{ old('email') }}" placeholder="{{ __('translation.enter_email') }}" autofocus class="form-control" autocomplete="email" />
+                                    <x-input-field id="email" :labelstatus="false" type="text" name="login" value="{{ old('email') }}" placeholder="{{ __('translation.emailorusername') }}" autofocus class="form-control" autocomplete="email" />
                                     <x-input-field id="password" :labelstatus="false" type="password" name="password" placeholder="{{ __('translation.enter_password') }}" autocomplete="new-password" />
                                     <x-primary-button class="ms-3 btn btn-outline-primary-2">
                                         @lang('translation.login') <i class="icon-long-arrow-right"></i>

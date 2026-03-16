@@ -14,7 +14,6 @@ Route::prefix('administrator')->middleware(['auth','role:1'])->group(function(){
      Route::get('change-password', [\App\Http\Controllers\Auth\PasswordController::class, 'editPassword'])->name('administrator.change-password');
      Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'editprofile'])->name('administrator.profile');
      Route::post('/updateprofile', [App\Http\Controllers\ProfileController::class, 'updateProfile'])->name('update.profile');
-    // Route::post('admin/updateprofile', [\App\Http\Controllers\Admin\DashboardController::class, 'updateProfile'])->name('editProfile');
 });
 
 Route::prefix('administrator')->middleware(['auth', 'role:1'])->group(function () {

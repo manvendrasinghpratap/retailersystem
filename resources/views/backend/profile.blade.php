@@ -28,8 +28,8 @@
                                 <x-text-input name="nin" label="National Identification Number" value="{{ $user->detail->nin ?? '' }}"  required  class="onlyinteger phonenumber nocutcopypaste"/>
                                 <x-text-input name="street_address" label="Address" value="{{ $user->detail->street_address ?? '' }}" />
                                 <x-select-dropdown name="local_government" label="Local Government" :options="$localGovernment" :selected="$user->detail->local_government ?? ''" required class="local_government"/>
-                                <x-select-dropdown name="country" label="Country Of Origin" :options="$countries" :selected="$user->detail->country_of_origin ?? ''" class="country" required/>
-                                <x-select-dropdown name="state" label="State Of Origin" :options="$state" :selected="$user->detail->state_of_origin ?? ''" class="state" required/>
+                                <x-select-dropdown name="country_of_origin" label="Country Of Origin" :options="$countries" :selected="$user->detail->country_of_origin ?? 'Nigeria'" class="country" required/>
+                                <x-select-dropdown name="state_of_origin" label="State Of Origin" :options="$state" :selected="$user->detail->state_of_origin ?? 'Lagos'" class="state" required/>
                                 <x-image-upload name="avatar" label="Upload Profile Picture"  :value="@$user->avatar" />
                                 <div class="form-group">
                                     <x-form-buttons submitText="{{$submitText??'Update'}}" resetText="{{$breadcrumb['reset_route_title'] ?? 'Cancel'}}" url="{{ isset($breadcrumb['reset_route']) ? route($breadcrumb['reset_route']) : '#' }}" class="btn-success" />
