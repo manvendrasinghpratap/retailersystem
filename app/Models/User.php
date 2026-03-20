@@ -8,9 +8,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-
 use App\Notifications\ResetUserPasswordNotification;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class User extends Authenticatable
 {
@@ -180,7 +179,9 @@ class User extends Authenticatable
      */
     public function sendPasswordResetNotification($token)
     {
-        $this->notify(new ResetUserPasswordNotification($token));
+        $this->notify(new ResetUserPasswordNotification(
+            url('/reset-password/'.$token)
+        ));
     }
 
     public static function createStaff($request, $filename)

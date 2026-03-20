@@ -1,52 +1,60 @@
 /*----------------Menu-----------------*/
 
 jQuery(document).ready(function () {
-	
-	$('.default-zero').on('focus', function () {
-	if ($.trim($(this).val()) === '0') {
-		$(this).val('');
-	}
-	});
 
-	$('.default-zero').on('blur', function () {
-	if ($.trim($(this).val()) === '') {
-		$(this).val('0');
-	}
-	});
+    $('.default-zero').on('focus', function () {
+        if ($.trim($(this).val()) === '0') {
+            $(this).val('');
+        }
+    });
 
-    
+    $('.default-zero').on('blur', function () {
+        if ($.trim($(this).val()) === '') {
+            $(this).val('0');
+        }
+    });
 
-    $('.securitynumber').on("cut copy paste",function(e) {
 
-      e.preventDefault();
 
-   });
+    $('.securitynumber').on("cut copy paste", function (e) {
 
-    $(".securitynumber").keyup(function(){
-
-        if (/\D/g.test($(this).val($(this).val()) )){$(this).val($(this).val().replace(/\D/g,''));}
-
-   });
-
-    $("input[name='ssn']").keyup(function() {
-
-    $(this).val($(this).val().replace(/^(\d{3})(\d{2})(\d+)$/, "$1-$2-$3"));
+        e.preventDefault();
 
     });
 
-	$(".securitynumber").keyup(function() {
-
-    $(this).val($(this).val().replace(/^(\d{3})(\d{2})(\d+)$/, "$1-$2-$3"));
-
-    });
-    $('.onlyalpha').on('input', function () {
-            let cleaned = $(this).val().replace(/[^a-zA-Z ]/g, '');
-            $(this).val(cleaned);
-        });
-    $(".onlyinteger").keyup(function () {
+    $(".securitynumber").keyup(function () {
 
         if (/\D/g.test($(this).val($(this).val()))) { $(this).val($(this).val().replace(/\D/g, '')); }
 
+    });
+
+    $("input[name='ssn']").keyup(function () {
+
+        $(this).val($(this).val().replace(/^(\d{3})(\d{2})(\d+)$/, "$1-$2-$3"));
+
+    });
+
+    $(".securitynumber").keyup(function () {
+
+        $(this).val($(this).val().replace(/^(\d{3})(\d{2})(\d+)$/, "$1-$2-$3"));
+
+    });
+    $('.onlyalpha').on('input', function () {
+        let cleaned = $(this).val().replace(/[^a-zA-Z ]/g, '');
+        $(this).val(cleaned);
+    });
+    // $(".onlyinteger").keyup(function () {
+
+    //     if (/\D/g.test($(this).val($(this).val()))) { $(this).val($(this).val().replace(/\D/g, '')); }
+
+    // });
+
+    $(".onlyinteger").on("input", function () {
+        this.value = this.value.replace(/\D/g, '');
+    });
+
+    $(".onlydecimal").on("input", function () {
+        $(this).val($(this).val().replace(/[^0-9.]/g, ''));
     });
 
     $(".phoneUS").keyup(function () {
@@ -89,7 +97,7 @@ jQuery(document).ready(function () {
 
         let value = $(this).val();
 
-        
+
 
         if (value.length > 11) {
 
@@ -125,70 +133,70 @@ jQuery(document).ready(function () {
 
     });
 
-		$('.nocutcopypaste').bind("cut copy paste", function (e) {
+    $('.nocutcopypaste').bind("cut copy paste", function (e) {
 
-			e.preventDefault();
+        e.preventDefault();
 
-		});
+    });
 
-		$('.auto_remove_space').on('keyup',function(e) {
-			$( this ).val($( this ).val().replace(/\s/g, ''));
-		});
-	
-		$('.minmax').on('input', function () {
-			let max = parseInt($(this).data('max'));
-			let min = parseInt($(this).data('min'));
-			let val = parseInt($(this).val());
+    $('.auto_remove_space').on('keyup', function (e) {
+        $(this).val($(this).val().replace(/\s/g, ''));
+    });
 
-			if (val > max) $(this).val(0);
-			if (val < min) $(this).val(0);
-		});
-	
+    $('.minmax').on('input', function () {
+        let max = parseInt($(this).data('max'));
+        let min = parseInt($(this).data('min'));
+        let val = parseInt($(this).val());
 
-		$('.allowintegerdigit').on('input', function () {
-			this.value = this.value.replace(/\D/g, '').slice(0, 10);
-		});
-		$(".onlynumberdecimal").on("keypress", function (e) {
-			let allowDecimal = 2;
-			if ($(this).data('allowdecimal') !== undefined) {
-			allowDecimal = parseInt($(this).data('allowdecimal'));
-			}
+        if (val > max) $(this).val(0);
+        if (val < min) $(this).val(0);
+    });
 
-			const char = String.fromCharCode(e.which);
-			const val = $(this).val();
 
-			// Allow control keys
-			if (e.which === 0 || e.ctrlKey || e.metaKey || e.which < 32) {
-			return;
-			}
+    $('.allowintegerdigit').on('input', function () {
+        this.value = this.value.replace(/\D/g, '').slice(0, 10);
+    });
+    $(".onlynumberdecimal").on("keypress", function (e) {
+        let allowDecimal = 2;
+        if ($(this).data('allowdecimal') !== undefined) {
+            allowDecimal = parseInt($(this).data('allowdecimal'));
+        }
 
-			// Allow only digits and one dot
-			if (!char.match(/[0-9.]/)) {
-			return false;
-			}
+        const char = String.fromCharCode(e.which);
+        const val = $(this).val();
 
-			// Prevent multiple decimals
-			if (char === '.' && val.includes('.')) {
-			return false;
-			}
+        // Allow control keys
+        if (e.which === 0 || e.ctrlKey || e.metaKey || e.which < 32) {
+            return;
+        }
 
-			// Enforce digits before and after decimal
-			const parts = val.split('.');
-			const beforeDecimal = parts[0];
-			const afterDecimal = parts[1] || '';
+        // Allow only digits and one dot
+        if (!char.match(/[0-9.]/)) {
+            return false;
+        }
 
-			const isTypingAfterDecimal = val.includes('.') && this.selectionStart > val.indexOf('.');
+        // Prevent multiple decimals
+        if (char === '.' && val.includes('.')) {
+            return false;
+        }
 
-			// Limit digits before decimal
-			if (!isTypingAfterDecimal && beforeDecimal.length >= 15 && char !== '.') {
-			return false;
-			}
+        // Enforce digits before and after decimal
+        const parts = val.split('.');
+        const beforeDecimal = parts[0];
+        const afterDecimal = parts[1] || '';
 
-			// Limit digits after decimal
-			if (isTypingAfterDecimal && afterDecimal.length >= allowDecimal) {
-			return false;
-			}
-		});
+        const isTypingAfterDecimal = val.includes('.') && this.selectionStart > val.indexOf('.');
+
+        // Limit digits before decimal
+        if (!isTypingAfterDecimal && beforeDecimal.length >= 15 && char !== '.') {
+            return false;
+        }
+
+        // Limit digits after decimal
+        if (isTypingAfterDecimal && afterDecimal.length >= allowDecimal) {
+            return false;
+        }
+    });
 
 
 
@@ -353,37 +361,37 @@ $('.deletetempdata').on('click', function () {
 
 
 
-function addMoreButton(className){
+function addMoreButton(className) {
 
-	$('input.validate-field').css( "border-color","#d5d5d5" );
+    $('input.validate-field').css("border-color", "#d5d5d5");
 
-	$("."+className+":last").clone().insertAfter("."+className+":last");
+    $("." + className + ":last").clone().insertAfter("." + className + ":last");
 
-	$("."+className+":last").find("input").val("");
+    $("." + className + ":last").find("input").val("");
 
 }
 
-function addMoreMedicationList(className){
+function addMoreMedicationList(className) {
 
-	var number = Date.now();
+    var number = Date.now();
 
-	$('input.validate-field').css( "border-color","#d5d5d5" );
+    $('input.validate-field').css("border-color", "#d5d5d5");
 
-	$("."+className+":last").clone().insertAfter("."+className+":last");
+    $("." + className + ":last").clone().insertAfter("." + className + ":last");
 
-	$("."+className+":last").find("input").val("");
+    $("." + className + ":last").find("input").val("");
 
-	$("."+className+":last").find("input.datepicker").removeClass("hasDatepicker").datepicker({dateFormat:'dd/mm/yy'});
+    $("." + className + ":last").find("input.datepicker").removeClass("hasDatepicker").datepicker({ dateFormat: 'dd/mm/yy' });
 
-	$("."+className+":last").find("input.datepicker").removeClass("hasDatepicker").each(function(){
+    $("." + className + ":last").find("input.datepicker").removeClass("hasDatepicker").each(function () {
 
-		$(this).val('').attr('id', function(_, id) {
+        $(this).val('').attr('id', function (_, id) {
 
-      return id + '_'+number;
+            return id + '_' + number;
+
+        });
 
     });
-
-	});
 
 
 }

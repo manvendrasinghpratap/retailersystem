@@ -1,6 +1,11 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\{
+    ProfileController,
+    BarcodeController
+};
+
 use App\Http\Controllers\Admin\{
 DashboardController,
 CategoryController,
@@ -8,12 +13,23 @@ ProductController,
 OrderController,
 StaffController
 };
-use Illuminate\Support\Facades\Route;
 
+Route::get('/updateapp', function () {
+    \Artisan::call('key:generate');
+    \Artisan::call('config:cache');
+    \Artisan::call('config:clear');
+    \Artisan::call('cache:clear');
+    \Artisan::call('route:clear');
+    \Artisan::call('view:clear');
+    \Artisan::call('optimize:clear');
+    echo 'dump-autoload complete';
+});
 // Mail::raw('Test email', function ($message) {
 //     $message->to('m8005029425@gmail.com')
 //             ->subject('Test Mail');
 // });
+
+Route::get('/generate-barcode', [BarcodeController::class, 'index']);
 Route::get('/', function () {
     return view('welcome');
 })->name('home');

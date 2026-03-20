@@ -14,206 +14,210 @@ class CategoryController extends Controller
 {
     protected $breadcrumbAddNew;
     protected $breadcrumbListing;
-    
-    public function __construct(){
+
+    public function __construct()
+    {
         $this->middleware('auth');
-        $this->breadcrumbAddNew = ['title' => __('translation.categories'), 'route1' => "categories.index", 'route1Title' => __('translation.categories').' '.__('translation.listing') , 'route2Title' => __('translation.add_new_category'), 'route2' => 'categories.create'];
-        $this->breadcrumbListing = ['title' => __('translation.categories'), 'route1' => "categories.index", 'route1Title' => __('translation.add_new_category'), 'route2Title' => __('translation.categories'), 'route2' => 'categories.index', 'route3Title' => __('translation.update'), 'route3' => 'categories.update'];
-      
+
+        $this->breadcrumbAddNew = [
+            'title' => 'Categories',
+            'route1' => "admin.categories.create",
+            'route1Title' => 'Add Category',
+            'route2Title' => 'Add Category',
+            'route2' => 'admin.categories',
+            'reset_route' => 'admin.categories', 'reset_route_title' => __('translation.cancel')
+        ];
+
+        $this->breadcrumbListing = [
+            'title' => 'Categories',
+            'route1' => "admin.categories",
+            'route1Title' => 'Category Listing',
+            'route2Title' => 'Add / Edit Category',
+            'route2' => 'admin.categories.create',
+            'route3Title' => 'Add / Edit Category',
+            'route3' => 'admin.categories.edit',
+            'reset_route' => 'admin.categories', 'reset_route_title' => __('translation.cancel')
+        ];
     }
+
     /**
-     * Display a listing of categories.
+     * Category Listing
      */
     public function index()
     {
-        $breadcrumb       = $this->breadcrumbAddNew;
-        $categories       = Category::latest()->where('is_deleted',0);
-        if (!empty(request()->get('categoryname'))) {
-            $categories = $categories->where('name', 'LIKE', '%' . trim(request()->get('categoryname')) . '%');
+        $breadcrumb = $this->breadcrumbAddNew;
+
+        $categories = Category::where('account_id', auth()->user()->account_id)
+            ->where('is_deleted', 0)
+            ->latest();
+
+        // Filters
+        if (request('categoryname')) {
+            $categories->where('name', 'LIKE', '%' . trim(request('categoryname')) . '%');
+            $categories->orWhere('slug', 'LIKE', '%' . trim(request('categoryname')) . '%');
+            $categories->orWhere('description', 'LIKE', '%' . trim(request('categoryname')) . '%');
         }
-        if (request()->get('is_active') !==null) {
-            $categories = $categories->where('status', request()->get('is_active'));
+
+        if (request('is_active') !== null) {
+            $categories->where('status', request('is_active'));
         }
-        $categories = $categories->paginate(\Config::get('constants.pagination'));
-        $status           = \Config::get('constants.accountstatus');
-        return view('backend.category.index',compact("categories",'breadcrumb','status'));
+
+        $categories = $categories->paginate(config('constants.pagination'));
+        $status = config('constants.accountstatus');
+
+        return view('backend.admin.category.index', compact('categories', 'breadcrumb', 'status'));
     }
 
     /**
-     * Show the form for creating a new category.
+     * Create Page
      */
     public function create()
     {
-        $breadcrumb       = $this->breadcrumbListing;
-        return view('backend.category.form', ['breadcrumb' => $this->breadcrumbListing]);
+        return view('backend.admin.category.form', ['breadcrumb' => $this->breadcrumbListing]);
     }
 
     /**
-     * Store a newly created category in storage.
+     * Store Category
      */
     public function store(Request $request)
     {
-            // 1️⃣ Validate incoming request
-            $request->validate([
-                'name'   => 'required|string|max:255',
-                'image'  => 'nullable|image|mimes:jpg,jpeg,png,webp|max:12048',
-                'status' => 'nullable|boolean',
-            ]);
+        $request->validate([
+            'name'   => 'required|string|max:255',
+            'image'  => 'nullable|image|mimes:jpg,jpeg,png,webp|max:12048',
+            'status' => 'nullable|boolean',
+        ]);
 
-            try {
-
-                // 2️⃣ Default image value
-                $imagePath = null;
-
-                // 3️⃣ Upload image if provided
-                if ($request->hasFile('image')) {
-                    $imagePath = Settings::uploadimage(
-                        $request,      // full request
-                        'image',       // input field name
-                        'categories'   // folder name
-                    );
-                }
-
-                // 4️⃣ Save category in database
-                Category::create([
-                    'name'        => $request->name,
-                    'slug'        => $request->slug ?? Str::slug($request->name),
-                    'image'       => $imagePath,
-                    'status'      => $request->status ?? 1,
-                    'is_deleted'  => 0,
-                    'created_by'  => auth()->id(),
-                    'description' => $request->description ?? '',
-                ]);
-
-                // 5️⃣ Redirect with success message
-                return redirect()
-                    ->route('categories.index')
-                    ->with('success', 'Category created successfully.');
-
-            } catch (\Exception $e) {
-
-                // 6️⃣ Log error (for developer)
-                if (app()->environment('production')) {
-                    Log::error('Category Store Error: ' . $e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine(), 'trace' => $e->getTraceAsString()]);
-                }
-
-                // 7️⃣ Redirect back with error message
-                return redirect()
-                    ->back()
-                    ->withInput()
-                    ->with('error', 'Something went wrong. Please try again.');
+        try {
+            $imagePath = null;
+            // Upload Image
+            if ($request->hasFile('image')) {
+                $imagePath = Settings::uploadimage($request, 'image', 'categories');
             }
+            Category::createCategory($request, $imagePath);
+            return Settings::roleRedirect('categories','Category Added Successfully.');
+
+        } catch (\Exception $e) {
+            return Settings::roleRedirect('categories','Something went wrong!','error');
+        }
     }
 
     /**
-     * Show the form for editing the specified category.
+     * Edit Category
      */
-    public function edit(Request $request,$id,)
-    {  
+    public function edit($id)
+    {
         $id = Settings::getDecodeCode($id);
-        $category = Category::findOrFail($id);
-        return view('backend.category.form', ['breadcrumb' => $this->breadcrumbListing, 'category' => $category]);
+
+        $category = Category::where('account_id', auth()->user()->account_id)
+            ->findOrFail($id);
+
+        return view('backend.admin.category.form', [
+            'breadcrumb' => $this->breadcrumbListing,
+            'category'   => $category
+        ]);
     }
 
     /**
-     * Update the specified category in storage.
+     * Update Category
      */
     public function update(Request $request)
     {
-        $id = Settings::getDecodeCode($request->category_id);
-        $category = Category::findOrFail($id);
         try {
-        } catch (\Exception $e) {
-            // Log error (for developer)
-            if (app()->environment('production')) {
-                Log::error('Category Update Error: ' . $e->getMessage(), ['file' => $e->getFile(), 'line' => $e->getLine(), 'trace' => $e->getTraceAsString()]);
+            $id = Settings::getDecodeCode($request->category_id);
+            $category = Category::where('account_id', auth()->user()->account_id)->findOrFail($id);
+            $request->validate([
+                'name'   => 'required|string|max:255',
+                'image'  => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+                'status' => 'nullable|boolean',
+            ]);
+
+            $imagePath = $category->image;
+
+            if ($request->hasFile('image')) {
+                $imagePath = Settings::uploadimage(
+                    $request,
+                    'image',
+                    'categories',
+                    $category->image
+                );
             }
+            Category::updateCategory($category,$request, $imagePath);
+            return Settings::roleRedirect('categories','Category Updated Successfully.');
 
-            // Redirect back with error message
-            return redirect()
-                ->back()
-                ->withInput()
-                ->with('error', 'Something went wrong. Please try again.');
+        } catch (\Exception $e) {
+            return Settings::roleRedirect('categories','Something went wrong!','error');
         }
-        // Validate incoming request
-        $request->validate([
-            'name'   => 'required|string|max:255',
-            'image'  => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-            'status' => 'nullable|boolean',
-        ]);   
-
-        $imagePath = $category->image;
-        // 3️⃣ Upload image if provided
-        if ($request->hasFile('image')) {
-            $imagePath = Settings::uploadimage(
-                $request,      // full request
-                'image',       // input field name
-                'categories',   // folder name
-                $category->image // existing image to delete
-            );
-        }
-        $category->update([
-                'name'        => $request->name,
-                'slug'        => $request->slug ?? Str::slug($request->name),
-                'image'       => $imagePath,
-                'status'      => $request->status ?? 1,
-                'is_deleted'  => 0,
-                'description' => $request->description ?? '',
-        ]);
-
-        return redirect()
-            ->route('categories.index')
-            ->with('success', 'Category updated successfully.');
     }
 
     /**
-     * Remove the specified category from storage.
+     * Soft Delete
      */
-    public function destroy(Category $category)
+    public function softdelete(Request $request)
     {
-        // Delete category image
+        try {
+            $id = Settings::getDecodeCode($request->input('id'));
+
+            $deleted = Category::where('account_id', auth()->user()->account_id)
+                ->where('id', $id)
+                ->update(['is_deleted' => 1]);
+
+            return response()->json([
+                'success' => $deleted ? true : false,
+                'message' => $deleted ? 'Deleted successfully' : 'Delete failed'
+            ]);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Something went wrong'
+            ], 500);
+        }
+    }
+
+    /**
+     * Status Update (AJAX)
+     */
+    public function statusUpdate(Request $request)
+    {
+        try {
+            $id = Settings::getDecodeCode($request->id);
+
+            $updated = Category::where('account_id', auth()->user()->account_id)
+                ->where('id', $id)
+                ->update(['status' => $request->status]);
+
+            return response()->json([
+                'success' => $updated ? true : false,
+                'message' => $updated ? 'Status updated' : 'Update failed'
+            ]);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Something went wrong'
+            ], 500);
+        }
+    }
+
+    /**
+     * Hard Delete (Optional)
+     */
+    public function destroy($id)
+    {
+        $id = Settings::getDecodeCode($id);
+
+        $category = Category::where('account_id', auth()->user()->account_id)
+            ->findOrFail($id);
+
         if ($category->image && Storage::disk('public')->exists($category->image)) {
             Storage::disk('public')->delete($category->image);
         }
 
         $category->delete();
 
-        return redirect()
-            ->route('categories.index')
-            ->with('success', 'Category deleted successfully.');
-    }
-
-    public function statusUpdate(Request $request)
-    {
-        try {
-            $id = Settings::getDecodeCode($request->input('id'));
-            $status = $request->input('status');
-            $updated = Category::where("id", $id)->update(["status" => $status]);
-
-            if ($updated) {
-                return response()->json(['success' => true, 'message' => 'Status updated successfully.']);
-            } else {
-                return response()->json(['success' => false, 'message' => 'Update failed or item not found.']);
-            }
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Something went wrong!', 'error' => $e->getMessage()], 500);
-        }
-    }
-
-    public function softdelete(Request $request)
-    {
-        try {
-            $id = Settings::getDecodeCode($request->input('id'));
-            $is_deleted = 1;
-            $deleted = Category::where('id', $id)->update(['is_deleted' => $is_deleted]);
-            if ($deleted) {
-                return response()->json(['success' => true, 'message' => 'Status deleted successfully.']);
-            } else {
-                return response()->json(['error' => false, 'message' => 'Update failed or item not found.']);
-            }
-
-        } catch (\Exception $e) {
-            return response()->json(['error' => false, 'message' => 'Something went wrong!', 'error' => $e->getMessage()], 500);
-        }
+        return redirect()->route('categories.index')
+            ->with('success', 'Category permanently deleted.');
     }
 }

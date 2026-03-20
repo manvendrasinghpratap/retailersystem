@@ -72,7 +72,7 @@
                                         <td><img src="{{ asset('uploads/categories/small/'.$categoriesType->image) }}" alt="Image"></td>
                                         <td>{{ substr($categoriesType->description,0,50) }}</td>
                                         <td>
-                                            <input type="checkbox" id="switch3{{$categoriesType->id}}" class="changestatus" data-id="{{ \App\Helpers\Settings::getEncodeCode($categoriesType->id) }}" data-url="{{ route('categories.statusUpdate', $categoriesType->id) }}" switch="bool"  @if($categoriesType->status==1) checked @endif/>
+                                            <input type="checkbox" id="switch3{{$categoriesType->id}}" class="changestatus" data-id="{{ \App\Helpers\Settings::getEncodeCode($categoriesType->id) }}" data-url="{{-- route('categories.statusUpdate', $categoriesType->id) --}}" switch="bool"  @if($categoriesType->status==1) checked @endif/>
                                             <label for="switch3{{$categoriesType->id}}" data-on-label="Yes" data-off-label="No"></label>
                                         </td>
                                         <td>{{ App\Helpers\Settings::getFormattedDatetime($categoriesType->created_at)}}</td>

@@ -111,11 +111,11 @@ class ProfileController extends Controller
                 }
                 $user->save();
 
-                return Settings::roleRedirect('profile', 'User Details Updated Successfully.');
+                return Settings::roleRedirect('dashboard', 'User Details Updated Successfully.');
 
             } catch (\Exception $e) {
 
-                return Settings::roleRedirect('profile', 'Something went wrong!', 'error');
+                return Settings::roleRedirect('dashboard', 'Something went wrong!', 'error');
             }
     }
 

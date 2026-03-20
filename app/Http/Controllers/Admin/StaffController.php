@@ -38,7 +38,7 @@ class StaffController extends Controller
 
         $this->breadcrumbAddStaff = ['title' => __('translation.staff'), 'route1' => 'admin.staff', 'route1Title' => __('translation.staff') . ' ' . __('translation.listing'), 'route2' => 'admin.staff.store', 'route2Title' => __('translation.addstaff'), 'reset_route' => 'admin.staff', 'reset_route_title' => __('translation.cancel')];
 
-        $this->breadcrumbStaffListing = ['title' => __('translation.staff') . ' ' . __('translation.listing'), 'route1' => 'admin.staff', 'route1Title' => __('translation.staff') . ' ' . __('translation.listing'), 'route2' => 'admin.staff.store', 'route2Title' => __('translation.addstaff'), 'reset_route' => 'admin.staff', 'reset_route_title' => __('translation.cancel')];
+        $this->breadcrumbStaffListing = ['title' => __('translation.staff') . ' ' . __('translation.listing'), 'route1' => 'admin.staff.add', 'route1Title' => __('translation.addstaff'), 'route2' => 'admin.staff.store', 'route2Title' => __('translation.addstaff'), 'reset_route' => 'admin.staff', 'reset_route_title' => __('translation.cancel')];
     }
 
 

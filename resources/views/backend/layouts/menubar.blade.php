@@ -16,7 +16,7 @@
         </a>
       </li>
 
-     @php $managementRoutes = ['staff','menuitems','menu.category','bulk-offers.index']; @endphp
+     @php $managementRoutes = ['admin.staff','admin.menuitems','admin.products']; @endphp
       @if(Auth::user()->user_type_id < 3)
         <li class="nav-item dropdown {{ in_array(Route::currentRouteName(), $managementRoutes) ? 'active' : '' }}">
           <a class="nav-link dropdown-toggle arrow-none" href="javascript:void(0);" id="topnav-management"
@@ -27,11 +27,30 @@
           </a>
           <div class="dropdown-menu" aria-labelledby="topnav-management">
             <a href="{{ route(App\Helpers\Settings::getUserRole().'.staff') }}" class="dropdown-item" data-key="t-staff">@lang('translation.staffmanagement')</a>
-           {{-- <a href="{{ route('menuitems') }}" class="dropdown-item" data-key="t-products">@lang('translation.productmanagement')</a> --}}
-           {{-- <a href="{{ route('menu.category') }}" class="dropdown-item" data-key="t-categories">@lang('translation.categoriesmanagement')</a> --}}
+            <a href="{{ route(App\Helpers\Settings::getUserRole().'.categories') }}" class="dropdown-item" data-key="t-categories">@lang('translation.categoriesmanagement')</a>
+           <a href="{{ route(App\Helpers\Settings::getUserRole().'.products') }}" class="dropdown-item" data-key="t-products">@lang('translation.productmanagement')</a>
           </div>
         </li>
       @endif
+      @php $inventoryRoutes = [App\Helpers\Settings::getUserRole().'.inventory',App\Helpers\Settings::getUserRole().'.inventory.manage',App\Helpers\Settings::getUserRole().'.inventory']; @endphp
+      <li class="nav-item dropdown {{ in_array(Route::currentRouteName(), $inventoryRoutes) ? 'active' : '' }}">
+          <a class="nav-link dropdown-toggle arrow-none" href="javascript:void(0);" id="topnav-inventory"
+            role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i data-feather="settings"></i>
+            <span data-key="t-inventory">@lang('translation.inventory')</span>
+            <div class="arrow-down"></div>
+          </a>
+          <div class="dropdown-menu" aria-labelledby="topnav-inventory">
+            <a href="{{ route(App\Helpers\Settings::getUserRole().'.inventory') }}" class="dropdown-item" data-key="t-in_stock">@lang('translation.in_stock')</a>
+            <a href="{{ route(App\Helpers\Settings::getUserRole().'.inventory.manage',App\Helpers\Settings::getEncodeCode(1)) }}" class="dropdown-item" data-key="t-add_stock">@lang('translation.add_stock')</a>
+            <a href="{{ route(App\Helpers\Settings::getUserRole().'.inventory.manage',App\Helpers\Settings::getEncodeCode(2)) }}" class="dropdown-item" data-key="t-sale_stock">@lang('translation.sale_stock')</a>
+            <a href="{{ route(App\Helpers\Settings::getUserRole().'.inventory.manage',App\Helpers\Settings::getEncodeCode(3)) }}" class="dropdown-item" data-key="t-return_stock">@lang('translation.return_stock')</a>
+            <a href="{{ route(App\Helpers\Settings::getUserRole().'.inventory.manage',App\Helpers\Settings::getEncodeCode(4)) }}" class="dropdown-item" data-key="t-damage_stock">@lang('translation.damage_stock')</a>
+            <a href="{{ route(App\Helpers\Settings::getUserRole().'.inventory.manage',App\Helpers\Settings::getEncodeCode(5)) }}" class="dropdown-item" data-key="t-deduct_stock">@lang('translation.deduct_stock')</a>
+          </div>
+      </li>
+
+
 
 
 

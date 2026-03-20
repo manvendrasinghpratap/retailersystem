@@ -11,6 +11,7 @@ use App\Services\TwilioService;
 use Twilio\Rest\Client;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Config;
 
 class Settings
 {
@@ -127,50 +128,20 @@ class Settings
 		return (!empty($date)) ? date(\Config::get('constants.dateformat.slashdmy'),strtotime($date)):'';
 	}
 
-	public static function uploadimageold($request, $fieldname, $pathname, $oldFilename = null){
-		$filename = '';
-		if ($request->hasFile($fieldname)) {
-			$ds = DIRECTORY_SEPARATOR;
-			$folderpath = 'uploads' . $ds . $pathname . $ds;
-			$image = $request->file($fieldname);
-			$filename = time() . '.' . $image->getClientOriginalExtension();
+	public static function getInventoryAdjustment($encodedId)
+    {
+        $id = self::getDecodeCode($encodedId);
 
-			// Ensure directories exist
-			$folders = ['original', 'small', 'medium', 'large'];
-			foreach ($folders as $folder) {
-				$dir = public_path($folderpath . $folder . $ds);
-				if (!File::exists($dir)) {
-					File::makeDirectory($dir, 0755, true);
-				}
-			}
-			
-			// Delete old files if old filename is provided
-			if ($oldFilename) {
-				foreach ($folders as $folder) {
-					$oldFilePath = public_path($folderpath . $folder . $ds . $oldFilename);
-					if (File::exists($oldFilePath)) {
-						File::delete($oldFilePath);
-					}
-				}
-			}
+        $map = [
+            1 => ['route' => Config::get('constants.typesofinventory.1'), 'adjustment' => 'add'],
+            2 => ['route' => Config::get('constants.typesofinventory.2'), 'adjustment' => 'sale'],
+            3 => ['route' => Config::get('constants.typesofinventory.3'), 'adjustment' => 'return'],
+            4 => ['route' => Config::get('constants.typesofinventory.4'), 'adjustment' => 'damage'],
+            5 => ['route' => Config::get('constants.typesofinventory.5'), 'adjustment' => 'deduct'],
+        ];
 
-			// Save original and resized images
-			Image::make($image)->save(public_path($folderpath . 'original' . $ds . $filename));
-
-			$sizes = [
-				'small' => [100, 100],
-				'medium' => [300, 300],
-				'large' => [600, 600],
-			];
-			foreach ($sizes as $folder => $size) {
-				Image::make($image)
-					->fit($size[0], $size[1])
-					->save(public_path($folderpath . $folder . $ds . $filename));
-			}
-		}
-
-		return $filename;
-	}
+        return $map[$id] ?? ['route' => null, 'adjustment' => null];
+    }
     public static function uploadimage($request, $fieldname, $pathname, $oldFilename = null)
     {  
         $filename = '';

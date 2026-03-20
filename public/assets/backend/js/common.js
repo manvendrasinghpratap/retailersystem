@@ -163,6 +163,13 @@ $(document).ready(function () {
         allowClear: false,
         disabled: true
     });
+    $(".category").select2({
+        placeholder: "Select Category",
+        allowClear: true
+    });
+    $(".barcode").on("input", function () {
+        this.value = this.value.replace(/[^a-zA-Z0-9]/g, '');
+    });
 
 
     $('.staffname, .email, .password_confirmation, .password').bind("cut copy paste", function (e) {

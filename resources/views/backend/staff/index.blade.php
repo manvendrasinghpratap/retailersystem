@@ -29,7 +29,7 @@
                             <x-select-dropdown name="designation_id" label="{{ __('translation.designation') }}" :options="$designation" :selected="request('designation_id')" class="designation" mainrows="2"/>
                             <x-date-input name="hired_date" :label="__('translation.hired_date')" value="{{ request('hired_date') ?? ''}}" class="flatdatepickr  hired_date" data-mindate="{{\App\Helpers\Settings::getFormattedDate(date('Y-m-d', strtotime('-20 years')) )}}" data-maxdate="{{\App\Helpers\Settings::getFormattedDate(date('Y-m-d', strtotime('+10 days')) )}}" mainrows="2"/>
                             <x-select-dropdown name="is_active" label="{{ __('translation.status') }}" :options="\Config::get( 'constants.accountstatus' )" :selected="request('is_active')" class="is_ative form-control" mainrows="2"/>
-                            {{-- <x-button submitText="Filter" resetText="Reset" url="{{ route(array_key_exists('route',$breadcrumb)?$breadcrumb['route']:'') }}" isbutton="1" iscancel="1" mainrows="2"/> --}}                            
+                            <x-button submitText="Filter" resetText="Reset" url="{{ route($breadcrumb['route1'] ?? '') }}" isbutton="1" iscancel="1" mainrows="2"/>                         
                         </div>
                     </form>
                 </div>
