@@ -6,8 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Helpers\Settings;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class CategoryController extends Controller
@@ -20,23 +18,25 @@ class CategoryController extends Controller
         $this->middleware('auth');
 
         $this->breadcrumbAddNew = [
-            'title' => 'Categories',
+            'title' => __('translation.categories'),
             'route1' => "admin.categories.create",
-            'route1Title' => 'Add Category',
-            'route2Title' => 'Add Category',
-            'route2' => 'admin.categories',
-            'reset_route' => 'admin.categories', 'reset_route_title' => __('translation.cancel')
+            'route1Title' => __('translation.add_new_category'),
+            'route2Title' => __('translation.add_new_category'),
+            'route2' => 'admin.categories.index',
+            'reset_route' => 'admin.categories.index',
+            'reset_route_title' => __('translation.cancel')
         ];
 
         $this->breadcrumbListing = [
-            'title' => 'Categories',
-            'route1' => "admin.categories",
-            'route1Title' => 'Category Listing',
-            'route2Title' => 'Add / Edit Category',
+            'title' => __('translation.categories'),
+            'route1' => "admin.categories.index",
+            'route1Title' => __('translation.categories'),
+            'route2Title' => __('translation.add_new_category'),
             'route2' => 'admin.categories.create',
-            'route3Title' => 'Add / Edit Category',
+            'route3Title' => __('translation.add_new_category'),
             'route3' => 'admin.categories.edit',
-            'reset_route' => 'admin.categories', 'reset_route_title' => __('translation.cancel')
+            'reset_route' => 'admin.categories.index',
+            'reset_route_title' => __('translation.cancel')
         ];
     }
 
@@ -47,9 +47,7 @@ class CategoryController extends Controller
     {
         $breadcrumb = $this->breadcrumbAddNew;
 
-        $categories = Category::where('account_id', auth()->user()->account_id)
-            ->where('is_deleted', 0)
-            ->latest();
+        $categories = Category::getCategories();
 
         // Filters
         if (request('categoryname')) {
@@ -82,8 +80,8 @@ class CategoryController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'   => 'required|string|max:255',
-            'image'  => 'nullable|image|mimes:jpg,jpeg,png,webp|max:12048',
+            'name' => 'required|string|max:255',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:12048',
             'status' => 'nullable|boolean',
         ]);
 
@@ -94,10 +92,10 @@ class CategoryController extends Controller
                 $imagePath = Settings::uploadimage($request, 'image', 'categories');
             }
             Category::createCategory($request, $imagePath);
-            return Settings::roleRedirect('categories','Category Added Successfully.');
+            return Settings::roleRedirect('categories.index', 'Category Added Successfully.');
 
         } catch (\Exception $e) {
-            return Settings::roleRedirect('categories','Something went wrong!','error');
+            return Settings::roleRedirect('categories.index', 'Something went wrong!', 'error');
         }
     }
 
@@ -106,14 +104,15 @@ class CategoryController extends Controller
      */
     public function edit($id)
     {
+        $breadcrumb = Settings::updateBreadcrumbRoute($this->breadcrumbListing, ['route3', 'route3Title'], ['admin.categories.update', __('translation.update_category')]);
         $id = Settings::getDecodeCode($id);
 
         $category = Category::where('account_id', auth()->user()->account_id)
             ->findOrFail($id);
 
         return view('backend.admin.category.form', [
-            'breadcrumb' => $this->breadcrumbListing,
-            'category'   => $category
+            'breadcrumb' => $breadcrumb,
+            'category' => $category
         ]);
     }
 
@@ -126,13 +125,12 @@ class CategoryController extends Controller
             $id = Settings::getDecodeCode($request->category_id);
             $category = Category::where('account_id', auth()->user()->account_id)->findOrFail($id);
             $request->validate([
-                'name'   => 'required|string|max:255',
-                'image'  => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+                'name' => 'required|string|max:255',
+                'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
                 'status' => 'nullable|boolean',
             ]);
 
             $imagePath = $category->image;
-
             if ($request->hasFile('image')) {
                 $imagePath = Settings::uploadimage(
                     $request,
@@ -141,11 +139,11 @@ class CategoryController extends Controller
                     $category->image
                 );
             }
-            Category::updateCategory($category,$request, $imagePath);
-            return Settings::roleRedirect('categories','Category Updated Successfully.');
+            Category::updateCategory($category, $request, $imagePath);
+            return Settings::roleRedirect('categories.index', 'Category Updated Successfully.');
 
         } catch (\Exception $e) {
-            return Settings::roleRedirect('categories','Something went wrong!','error');
+            return Settings::roleRedirect('categories.index', 'Something went wrong!', 'error');
         }
     }
 

@@ -7,12 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 
 class LocalGovernment extends Model
 {
-    use HasFactory;
-    protected $table = 'local_governments';	
+	use HasFactory;
+	protected $table = 'local_governments';
 
-	public function name(){
-		return $this->belongsTo(User::class,'collected_by','id');
+	public function name()
+	{
+		return $this->belongsTo(User::class, 'collected_by', 'id');
 	}
-
+	public static function getList()
+	{
+		return self::pluck('name', 'name')->toArray();
+	}
 
 }

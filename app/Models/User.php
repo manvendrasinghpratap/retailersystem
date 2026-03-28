@@ -141,7 +141,7 @@ class User extends Authenticatable
      */
     public function subscriptionplan()
     {
-        return $this->belongsTo(SubscriptionPlan::class , 'subscription_id', 'id');
+        return $this->belongsTo(SubscriptionPlan::class, 'subscription_id', 'id');
     }
 
     /**
@@ -149,7 +149,7 @@ class User extends Authenticatable
      */
     public function detail()
     {
-        return $this->hasOne(UserDetail::class , 'user_id');
+        return $this->hasOne(UserDetail::class, 'user_id');
     }
 
     /**
@@ -157,7 +157,7 @@ class User extends Authenticatable
      */
     public function subscriptionStatus()
     {
-        return $this->hasOne(UserAccountSubscription::class , 'user_id');
+        return $this->hasOne(UserAccountSubscription::class, 'user_id');
     }
 
     /**
@@ -165,7 +165,7 @@ class User extends Authenticatable
      */
     public function customer()
     {
-        return $this->hasOne(Customer::class , 'user_id');
+        return $this->hasOne(Customer::class, 'user_id');
     }
 
     /*
@@ -180,7 +180,7 @@ class User extends Authenticatable
     public function sendPasswordResetNotification($token)
     {
         $this->notify(new ResetUserPasswordNotification(
-            url('/reset-password/'.$token)
+            url('/reset-password/' . $token)
         ));
     }
 
@@ -204,5 +204,12 @@ class User extends Authenticatable
         $user->save();
 
         return $user;
+    }
+
+    public static function getByAccount($id, $accountId)
+    {
+        return self::where('id', $id)
+            ->where('account_id', $accountId)
+            ->first();
     }
 }

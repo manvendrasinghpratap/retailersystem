@@ -12,6 +12,8 @@ use Twilio\Rest\Client;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Crypt;
+use Hashids;
 
 class Settings
 {
@@ -26,7 +28,7 @@ class Settings
         $pdf->output();
         $domPdf = $pdf->getDomPDF();
         $canvas = $domPdf->get_canvas();
-        $canvas->page_text(500, 10, "Page {PAGE_NUM} of {PAGE_COUNT}", 'sans-serif', 8, [90/255, 62/255, 43/255]);
+        $canvas->page_text(500, 10, "Page {PAGE_NUM} of {PAGE_COUNT}", 'sans-serif', 8, [90 / 255, 62 / 255, 43 / 255]);
         $pdf->setPaper('L', 'landscape');
         return $pdf;
     }
@@ -36,11 +38,11 @@ class Settings
         $pdf->output();
         $domPdf = $pdf->getDomPDF();
         $canvas = $domPdf->get_canvas();
-        $canvas->page_text(760, 10, "Page {PAGE_NUM} of {PAGE_COUNT}", 'sans-serif', 8, [90/255, 62/255, 43/255]);
+        $canvas->page_text(760, 10, "Page {PAGE_NUM} of {PAGE_COUNT}", 'sans-serif', 8, [90 / 255, 62 / 255, 43 / 255]);
         return $pdf;
     }
-	
-   public static function updateBreadcrumbRoute($breadcrumb, $routes, $values)
+
+    public static function updateBreadcrumbRoute($breadcrumb, $routes, $values)
     {
         foreach ($routes as $i => $key) {
             $breadcrumb[$key] = $values[$i] ?? $breadcrumb[$key];
@@ -61,11 +63,11 @@ class Settings
         }
 
         $route = $prefix . $page;
-        
+
 
         return $message
-        ? redirect()->route($route)->with($type, $message)
-        : redirect()->route($route);
+            ? redirect()->route($route)->with($type, $message)
+            : redirect()->route($route);
     }
 
     public static function getUserRole()
@@ -80,55 +82,73 @@ class Settings
     }
 
 
-	public static function getPunchIn($attendanceData,$staffId,$monthdate, $csvornot = 1){
-        $punchInDate = ''; 
-        $br  = '<br>';  
-        if($csvornot == 0){
-            $br  = "\n";
-        }     
-        foreach($attendanceData as $atttendanceRecord){
-            if(($atttendanceRecord->staff_id ==$staffId) && (date('Y-m-d',strtotime($atttendanceRecord->punch_in_date)) ==  date('Y-m-d',strtotime($monthdate))) ){
-                $punchInDate = 'Punch-In '.$br.'('.date(\Config::get('constants.dateformat.dmy'),strtotime($atttendanceRecord->punch_in_date)).')';
+    public static function getPunchIn($attendanceData, $staffId, $monthdate, $csvornot = 1)
+    {
+        $punchInDate = '';
+        $br = '<br>';
+        if ($csvornot == 0) {
+            $br = "\n";
+        }
+        foreach ($attendanceData as $atttendanceRecord) {
+            if (($atttendanceRecord->staff_id == $staffId) && (date('Y-m-d', strtotime($atttendanceRecord->punch_in_date)) == date('Y-m-d', strtotime($monthdate)))) {
+                $punchInDate = 'Punch-In ' . $br . '(' . date(\Config::get('constants.dateformat.dmy'), strtotime($atttendanceRecord->punch_in_date)) . ')';
             }
         }
-		return $punchInDate;
-	}
+        return $punchInDate;
+    }
 
-    public static function getPunchOut($attendanceData,$staffId,$monthdate, $csvornot = 1){
-        $punchOutDate = ''; 
-        $br  = '<br>';  
-        if($csvornot == 0){
-            $br  = "\n";
-        }          
-        foreach($attendanceData as $atttendanceRecord){
-            if(($atttendanceRecord->staff_id ==$staffId) && (date('Y-m-d',strtotime($atttendanceRecord->punch_out_date)) ==  date('Y-m-d',strtotime($monthdate))) ){
-                $punchOutDate = 'Punch-Out '.$br.'('.date(\Config::get('constants.dateformat.dmy'),strtotime($atttendanceRecord->punch_out_date)).')';
+    public static function getPunchOut($attendanceData, $staffId, $monthdate, $csvornot = 1)
+    {
+        $punchOutDate = '';
+        $br = '<br>';
+        if ($csvornot == 0) {
+            $br = "\n";
+        }
+        foreach ($attendanceData as $atttendanceRecord) {
+            if (($atttendanceRecord->staff_id == $staffId) && (date('Y-m-d', strtotime($atttendanceRecord->punch_out_date)) == date('Y-m-d', strtotime($monthdate)))) {
+                $punchOutDate = 'Punch-Out ' . $br . '(' . date(\Config::get('constants.dateformat.dmy'), strtotime($atttendanceRecord->punch_out_date)) . ')';
             }
         }
-		return $punchOutDate;
-	}
-	public static function formatDate($date,$format){
-		if (strpos($date, '/') !== false) {
-			return date($format, strtotime(str_replace('/', '-', $date)));
-		} else {
-			return date($format, strtotime($date));
-		}	
-		
-	}
-	public static function getEncodeCode($data){
-            return  (!empty($data))? substr(str_shuffle("123456789"), 0, 5).$data:'';
+        return $punchOutDate;
     }
-    public static function getDecodeCode($encodedCode){
-        return  (!empty($encodedCode))? substr($encodedCode,5):'';
-    }
-	public static function getFormattedDate($date){		
-		return (!empty($date)) ? date(\Config::get('constants.dateformat.slashdmyonly'),strtotime($date)):'';
-	}
-	public static function getFormattedDatetime($date){		
-		return (!empty($date)) ? date(\Config::get('constants.dateformat.slashdmy'),strtotime($date)):'';
-	}
+    public static function formatDate($date, $format)
+    {
+        if (strpos($date, '/') !== false) {
+            return date($format, strtotime(str_replace('/', '-', $date)));
+        } else {
+            return date($format, strtotime($date));
+        }
 
-	public static function getInventoryAdjustment($encodedId)
+    }
+    public static function getEncodeCodeWithHashids($data)
+    {
+        return (!empty($data)) ? substr(str_shuffle("123456789"), 0, 5) . Hashids::encode($data) : '';
+    }
+    public static function getEncodeCode($data)
+    {
+        return (!empty($data)) ? substr(str_shuffle("123456789"), 0, 5) . $data : '';
+    }
+    public static function getDecodeCodeWithHashids($encodedCode)
+    {
+        return (!empty($encodedCode)) ? Hashids::decode(substr($encodedCode, 5)) : 0;
+    }
+    public static function getDecodeCode($encodedCode)
+    {
+        return (!empty($encodedCode)) ? substr($encodedCode, 5) : '';
+    }
+
+
+
+    public static function getFormattedDate($date)
+    {
+        return (!empty($date)) ? date(\Config::get('constants.dateformat.slashdmyonly'), strtotime($date)) : '';
+    }
+    public static function getFormattedDatetime($date)
+    {
+        return (!empty($date)) ? date(\Config::get('constants.dateformat.slashdmy'), strtotime($date)) : '';
+    }
+
+    public static function getInventoryAdjustment($encodedId)
     {
         $id = self::getDecodeCode($encodedId);
 
@@ -142,8 +162,78 @@ class Settings
 
         return $map[$id] ?? ['route' => null, 'adjustment' => null];
     }
+
+    public static function getRouteName($encodedId)
+    {
+        $id = self::getDecodeCode($encodedId);
+
+        $map = [
+            1 => ['route' => Config::get('constants.typesofinventory.1'), 'adjustment' => 'add'],
+            2 => ['route' => Config::get('constants.typesofinventory.2'), 'adjustment' => 'sale'],
+            3 => ['route' => Config::get('constants.typesofinventory.3'), 'adjustment' => 'return'],
+            4 => ['route' => Config::get('constants.typesofinventory.4'), 'adjustment' => 'damage'],
+            5 => ['route' => Config::get('constants.typesofinventory.5'), 'adjustment' => 'deduct'],
+        ];
+
+        return $map[$id] ?? ['route' => null, 'adjustment' => null];
+    }
+
+    public static function isValidEAN13($barcode)
+    {
+        // Must be exactly 13 digits
+        if (!preg_match('/^[0-9]{13}$/', $barcode)) {
+            return false;
+        }
+
+        $sum = 0;
+
+        for ($i = 0; $i < 12; $i++) {
+            $digit = (int) $barcode[$i];
+            $sum += ($i % 2 === 0) ? $digit : $digit * 3;
+        }
+
+        $checkDigit = (10 - ($sum % 10)) % 10;
+
+        return (int) $barcode[12] === $checkDigit;
+    }
+
+    public static function getAdjustmentIdFromRoute($routeName)
+    {
+        $map = [
+            'admin.barcode' => 1,
+            'admin.sales-barcode' => 2,
+            'admin.return-barcode' => 3,
+            'admin.damage-barcode' => 4,
+            'admin.deduct-barcode' => 5,
+            'admin.no-barcode' => 6,
+        ];
+        return $map[$routeName] ?? 1; // default = 1
+    }
+
+
+    public static function generateEan13()
+    {
+        // Generate random 12-digit base
+        $base = '';
+        for ($i = 0; $i < 12; $i++) {
+            $base .= rand(0, 9);
+        }
+
+        // Calculate checksum
+        $sum = 0;
+        for ($i = 0; $i < 12; $i++) {
+            $digit = (int) $base[$i];
+            $sum += ($i % 2 === 0) ? $digit : $digit * 3;
+        }
+
+        $checkDigit = (10 - ($sum % 10)) % 10;
+
+        return $base . $checkDigit;
+    }
+
+
     public static function uploadimage($request, $fieldname, $pathname, $oldFilename = null)
-    {  
+    {
         $filename = '';
 
         if ($request->hasFile($fieldname)) {
@@ -152,7 +242,7 @@ class Settings
             $folderpath = 'uploads' . $ds . $pathname . $ds;
 
             $imageFile = $request->file($fieldname);
-            $filename  = time() . '.' . $imageFile->getClientOriginalExtension();
+            $filename = time() . '.' . $imageFile->getClientOriginalExtension();
 
             // Ensure directories exist
             $folders = ['original', 'small', 'medium', 'large'];
@@ -180,9 +270,9 @@ class Settings
 
             /* -------- RESIZED IMAGES -------- */
             $sizes = [
-                'small'  => [100, 100],
+                'small' => [100, 100],
                 'medium' => [300, 300],
-                'large'  => [600, 600],
+                'large' => [600, 600],
             ];
 
             foreach ($sizes as $folder => [$width, $height]) {
@@ -196,22 +286,24 @@ class Settings
     }
 
 
-    public static function isFileExists($foldername,$imagename){	
-                $isExist = 0;
-                $ds = DIRECTORY_SEPARATOR;
-                $folderpath = 'uploads' . $ds . $foldername . $ds . 'original'. $ds;	
-                $imagePath = $folderpath . $imagename;
-                if (file_exists(public_path($imagePath))){
-                    $isExist = 1;
-                }
-                return $isExist;
-	}
-	
-	public static function  getcustomnumberformat($amount) {
-		 return number_format($amount, 2);
+    public static function isFileExists($foldername, $imagename)
+    {
+        $isExist = 0;
+        $ds = DIRECTORY_SEPARATOR;
+        $folderpath = 'uploads' . $ds . $foldername . $ds . 'original' . $ds;
+        $imagePath = $folderpath . $imagename;
+        if (file_exists(public_path($imagePath))) {
+            $isExist = 1;
+        }
+        return $isExist;
+    }
+
+    public static function getcustomnumberformat($amount)
+    {
+        return number_format($amount, 2);
         $parts = explode('.', number_format($amount, 2, '.', ''));
         $intPart = $parts[0];
-        
+
         if (strlen($intPart) > 4) {
             $firstPart = substr($intPart, 0, 2);
             $lastPart = substr($intPart, 2);
@@ -219,15 +311,15 @@ class Settings
         } else {
             $formatted = $intPart;
         }
-    
+
         return $formatted . '.' . $parts[1];
     }
 
-    public static function applyDateRange($query, Request $request, $column = 'date',$defaultdate = false)
-    { 
+    public static function applyDateRange($query, Request $request, $column = 'date', $defaultdate = false)
+    {
         if ($request->filled('from_date') && $request->filled('to_date')) {
             $fromDate = Settings::formatDate($request->get('from_date'), 'Y-m-d');
-            $toDate   = Settings::formatDate($request->get('to_date'), 'Y-m-d');
+            $toDate = Settings::formatDate($request->get('to_date'), 'Y-m-d');
             $query->whereDate($column, '>=', $fromDate)->whereDate($column, '<=', $toDate);
         } elseif ($request->filled('from_date')) {
             $fromDate = Settings::formatDate($request->get('from_date'), 'Y-m-d');
@@ -235,7 +327,7 @@ class Settings
         } elseif ($request->filled('to_date')) {
             $toDate = Settings::formatDate($request->get('to_date'), 'Y-m-d');
             $query->whereDate($column, '<=', $toDate);
-        }elseif($defaultdate){
+        } elseif ($defaultdate) {
             $query->whereDate($column, '>=', date('Y-m-d'))->whereDate($column, '<=', date('Y-m-d'));
         }
         return $query;
@@ -244,41 +336,41 @@ class Settings
 
 
     public static function downloadcsvfile($data, $fileName)
-        {
-            header('Content-Type: text/csv; charset=utf-8');
-            header("Content-Disposition: attachment; filename=$fileName");
-            $fp = fopen('php://output', 'w');
-            foreach ($data as $row) {
-                fputcsv($fp, $row);
-                ob_flush();
-                flush(); // Push output to browser
-            }
-            fclose($fp);
-            exit;
-        }  
+    {
+        header('Content-Type: text/csv; charset=utf-8');
+        header("Content-Disposition: attachment; filename=$fileName");
+        $fp = fopen('php://output', 'w');
+        foreach ($data as $row) {
+            fputcsv($fp, $row);
+            ob_flush();
+            flush(); // Push output to browser
+        }
+        fclose($fp);
+        exit;
+    }
 
 
-	public static function sendSms($to, $message)
-	{
-		try {
-			$sid = config('services.twilio.sid');
-			$token = config('services.twilio.token');
-			$from = config('services.twilio.from');
+    public static function sendSms($to, $message)
+    {
+        try {
+            $sid = config('services.twilio.sid');
+            $token = config('services.twilio.token');
+            $from = config('services.twilio.from');
 
-			$client = new Client($sid, $token);
+            $client = new Client($sid, $token);
 
-			$client->messages->create($to, [
-				'from' => $from,
-				'body' => $message,
-			]);
+            $client->messages->create($to, [
+                'from' => $from,
+                'body' => $message,
+            ]);
 
-			Log::info("✅ SMS sent to {$to}: {$message}");
-			return ['success' => true, 'message' => 'SMS sent successfully'];
-		} catch (\Exception $e) {
-			Log::error("❌ Twilio SMS Error: " . $e->getMessage());
-			return ['success' => false, 'message' => $e->getMessage()];
-		}
-	}
+            Log::info("✅ SMS sent to {$to}: {$message}");
+            return ['success' => true, 'message' => 'SMS sent successfully'];
+        } catch (\Exception $e) {
+            Log::error("❌ Twilio SMS Error: " . $e->getMessage());
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
     public static function route_exists(string $name): bool
     {
         return Route::has($name);

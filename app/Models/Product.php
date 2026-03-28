@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Product extends Model
 {
@@ -14,7 +15,7 @@ class Product extends Model
         'slug',
         'sku',
         'barcode',
-        'price',
+        'selling_price',
         'cost_price',
         'status',
         'description',
@@ -57,9 +58,36 @@ class Product extends Model
     |--------------------------------------------------------------------------
     */
 
+    protected function name(): Attribute
+    {
+        return Attribute::make(
+
+            // ✅ Accessor (GET)
+            get: fn($value) => ucwords($value),
+
+            // ✅ Mutator (SET)
+            set: fn($value) => strtolower(trim($value))
+        );
+    }
+
     public function category()
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function account()
+    {
+        return $this->belongsTo(Account::class);
+    }
+
+    public function stock()
+    {
+        return $this->hasOne(Inventory::class);
+    }
+
+    public function stockAdjustments()
+    {
+        return $this->hasMany(StockAdjustment::class);
     }
 
     public function scopeNotDeleted($query)
@@ -73,5 +101,16 @@ class Product extends Model
     public function scopeActive($query)
     {
         return $query->where('status', 1);
-    }   
+    }
+    public function scopeGetProducts($query)
+    {
+        return $query->with('category')
+            ->where('account_id', auth()->user()->account_id)->notDeleted()
+            ->latest();
+    }
+
+    public static function getProductPluck()
+    {
+        return Product::ofAccount()->notDeleted()->active()->pluck('name', 'id');
+    }
 }

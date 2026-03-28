@@ -7,11 +7,11 @@ use App\Http\Controllers\{
 };
 
 use App\Http\Controllers\Admin\{
-DashboardController,
-CategoryController,
-ProductController,
-OrderController,
-StaffController
+    DashboardController,
+    CategoryController,
+    ProductController,
+    OrderController,
+    StaffController
 };
 
 Route::get('/updateapp', function () {
@@ -34,32 +34,35 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-Route::middleware(['auth'])->get('admin', [App\Http\Controllers\Admin\DashboardController::class , 'index'])->name('dashboard');
+Route::middleware(['auth'])->get('admin', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
 Route::middleware(['auth'])->prefix('admin/staff')->group(function () {
-    Route::get('/', [StaffController::class , 'index'])->name('admin.staff');
-    Route::get('/add', [StaffController::class , 'create'])->name('admin.staff.add');
-    Route::post('/store', [StaffController::class , 'store'])->name('admin.staff.store');
-    Route::get('/edit/{id}', [StaffController::class , 'editstaff'])->name('admin.staff.edit');
-    Route::post('/update', [StaffController::class , 'update'])->name('admin.staff.update');
-    Route::post('/updatepassword', [StaffController::class , 'updatepassword'])->name('admin.staff.updatepassword');
-    Route::get('/downloadstaffpdf', [StaffController::class , 'downloadstaffpdf'])->name('downloadstaffpdf');
+    Route::get('/', [StaffController::class, 'index'])->name('admin.staff');
+    Route::get('/index', [StaffController::class, 'index'])->name('admin.staff.index');
+    Route::get('/add', [StaffController::class, 'create'])->name('admin.staff.add');
+    Route::post('/store', [StaffController::class, 'store'])->name('admin.staff.store');
+    Route::get('/edit/{id}', [StaffController::class, 'editstaff'])->name('admin.staff.edit');
+    Route::post('/update', [StaffController::class, 'update'])->name('admin.staff.update');
+    Route::post('/updatepassword', [StaffController::class, 'updatepassword'])->name('admin.staff.updatepassword');
+    Route::get('/downloadstaffpdf', [StaffController::class, 'downloadstaffpdf'])->name('downloadstaffpdf');
 });
 
 Route::middleware(['auth'])->prefix('admin/members')->group(function () {
-    Route::post('/destroy', [StaffController::class , 'delete'])->name('destroy');
-    Route::post('/status-update', [StaffController::class , 'statusUpdate'])->name('statusUpdate');
+    Route::post('/destroy', [StaffController::class, 'delete'])->name('destroy');
+    Route::post('/status-update', [StaffController::class, 'statusUpdate'])->name('statusUpdate');
 });
 
 
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class , 'edit'])->name('profile');
-    Route::get('/profile', [ProfileController::class , 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class , 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class , 'destroy'])->name('profile.destroy');
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile');
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/barcode-scan-product', [BarcodeController::class, 'index'])->name('barcode.scan.product');
+    Route::post('/barcode-scan-inventory', [BarcodeController::class, 'scan'])->name('barcode.scan.inventory');
 });
 
 //  Route::get('/profile', [App\Http\Controllers\Auth\PasswordController::class, 'edit'])->name('profile');
-Route::post('update-password', [\App\Http\Controllers\Auth\PasswordController::class , 'update'])->name('update-password');
+Route::post('update-password', [\App\Http\Controllers\Auth\PasswordController::class, 'update'])->name('update-password');
 
 require __DIR__ . '/auth.php';
 require __DIR__ . '/admin.php';

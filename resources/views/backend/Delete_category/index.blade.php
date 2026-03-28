@@ -1,4 +1,4 @@
-@extends('backend.layouts.master-horizontal')
+@extends('layouts.backend.app')
 @section('title')
     {{array_key_exists('title', $breadcrumb) ? $breadcrumb['title'] : ''}}
 @endsection
@@ -23,13 +23,16 @@
                 <div class="card-body">
                     <form name="cartlistingform" id="cartlistingform" method="GET">
                         <div class="row">
-                            <x-text-input name="categoryname" label="{{ __('translation.category_name') }}" value="{{ request()->get('categoryname') ?? '' }}" class="" mainrows='3' />
-                            <x-select-dropdown name="is_active" label="{{ __('translation.status') }}" :options="$status ?? []" :selected="request()->get('is_active') ?? ''" class="is_active accountstatus" mainrows="2" />
+                            {{-- <x-select-dropdown name="subscription_id" label="Subscription Plan" :options="$subscriptionPlan" :selected="request()->get('subscription_id') ?? ''" class="subscription_id" mainrows='2' /> --}}
+                            <x-text-input name="categoryname" label="Category" value="{{ request()->get('categoryname') ?? '' }}" class="" mainrows='3' />
+                            <x-select-dropdown name="is_active" label="Status" :options="$status ?? []" :selected="request()->get('is_active') ?? ''" class="is_active accountstatus" mainrows="2" />
                             <div class="col-xl-2 col-md-2">
                                 <div class="form-group mb-3">
                                     <label class="d-inline-block w-100">&nbsp;</label>
-                                    <x-filter-submit-button name="submit" label="{{ __('translation.filter') }}" value="Filter" class="" />
-                                    <x-filter-href-button name="reset" href="{!! !empty($breadcrumb['route2']) ? route($breadcrumb['route2']) : '' !!}" label="Reset" class="" />
+                                    <x-filter-submit-button name="submit" label="Filter" value="Filter" class="" />
+                                    @if(!empty($breadcrumb['route1']))
+                                        <x-filter-href-button name="reset" href="{{ route(array_key_exists('route1', $breadcrumb) ? $breadcrumb['route1'] : '') }}" label="Reset" class="" />
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -50,10 +53,10 @@
                             <thead>
                                 <tr>
                                     <th>#</th>
-                                    <th>{{__('translation.category_name')}}</th>
+                                    <th>{{__('translation.category')}}</th>
                                     <th>{{__('translation.slug')}}</th>
                                     <th>{{__('translation.image')}}</th>
-                                    <th>{{__('translation.short_description')}}</th>
+                                    <th>{{__('translation.description')}}</th>
                                     <th>{{__('translation.status')}}</th>
                                     <th>{{__('translation.createdat')}}</th>
                                     <th>{{__('translation.actions')}}</th>
@@ -66,21 +69,16 @@
                                             <td>{{ $loop->iteration }}</td>
                                             <td>{{ $categoriesType->name }}</td>
                                             <td>{{ $categoriesType->slug }}</td>
-                                            <td>
-                                                <img src="{{ (!empty($categoriesType->image) && file_exists(public_path('uploads/categories/small/' . $categoriesType->image))) ? asset('uploads/categories/small/' . $categoriesType->image) : asset('assets/images/no-image.png') }}" width="80" height="60" alt="Category Image">
-                                            </td>
+                                            <td><img src="{{ asset('uploads/categories/small/' . $categoriesType->image) }}" alt="Image"></td>
                                             <td>{{ substr($categoriesType->description, 0, 50) }}</td>
                                             <td>
-                                                @if($categoriesType->status == 1)
-                                                    <span class="badge bg-success">Active</span>
-                                                @else
-                                                    <span class="badge bg-danger">Inactive</span>
-                                                @endif
+                                                <input type="checkbox" id="switch3{{$categoriesType->id}}" class="changestatus" data-id="{{ \App\Helpers\Settings::getEncodeCode($categoriesType->id) }}" data-url="{{-- route('categories.statusUpdate', $categoriesType->id) --}}" switch="bool" @if($categoriesType->status == 1) checked @endif />
+                                                <label for="switch3{{$categoriesType->id}}" data-on-label="Yes" data-off-label="No"></label>
                                             </td>
                                             <td>{{ App\Helpers\Settings::getFormattedDatetime($categoriesType->created_at)}}</td>
                                             <td>
-                                                <x-href-input name="edit" label="Edit" required href="{{ route('admin.categories.edit', ['id' => \App\Helpers\Settings::getEncodeCode($categoriesType->id)]) }}" />
-                                                <x-deletehref-input name="DeleteButton" label="Delete" required href="javascript:void(0)" class="deleteData" data-deleteid="{{ \App\Helpers\Settings::getEncodeCode($categoriesType->id) }}" data-routeurl="{{ route('admin.categories.softdelete', $categoriesType->id) }}" />
+                                                <x-href-input name="edit" label="Edit" required href="{{ route('categories.edit', ['category' => \App\Helpers\Settings::getEncodeCode($categoriesType->id)]) }}" />
+                                                <x-deletehref-input name="DeleteButton" label="Delete" required href="javascript:void(0)" class="deleteData" data-deleteid="{{ \App\Helpers\Settings::getEncodeCode($categoriesType->id) }}" data-routeurl="{{ route('categories.softdelete', $categoriesType->id) }}" />
                                             </td>
                                         </tr>
                                     @endforeach

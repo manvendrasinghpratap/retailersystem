@@ -7,9 +7,8 @@ use App\Models\Product;
 use App\Models\Category;
 use App\Helpers\Settings;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Crypt;
+use App\Models\StockAdjustment;
 
 class ProductController extends Controller
 {
@@ -22,11 +21,14 @@ class ProductController extends Controller
 
         $this->breadcrumbAddNew = [
             'title' => __('translation.product'),
-            'route1' => "admin.products.create",
+            'route1' => "admin.barcode",
             'route1Title' => __('translation.add_edit_product'),
             'route2Title' => __('translation.add_edit_product'),
             'route2' => 'admin.products',
-            'reset_route' => 'admin.products', 'reset_route_title' => __('translation.cancel')
+            'reset_route' => 'admin.products',
+            'reset_route_title' => __('translation.cancel'),
+            'route4Title' => __('translation.add_product_without_barcode'),
+            'route4' => 'admin.no-barcode',
         ];
 
         $this->breadcrumbListing = [
@@ -37,96 +39,130 @@ class ProductController extends Controller
             'route2' => 'admin.products.create',
             'route3Title' => __('translation.add_edit_product'),
             'route3' => 'admin.products.edit',
-            'reset_route' => 'admin.products', 'reset_route_title' => __('translation.cancel')
+            'reset_route' => 'admin.products',
+            'reset_route_title' => __('translation.cancel'),
+            'route4Title' => __('translation.add_edit_product'),
+            'route4' => 'admin.barcode',
+
         ];
     }
 
     public function index()
     {
         $breadcrumb = $this->breadcrumbAddNew;
-        $categories = Category::ofAccount()->notDeleted()->active()->pluck('name','id');
-        $products = Product::with('category')
-            ->where('account_id', auth()->user()->account_id)->notDeleted()
-            ->latest();
+        $categories = Category::getCategoriesPluck();
+        $products = Product::getProducts();
 
         if (request('name')) {
             $products->where('name', 'LIKE', '%' . request('name') . '%');
         }
-        if(request('category_id')) {
+        if (request('category_id')) {
             $products->where('category_id', request('category_id'));
         }
-        if(request('is_active')) {
+        if (request('is_active')) {
             $products->where('status', request('is_active'));
         }
-        
-
         $products = $products->paginate(config('constants.pagination'));
-
-        return view('backend.admin.product.index', compact('products','breadcrumb','categories'));
+        return view('backend.admin.product.index', compact('products', 'breadcrumb', 'categories'));
     }
 
-    public function create()
+    public function create(Request $request, $token = null)
     {
+        $barcode = $productId = $route = $adjustment = null;
+        if ($token) {
+            try {
+                $data = Crypt::decrypt($token);
+                $adjustmentData = Settings::getInventoryAdjustment($data['adjustment']);
+                if (empty($adjustmentData['adjustment'])) {
+                    return Settings::roleRedirect('inventory', 'Something went wrong!', 'error');
+                }
+                $route = $adjustmentData['route'];
+                $adjustment = $adjustmentData['adjustment'];
+                $barcode = $data['barcode'];
+                $productId = $data['product_id'];
+
+            } catch (\Exception $e) {
+                return redirect()->route('admin.barcode')->with('error', 'Invalid link');
+            }
+        }
         $breadcrumb = $this->breadcrumbListing;
-        $categories = Category::ofAccount()->notDeleted()->pluck('name','id');
-        return view('backend.admin.product.form', compact('categories','breadcrumb'));
+        $categories = Category::getCategoriesPluck();
+        return view('backend.admin.product.form', compact('categories', 'breadcrumb', 'barcode', 'productId', 'route', 'adjustment'));
     }
 
     public function store(Request $request)
     {
+        $prefix = strtoupper(substr($request->name, 0, 3));
         $request->merge([
-            'barcode' => 'BAR-'.time().rand(1000,9999),
-            'sku' => 'SKU-'.time().rand(1000,9999),
+            'barcode' => $request->filled('barcode')
+                ? $request->barcode
+                : Settings::generateEan13(),
+            'sku' => $request->filled('sku')
+                ? $request->sku
+                : $prefix . '-' . time() . rand(100, 999),
         ]);
+
         try {
             $request->validate([
-                'name'        => 'required|string|max:255',
-                'price'       => 'required|numeric|min:0',
-                'cost_price'  => 'required|numeric|min:0',
-                'status'      => 'nullable|in:0,1',
+                'name' => 'required|string|max:255',
+                'selling_price' => 'required|numeric|min:0',
+                'cost_price' => 'required|numeric|min:0',
+                'status' => 'nullable|in:0,1',
                 'category_id' => 'nullable|exists:categories,id',
                 'description' => 'nullable|string',
             ]);
-            $product = Product::create($request->all());  
+            $product = Product::create($request->all());
             $product->update([
-                'sku' => 'PROD-'.$product->id,
-                'barcode' => 'BAR-'.$product->id,
-            ]);          
-            return Settings::roleRedirect('products','Product Added Successfully.');
+                'sku' => strtoupper(substr($product->category->name, 0, 3)) . '-' . $product->id
+            ]);
+
+            if ($request->route == 'Add') {
+                StockAdjustment::create([
+                    'product_id' => $product->id,
+                    'type' => 'add',
+                    'quantity' => $request->quantity ?? 0,
+                    'note' => 'Initial stock added'
+                ]);
+                return Settings::roleRedirect('barcode', 'Product Added Successfully.');
+            }
+
+            return Settings::roleRedirect('products', 'Product Added Successfully.');
 
         } catch (\Exception $e) {
-            return Settings::roleRedirect('products','Something went wrong!','error');
+            return Settings::roleRedirect('products', 'Something went wrong!', 'error');
         }
     }
 
     public function edit($id)
     {
         $id = Settings::getDecodeCode($id);
+        $route = 'edit';
         $breadcrumb = $this->breadcrumbListing;
         $product = Product::where('account_id', auth()->user()->account_id)->findOrFail($id);
-        $categories = Category::ofAccount()->notDeleted()->pluck('name','id');
+        $categories = Category::ofAccount()->notDeleted()->pluck('name', 'id');
 
-        return view('backend.admin.product.form', compact('product','categories','breadcrumb'));
+
+        return view('backend.admin.product.form', compact('product', 'categories', 'breadcrumb', 'route'));
     }
 
     public function update(Request $request)
     {
-        try{
+        // try{
         $id = Settings::getDecodeCode($request->product_id);
         $product = Product::where('account_id', auth()->user()->account_id)->findOrFail($id);
         $request->validate([
-                'name'        => 'required|string|max:255',
-                'price'       => 'required|numeric|min:0',
-                'cost_price'  => 'required|numeric|min:0',
-                'status'      => 'nullable|in:0,1',
-                'description' => 'nullable|string',
-                'category_id' => 'nullable|exists:categories,id',
-            ]);
+            'name' => 'required|string|max:255',
+            'selling_price' => 'required|numeric|min:0',
+            'cost_price' => 'required|numeric|min:0',
+            'status' => 'nullable|in:0,1',
+            'description' => 'nullable|string',
+            'category_id' => 'nullable|exists:categories,id',
+        ]);
         $product->update($request->all());
-        return Settings::roleRedirect('products','Product Updated Successfully.');
-        }catch (\Exception $e) {
-            return Settings::roleRedirect('products','Something went wrong!','error');
-        }
+        return Settings::roleRedirect('products', 'Product Updated Successfully.');
+        // }catch (\Exception $e) {
+        //     return Settings::roleRedirect('products','Something went wrong!','error');
+        // }
     }
 
     public function destroy(Request $request)
@@ -137,21 +173,21 @@ class ProductController extends Controller
             ->where('id', $id)
             ->delete();
 
-        return response()->json(['success'=>true]);
+        return response()->json(['success' => true]);
     }
 
-    
+
     /**
      * Soft Delete
      */
     public function softdelete(Request $request)
     {
-         try {
+        try {
             $id = Settings::getDecodeCode($request->id);
 
             $deleted = Product::where('account_id', auth()->user()->account_id)
                 ->where('id', $id)
-                ->update(['is_deleted' => 1,'deleted_by' => auth()->user()->id,'deleted_at' => now()]);
+                ->update(['is_deleted' => 1, 'deleted_by' => auth()->user()->id, 'deleted_at' => now()]);
 
             return response()->json([
                 'success' => $deleted ? true : false,

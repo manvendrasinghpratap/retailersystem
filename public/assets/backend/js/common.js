@@ -113,7 +113,7 @@ $(document).ready(function () {
         placeholder: "Select Status",
         allowClear: true
     });
-    $(".menucategory").select2({
+    $(".category_id").select2({
         placeholder: "Select Category",
         allowClear: true
     });

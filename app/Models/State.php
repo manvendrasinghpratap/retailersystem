@@ -7,11 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 
 class State extends Model
 {
-    use HasFactory;
-    protected $table = 'states';
-	
-	public function name(){
-		return $this->belongsTo(User::class,'collected_by','id');
+	use HasFactory;
+	protected $table = 'states';
+
+	public function name()
+	{
+		return $this->belongsTo(User::class, 'collected_by', 'id');
+	}
+	public static function getList()
+	{
+		return self::pluck('name', 'name')->toArray();
 	}
 
 

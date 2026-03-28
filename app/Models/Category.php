@@ -35,8 +35,8 @@ class Category extends Model
     protected function name(): Attribute
     {
         return Attribute::make(
-            get: fn ($value) => ucwords($value),
-            set: fn ($value) => ucwords(trim($value))
+            get: fn($value) => ucwords($value),
+            set: fn($value) => ucwords(trim($value))
         );
     }
 
@@ -86,28 +86,40 @@ class Category extends Model
     }
 
     public static function createCategory($request, $imagePath = null)
-        {
-            return self::create([
-                'account_id'  => auth()->user()->account_id,
-                'name'        => $request->name,
-                'slug'        => Str::slug($request->slug),
-                'image'       => $imagePath,
-                'status'      => $request->status ?? 1,
-                'is_deleted'  => 0,
-                'created_by'  => auth()->id(),
-                'description' => $request->description ?? '',
-            ]);
-        }
+    {
+        return self::create([
+            'account_id' => auth()->user()->account_id,
+            'name' => $request->name,
+            'slug' => Str::slug($request->slug),
+            'image' => $imagePath,
+            'status' => $request->status ?? 1,
+            'is_deleted' => 0,
+            'created_by' => auth()->id(),
+            'description' => $request->description ?? '',
+        ]);
+    }
 
     public static function updateCategory($category, $request, $imagePath = null)
-        {
-            return $category->update([
-                'name'        => $request->name,
-                'slug'        => Str::slug($request->slug),
-                'image'       => $imagePath,
-                'status'      => $request->status ?? 1,
-                'description' => $request->description ?? '',
-            ]);
-        }
+    {
+        return $category->update([
+            'name' => $request->name,
+            'slug' => Str::slug($request->slug),
+            'image' => $imagePath,
+            'status' => $request->status ?? 1,
+            'description' => $request->description ?? '',
+        ]);
+    }
+
+
+    public static function getCategoriesPluck()
+    {
+        return Category::ofAccount()->notDeleted()->active()->pluck('name', 'id');
+    }
+
+
+    public static function getCategories()
+    {
+        return Category::ofAccount()->notDeleted()->latest();
+    }
 
 }

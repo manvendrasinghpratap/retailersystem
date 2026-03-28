@@ -10,20 +10,14 @@ use App\Helpers\Settings;
 use App\Models\UserDetail;
 use App\Models\Designation;
 use Illuminate\Http\Request;
-use Illuminate\Http\Redirect;
 use App\Http\Requests\StoreStaffRequest;
 use App\Http\Requests\UpdateStaffRequest;
-use Illuminate\Validation\Rule;
 use App\Models\LocalGovernment;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Session;
-use Image;
-use Lang;
 use App\Services\UserService;
-
-use Illuminate\Support\Facades\Validator;
 
 class StaffController extends Controller
 {
@@ -35,17 +29,15 @@ class StaffController extends Controller
     {
         $this->middleware('auth');
         $this->userService = $userService;
-
-        $this->breadcrumbAddStaff = ['title' => __('translation.staff'), 'route1' => 'admin.staff', 'route1Title' => __('translation.staff') . ' ' . __('translation.listing'), 'route2' => 'admin.staff.store', 'route2Title' => __('translation.addstaff'), 'reset_route' => 'admin.staff', 'reset_route_title' => __('translation.cancel')];
-
-        $this->breadcrumbStaffListing = ['title' => __('translation.staff') . ' ' . __('translation.listing'), 'route1' => 'admin.staff.add', 'route1Title' => __('translation.addstaff'), 'route2' => 'admin.staff.store', 'route2Title' => __('translation.addstaff'), 'reset_route' => 'admin.staff', 'reset_route_title' => __('translation.cancel')];
+        $this->breadcrumbAddStaff = ['title' => __('translation.staff'), 'route1' => 'admin.staff.index', 'route1Title' => __('translation.staff') . ' ' . __('translation.listing'), 'route2' => 'admin.staff.store', 'route2Title' => __('translation.addstaff'), 'reset_route' => 'admin.staff.index', 'reset_route_title' => __('translation.reset')];
+        $this->breadcrumbStaffListing = ['title' => __('translation.staff'), 'route1' => 'admin.staff.add', 'route1Title' => __('translation.addstaff'), 'route2' => 'admin.staff.store', 'route2Title' => __('translation.addstaff'), 'reset_route' => 'admin.staff.index', 'reset_route_title' => __('translation.cancel')];
     }
 
 
     public function index(Request $request)
     {
         $breadcrumb = $this->breadcrumbStaffListing;
-        $designation = Designation::where('status',1)->pluck('name', 'id')->toArray();
+        $designation = Designation::getSelectable();
         $updatedAt = date('Y-m-d');
         $updatedAt = '';
         $staffstatus = \Config::get('constants.staffstatus');
@@ -67,16 +59,6 @@ class StaffController extends Controller
             $userList = $userList->whereDate('hire_date', $updatedAt);
         }
         $userList = $userList->orderBy('id', 'desc');
-        // if ($request->has('pdf')) {
-        //     $userList = $userList->get();
-        //     $pdfHeaderdata = \Config::get('constants.staffspdf');
-        //     $pdf = PDF::loadView('backend.pdf.staffspdf', compact('userList', 'pdfHeaderdata'))->setPaper('a4')->setOptions(['defaultFont' => 'sans-serif']);
-        //     $pdf = Settings::downloadlandscapepdf($pdf);
-        //     $fileName = $pdfHeaderdata['filename'] . '-' . date('Y-m-d') . '.pdf';
-        //     return $pdf->stream($fileName);
-        // }
-        // print_r($userList->count());
-        // die;
         if ($request->has('csv')) {
             $userList = $userList->get();
             $pdfHeaderdata = \Config::get('constants.staffspdf');
@@ -115,8 +97,7 @@ class StaffController extends Controller
                         !empty($user->created_at) ? "\t" . $user->created_at : '-',
                     ];
                 }
-            }
-            else {
+            } else {
                 // No records fallback
                 $data[$ii++] = [__('translation.no_staff_found')];
             }
@@ -145,8 +126,7 @@ class StaffController extends Controller
             $status = $request->input('status');
             $Menu = User::where("id", $id)->update(["is_active" => $status]);
             Session::flash('success', 'Data update successfully.');
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             Session::flash('error', 'something went wrong!');
             return redirect()->back()->withInput();
         }
@@ -159,8 +139,7 @@ class StaffController extends Controller
             $id = $request->input('id');
             $is_deleted = 1;
             $Menu = User::where("id", $id)->update(["is_deleted" => $is_deleted]);
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             Session::flash('error', 'something went wrong!');
             return redirect()->back()->withInput();
         }
@@ -169,18 +148,16 @@ class StaffController extends Controller
     public function create(Request $request)
     {
         $submitText = 'Save';
-        $route = 'addroute';
         $breadcrumb = $this->breadcrumbAddStaff;
         $isimagechanged = 1;
         $suffix = \Config::get('constants.suffix');
         $emergecyRelationship = \Config::get('constants.emergecyRelationship');
         $staffstatus = \Config::get('constants.staffstatus');
-        $state = State::select('name')->pluck('name', 'name')->toArray();
-        $countries = Countries::select('country_name')->pluck('country_name', 'country_name')->toArray();
-
-        $localGovernment = LocalGovernment::select('name')->pluck('name', 'name')->toArray();
-        $designation = Designation::where('id', '!=', 1)->where('id', '!=', 3)->pluck('name', 'id')->toArray();
-        return view('backend.staff.form', compact(["designation", "route", 'suffix', 'state', 'localGovernment', 'emergecyRelationship', 'staffstatus', 'isimagechanged', 'countries', 'breadcrumb', 'submitText']));
+        $designation = Designation::getSelectable();
+        $state = State::getList();
+        $localGovernment = LocalGovernment::getList();
+        $countries = Countries::getList();
+        return view('backend.staff.form', compact(["designation", 'suffix', 'state', 'localGovernment', 'emergecyRelationship', 'staffstatus', 'isimagechanged', 'countries', 'breadcrumb', 'submitText']));
     }
 
     public function store(StoreStaffRequest $request)
@@ -198,8 +175,7 @@ class StaffController extends Controller
             $userDetail = UserDetail::updateOrCreateDetail($user->id, $request->all());
 
             return Settings::roleRedirect('staff', 'Staff Added Successfully.');
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             return Settings::roleRedirect('staff', 'Something went wrong!', 'error');
         }
     }
@@ -231,25 +207,24 @@ class StaffController extends Controller
 
     public function editstaff(Request $request, $id)
     {
-        $route = 'updateroute';
-        $breadcrumb = Settings::updateBreadcrumbRoute($this->breadcrumbAddStaff,['title','route2','route2Title'],[__('translation.update_staff'),'admin.staff.update','Update Staff']);
+        $breadcrumb = Settings::updateBreadcrumbRoute($this->breadcrumbAddStaff, ['route2', 'route2Title'], ['admin.staff.update', 'Update Staff']);
         $id = Settings::getDecodeCode($id);
         $isimagechanged = 0;
-        $designation = Designation::where('id', '!=', 1)->where('id', '!=', 3)->pluck('name', 'id')->toArray();
-        $userDetails = User::where('id', $id)->where('account_id', Auth::user()->account_id)->first();
         $suffix = \Config::get('constants.suffix');
         $emergecyRelationship = \Config::get('constants.emergecyRelationship');
         $staffstatus = \Config::get('constants.staffstatus');
-        $state = State::select('name')->pluck('name', 'name')->toArray();
-        $localGovernment = LocalGovernment::select('name')->pluck('name', 'name')->toArray();
-        $countries = Countries::select('country_name')->pluck('country_name', 'country_name')->toArray();
-        return view('backend.staff.form', compact(["designation", "userDetails", "route", 'suffix', 'emergecyRelationship', 'staffstatus', 'state', 'localGovernment', 'isimagechanged', 'countries', 'breadcrumb']));
+
+        $designation = Designation::getSelectable();
+        $userDetails = User::getByAccount($id, Auth::user()->account_id);
+        $state = State::getList();
+        $localGovernment = LocalGovernment::getList();
+        $countries = Countries::getList();
+        return view('backend.staff.form', compact(["designation", "userDetails", 'suffix', 'emergecyRelationship', 'staffstatus', 'state', 'localGovernment', 'isimagechanged', 'countries', 'breadcrumb']));
     }
 
     public function update(UpdateStaffRequest $request)
-    {  
-      
-        // try {
+    {
+        try {
             $id = Settings::getDecodeCode($request->user_id);
             $user = User::find($id);
             $filename = 'default.png';
@@ -261,10 +236,9 @@ class StaffController extends Controller
             $user = $this->userService->updateStaffBasic($user, $request);
             $userDetail = UserDetail::updateOrCreateDetail($id, $request->all());
             return Settings::roleRedirect('staff', 'Staff Updated Successfully. ');
-        // }
-        // catch (\Exception $e) {
-        //     return Settings::roleRedirect('staff', 'Something went wrong! Please try again.', 'error');
-        // }
+        } catch (\Exception $e) {
+            return Settings::roleRedirect('staff', 'Something went wrong! Please try again.', 'error');
+        }
     }
     public function updatepassword(Request $request)
     {

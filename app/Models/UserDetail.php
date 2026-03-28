@@ -55,7 +55,7 @@ class UserDetail extends Model
      */
     public function user()
     {
-        return $this->belongsTo(User::class , 'user_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     /**
@@ -64,26 +64,26 @@ class UserDetail extends Model
     public function setDateOfBirthAttribute($value)
     {
         $this->attributes['date_of_birth'] = $value
-            ?Settings::formatDate($value, config('constants.dateformat.datepicker'))
+            ? Settings::formatDate($value, config('constants.dateformat.datepicker'))
             : null;
     }
 
     public function setFirstNameAttribute($value)
     {
         $this->attributes['first_name'] = $value
-            ?ucwords(trim($value))
+            ? ucwords(trim($value))
             : null;
     }
     public function setLastNameAttribute($value)
     {
         $this->attributes['last_name'] = $value
-            ?ucwords(trim($value))
+            ? ucwords(trim($value))
             : null;
     }
     public function setHireDateAttribute($value)
     {
         $this->attributes['hire_date'] = $value
-            ?Settings::formatDate($value, config('constants.dateformat.datepicker'))
+            ? Settings::formatDate($value, config('constants.dateformat.datepicker'))
             : null;
     }
 
@@ -110,67 +110,67 @@ class UserDetail extends Model
     public static function updateOrCreateDetailOld($userId, $data)
     {
         return self::updateOrCreate(
-        ['user_id' => $userId],
-        [
-            'first_name' => $data['first_name'] ?? null,
-            'last_name' => $data['last_name'] ?? null,
-            'street_address' => $data['street_address'] ?? null,
-            'office_phone' => $data['office_phone'] ?? null,
-            'cell_phone' => $data['cell_phone'] ?? null,
-            'whatsapp_number' => $data['whatsapp_number'] ?? null,
-            'local_government' => $data['local_government'] ?? null,
-            'country_of_origin' => $data['country'] ?? null,
-            'state_of_origin' => $data['state'] ?? null,
-            'date_of_birth' => $data['date_of_birth'] ?? null,
-            'nin' => $data['nin'] ?? null,
-            'staff_suffix' => $data['suffix'] ?? null,
-        ]
+            ['user_id' => $userId],
+            [
+                'first_name' => $data['first_name'] ?? null,
+                'last_name' => $data['last_name'] ?? null,
+                'street_address' => $data['street_address'] ?? null,
+                'office_phone' => $data['office_phone'] ?? null,
+                'cell_phone' => $data['cell_phone'] ?? null,
+                'whatsapp_number' => $data['whatsapp_number'] ?? null,
+                'local_government' => $data['local_government'] ?? null,
+                'country_of_origin' => $data['country'] ?? null,
+                'state_of_origin' => $data['state'] ?? null,
+                'date_of_birth' => $data['date_of_birth'] ?? null,
+                'nin' => $data['nin'] ?? null,
+                'staff_suffix' => $data['suffix'] ?? null,
+            ]
         );
     }
 
 
     public static function updateOrCreateDetail($userId, $data)
     {
-        //   echo '<pre>'; print_r($data); die();
+
         return self::updateOrCreate(
-        ['user_id' => $userId],
-        [
-            'first_name' => $data['first_name'] ?? null,
-            'last_name' => $data['last_name'] ?? null,
+            ['user_id' => $userId],
+            [
+                'first_name' => $data['first_name'] ?? null,
+                'last_name' => $data['last_name'] ?? null,
 
-            'street_address' => $data['street_address'] ?? null,
-            'local_government' => $data['local_government'] ?? null,
-            'country_of_origin' => $data['country_of_origin'] ?? null,
-            'state_of_origin' => $data['state_of_origin'] ?? null,
+                'street_address' => $data['street_address'] ?? null,
+                'local_government' => $data['local_government'] ?? null,
+                'country_of_origin' => $data['country_of_origin'] ?? null,
+                'state_of_origin' => $data['state_of_origin'] ?? null,
 
-            'date_of_birth' => $data['date_of_birth'] ?? null,
-            'hire_date' => $data['hire_date'] ?? null,  
+                'date_of_birth' => $data['date_of_birth'] ?? null,
+                'hire_date' => $data['hire_date'] ?? null,
 
-            'nin' => $data['nin'] ?? null,
-            'cell_phone' => $data['cell_phone'] ?? null,
-            'whatsapp_number' => $data['whatsapp_number'] ?? null,
-            'office_phone' => $data['office_phone'] ?? $data['mobile_no'] ?? null,
+                'nin' => $data['nin'] ?? null,
+                'cell_phone' => $data['cell_phone'] ?? null,
+                'whatsapp_number' => $data['whatsapp_number'] ?? null,
+                'office_phone' => $data['office_phone'] ?? $data['mobile_no'] ?? null,
 
-            'staff_suffix' => $data['staff_suffix'] ?? null,
-            'emergency_suffix' => $data['emergency_suffix'] ?? null,
-            'guarantor_suffix' => $data['guarantor_suffix'] ?? null,
+                'staff_suffix' => $data['staff_suffix'] ?? null,
+                'emergency_suffix' => $data['emergency_suffix'] ?? null,
+                'guarantor_suffix' => $data['guarantor_suffix'] ?? null,
 
-            'emergency_contact_name' => $data['emergency_contact_name'] ?? null,
-            'emergency_phone' => $data['emergency_phone'] ?? null,
-            'emergency_relationship' => $data['emergency_relationship'] ?? null,
+                'emergency_contact_name' => $data['emergency_contact_name'] ?? null,
+                'emergency_phone' => $data['emergency_phone'] ?? null,
+                'emergency_relationship' => $data['emergency_relationship'] ?? null,
 
-            'guarantor_name' => $data['guarantor_name'] ?? null,
-            'guarantor_address' => $data['guarantor_address'] ?? null,
-            'guarantor_phone' => $data['guarantor_phone'] ?? null,
+                'guarantor_name' => $data['guarantor_name'] ?? null,
+                'guarantor_address' => $data['guarantor_address'] ?? null,
+                'guarantor_phone' => $data['guarantor_phone'] ?? null,
 
-            'note' => $data['note'] ?? null,
+                'note' => $data['note'] ?? null,
 
-            'pinterest' => $data['pinterest'] ?? null,
-            'instagram' => $data['instagram'] ?? null,
-            'linkedin' => $data['linkedin'] ?? null,
-            'twitter' => $data['twitter'] ?? null,
-            'facebook' => $data['facebook'] ?? null,
-        ]
+                'pinterest' => $data['pinterest'] ?? null,
+                'instagram' => $data['instagram'] ?? null,
+                'linkedin' => $data['linkedin'] ?? null,
+                'twitter' => $data['twitter'] ?? null,
+                'facebook' => $data['facebook'] ?? null,
+            ]
         );
     }
 }

@@ -1,1 +1,1 @@
-<body data-topbar="dark" oncontextmenu="return false-;" class="nocutcopypaste-">
+<body data-topbar="dark" oncontextmenu="return false-;" class="nocutcopypaste- {{ $fullBg ? 'full-bg' : '' }}">

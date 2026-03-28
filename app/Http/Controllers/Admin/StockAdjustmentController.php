@@ -33,6 +33,9 @@ class StockAdjustmentController extends Controller
                 'reference_id' => $request->reference_id,
                 'note' => $request->note,
             ]); 
+            if($request->route == 'Add'){
+                return Settings::roleRedirect('barcode','Stock Adjusted Successfully.');
+            }
             return Settings::roleRedirect('inventory','Stock Adjusted Successfully.');
         } catch (\Exception $e) {
             return Settings::roleRedirect('inventory','Something went wrong!','error');
