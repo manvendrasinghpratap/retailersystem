@@ -77,7 +77,7 @@ class Settings
         return match ($user->user_type_id) {
             config('constants.superadmin') => 'administrator',
             config('constants.admin') => 'admin',
-            default => '',
+            default => 'admin',
         };
     }
 

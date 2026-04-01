@@ -11,7 +11,7 @@ class Designation extends Model
 
     public static function getSelectable()
     {
-        return self::whereNotIn('id', [1, 3])
+        return self::where('status', 1)->orderBy('name', 'asc')
             ->pluck('name', 'id')
             ->toArray();
     }
