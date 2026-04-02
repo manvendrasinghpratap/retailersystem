@@ -2,7 +2,7 @@
     'name',
     'label' => null,
     'href' => 'javascript:void(0)',
-    'action' => 'edit',   {{-- default = edit --}}
+    'action' => 'edit',
 ])
 
 <a href="{{ $href }}" id="{{ $name }}" {{ $attributes->class(['']) }}>

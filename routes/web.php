@@ -5,12 +5,9 @@ use App\Http\Controllers\{
     ProfileController,
     BarcodeController
 };
-
+use App\Http\Controllers\BillingController;
 use App\Http\Controllers\Admin\{
     DashboardController,
-    CategoryController,
-    ProductController,
-    OrderController,
     StaffController
 };
 
@@ -34,7 +31,7 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-Route::middleware(['auth'])->get('admin', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
+Route::middleware(['auth'])->get('admin', [DashboardController::class, 'index'])->name('dashboard');
 Route::middleware(['auth'])->prefix('admin/staff')->group(function () {
     Route::get('/', [StaffController::class, 'index'])->name('admin.staff');
     Route::get('/index', [StaffController::class, 'index'])->name('admin.staff.index');
@@ -63,6 +60,12 @@ Route::middleware('auth')->group(function () {
 
 //  Route::get('/profile', [App\Http\Controllers\Auth\PasswordController::class, 'edit'])->name('profile');
 Route::post('update-password', [\App\Http\Controllers\Auth\PasswordController::class, 'update'])->name('update-password');
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
+    Route::post('/billing/scan', [BillingController::class, 'scanProduct'])->name('billing.scan');
+    Route::post('/billing/complete', [BillingController::class, 'completeSale'])->name('billing.complete');
+});
 
 require __DIR__ . '/auth.php';
 require __DIR__ . '/admin.php';

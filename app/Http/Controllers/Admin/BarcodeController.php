@@ -7,9 +7,6 @@ use App\Models\Product;
 use App\Models\Category;
 use App\Helpers\Settings;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Crypt;
 
 class BarcodeController extends Controller
@@ -42,17 +39,6 @@ class BarcodeController extends Controller
             'product_id' => null
         ]);
         return redirect()->route('admin.products.create', $payload);
-        return response()->json([
-            'status' => false,
-            'message' => 'Product not found. Please add product first.',
-            'payload' => $payload,
-            'adjustmentType' => 1,
-        ]);
-        $breadcrumb = $this->breadcrumbBarcodeReader;
-        $routeName = $request->route()->getName();
-        $categories = Category::getCategoriesPluck();
-        $products = Product::getProductPluck();
-        return view('backend.admin.product.barcodereader', compact('breadcrumb', 'categories', 'products'));
     }
 
     public function index(Request $request)
@@ -62,44 +48,6 @@ class BarcodeController extends Controller
         $categories = Category::getCategoriesPluck();
         $products = Product::getProductPluck();
         return view('backend.admin.product.barcodereader', compact('breadcrumb', 'categories', 'products'));
-    }
-
-    public function validateBarcodeold(Request $request)
-    {
-
-        $request->validate([
-            'barcode' => 'required|string',
-            'routeName' => 'required|string',
-        ]);
-
-        $product = Product::where('barcode', $request->barcode)->first();
-        $adjustmentType = Settings::getAdjustmentIdFromRoute($request->routeName);
-        $adjustmentData = Settings::getEncodeCode($adjustmentType);
-        if ($product) {
-            $payload = Crypt::encrypt([
-                'adjustment' => $adjustmentData,
-                'adjustmentType' => $adjustmentType,
-                'barcode' => $product->barcode,
-                'product_id' => $product->id
-            ]);
-            return response()->json([
-                'status' => true,
-                'product' => $product,
-                'payload' => $payload,
-                'adjustmentType' => $adjustmentType,
-            ]);
-        }
-        $payload = Crypt::encrypt([
-            'adjustment' => $adjustmentData,
-            'barcode' => $request->barcode,
-            'product_id' => null
-        ]);
-        return response()->json([
-            'status' => false,
-            'message' => 'Product not found. Please add product first.',
-            'payload' => $payload,
-            'adjustmentType' => $adjustmentType,
-        ]);
     }
 
     public function validateBarcode(Request $request)

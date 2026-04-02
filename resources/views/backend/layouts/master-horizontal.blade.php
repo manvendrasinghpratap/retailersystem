@@ -17,22 +17,19 @@
   @include('backend.layouts.head-css')
 </head>
 @section('body')
-<input type="hidden" name="passwordlength" value="{{Config::get('constants.passwordlength')}}" class="passwordlength"
-  id="passwordlength">
+<input type="hidden" name="passwordlength" value="{{Config::get('constants.passwordlength')}}" class="passwordlength" id="passwordlength">
 @include('backend.layouts.body', ['fullBg' => true])
 @show
 <div id="layout-wrapper">
-  @if(Auth::user()->user_type_id == 1)
-    @include('backend.layouts.administrator.topbar')
-  @else
-    @include('backend.layouts.administrator.topbar')
-  @endif
+  @include('backend.layouts.administrator.topbar')
   <div class="topnav">
     <div class="container-fluid">
       @if(Auth::user()->user_type_id == 1)
         @include('backend.layouts.administrator.menubar')
-      @else
+      @elseif(Auth::user()->user_type_id == 2)
         @include('backend.layouts.menubar')
+      @else
+        @include('backend.layouts.othermenubar')
       @endif
 
     </div>
