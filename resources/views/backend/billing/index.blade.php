@@ -119,9 +119,7 @@
             let html = '';
 
             if (!cart.length) {
-                html = `<tr>
-                                                                            <td colspan="6" class="text-center">Cart is empty</td>
-                                                                        </tr>`;
+                html = `<tr><td colspan="6" class="text-center">Cart is empty</td></tr>`;
             } else {
 
                 cart.forEach((item, index) => {
@@ -130,31 +128,7 @@
                     let price = parseFloat(item.price) || 0;
                     let total = quantity * price;
 
-                    html += `<tr>
-                                                        <td>${item.category_name}</td>
-
-                                                        <td>${item.name}</td>
-
-                                                        <td>
-                                                            <input type="number"
-                                                                class="form-control"
-                                                                style="width: 80px;"
-                                                                value="${quantity}"
-                                                                min="1"
-                                                                oninput="updateQuantity(${index}, this.value)">
-                                                        </td>
-
-                                                        <td>₹${price.toFixed(2)}</td>
-
-                                                        <td class="item-total">₹${total.toFixed(2)}</td>
-
-                                                        <td>
-                                                            <button class="btn btn-sm"
-                                                                onclick="removeItem(${index})">
-                                                                <i class="fas fa-trash action-btn darkred"></i>
-                                                            </button>
-                                                        </td>
-                                                    </tr>`;
+                    html += `<tr><td>${item.category_name}</td><td>${item.name}</td><td><input type="number" class="form-control" style="width: 100px;" value="${quantity}" min="1" oninput="updateQuantity(${index}, this.value)"></td><td>{{ __('translation.b_ngn') }} ${price.toFixed(2)}</td><td class="item-total">{{ __('translation.b_ngn') }} ${total.toFixed(2)}</td><td><button class="btn btn-sm" onclick="removeItem(${index})"><i class="fas fa-trash action-btn darkred"></i></button></td></tr>`;
                 });
             }
 
