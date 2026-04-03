@@ -35,8 +35,9 @@
         });
 
         document.getElementById('barcode').addEventListener('keydown', function (e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
+
+            if (e.key === 'Enter' || e.key === 'Tab') {
+                e.preventDefault(); // stop tab focus change
 
                 let barcode = this.value.trim();
                 let routeName = "{{ request()->route()->getName() }}";
@@ -53,7 +54,7 @@
                     })
                         .then(res => res.json())
                         .then(data => {
-                            // console.log(data); return;
+
                             if (data.adjustmentType > 1 && data.status == false) {
                                 Swal.fire({
                                     icon: 'warning',
@@ -63,18 +64,17 @@
                                 });
                                 return;
                             }
+
                             new Audio('/beep.wav').play();
-                            if (data.status) {
-                                var route = "{{ route('admin.inventory.update', 'TOKEN') }}"
-                            } else {
-                                var route = "{{ route('admin.products.create', 'TOKEN') }}"
-                            }
+
+                            let route = data.status
+                                ? "{{ route('admin.inventory.update', 'TOKEN') }}"
+                                : "{{ route('admin.products.create', 'TOKEN') }}";
+
                             let url = route.replace('TOKEN', encodeURIComponent(data.payload));
                             window.location.href = url;
                         })
-                        .catch(err => {
-                            console.error(err);
-                        });
+                        .catch(err => console.error(err));
 
                     this.value = '';
                 }

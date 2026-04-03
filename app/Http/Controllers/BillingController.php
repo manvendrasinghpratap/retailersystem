@@ -7,18 +7,23 @@ use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Category;
-use DB;
+use App\Models\Inventory;
+use Illuminate\Support\Facades\DB;
 
 class BillingController extends Controller
 {
-    protected $breadcrumbBarcodeReader;
+    /**
+     * Breadcrumb configuration for billing page
+     */
+    protected array $breadcrumbBarcodeReader;
+
     public function __construct()
     {
         $this->middleware('auth');
 
         $this->breadcrumbBarcodeReader = [
             'title' => __('translation.billing'),
-            'route1-' => "admin.products.create",
+            'route1' => "admin.products.create", // ✅ fixed
             'route1Title' => __('translation.billing'),
             'route2Title' => __('translation.billing'),
             'route2' => 'admin.products',
@@ -28,47 +33,84 @@ class BillingController extends Controller
             'reset_route_title' => __('translation.cancel')
         ];
     }
+
+    /**
+     * Show billing (POS) page
+     */
     public function index(Request $request)
     {
-        $breadcrumb = $this->breadcrumbBarcodeReader;
-        $routeName = $request->route()->getName();
-        $categories = Category::getCategoriesPluck();
-        $products = Product::getProductPluck();
-        return view('backend.billing.index', compact('breadcrumb', 'categories', 'products'));
-    }
-
-    // Scan product by barcode
-    public function scanProduct(Request $request)
-    {
-        $product = Product::where('barcode', $request->barcode)->first();
-
-        if (!$product) {
-            return response()->json(['error' => 'Product not found']);
-        }
-
-        return response()->json([
-            'id' => $product->id,
-            'name' => $product->name,
-            'price' => $product->selling_price
+        return view('backend.billing.index', [
+            'breadcrumb' => $this->breadcrumbBarcodeReader,
+            'categories' => Category::getCategoriesPluck(),
+            'products' => Product::getProductPluck(),
         ]);
     }
 
+    /**
+     * Scan product by barcode
+     */
+    public function scanProduct(Request $request)
+    {
+        $request->validate([
+            'barcode' => 'required|string'
+        ]);
 
+        $barcode = trim($request->barcode);
+
+        $product = Product::where('barcode', $barcode)
+            ->select('id', 'name', 'selling_price', 'category_id')
+            ->first();
+
+        if (!$product) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Product not found'
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => true,
+            'data' => [
+                'id' => $product->id,
+                'name' => $product->name,
+                'price' => (float) $product->selling_price, // ✅ convert to number
+                'category_name' => $product->category->name ?? '-'
+            ]
+        ]);
+    }
+
+    /**
+     * Complete Sale (POS)
+     * - Creates sale
+     * - Validates stock
+     * - Deducts inventory
+     * - Stores sale items
+     */
     public function completeSale(Request $request)
     {
-        try {
+        $request->validate([
+            'items' => 'required|array|min:1',
+            'subtotal' => 'required|numeric',
+            'tax' => 'nullable|numeric',
+            'discount' => 'nullable|numeric',
+            'total' => 'required|numeric',
+            'paid_amount' => 'required|numeric',
+            'change_amount' => 'nullable|numeric',
+            'payment_method' => 'required|string',
+        ]);
 
+        try {
             DB::transaction(function () use ($request) {
 
-                // Create Sale
+                // ✅ Create Sale
                 $sale = Sale::create([
-                    'invoice_no' => 'INV' . time(),
+                    'invoice_no' => 'INV' . now()->timestamp,
                     'subtotal' => $request->subtotal,
-                    'tax' => $request->tax,
-                    'discount' => $request->discount,
+                    'tax' => $request->tax ?? 0,
+                    'discount' => $request->discount ?? 0,
                     'total' => $request->total,
                     'paid_amount' => $request->paid_amount,
-                    'change_amount' => $request->change_amount,
+                    'change_amount' => $request->change_amount ?? 0,
                     'payment_method' => $request->payment_method,
                     'status' => 'completed',
                     'user_id' => auth()->id(),
@@ -76,43 +118,62 @@ class BillingController extends Controller
 
                 foreach ($request->items as $item) {
 
+                    // ✅ Validate item structure
+                    if (!isset($item['product_id'], $item['quantity'], $item['price'])) {
+                        throw new \Exception('Invalid item data');
+                    }
+
                     // 🔒 Lock inventory row
-                    $inventory = \App\Models\Inventory::where('product_id', $item['product_id'])
+                    $inventory = Inventory::where('product_id', $item['product_id'])
                         ->lockForUpdate()
                         ->first();
 
-                    if (!$inventory || $inventory->stock < $item['quantity']) {
+                    if (!$inventory) {
+                        throw new \Exception('Inventory not found for product ID: ' . $item['product_id']);
+                    }
+
+                    if ($inventory->stock < $item['quantity']) {
                         throw new \Exception('Insufficient stock for product ID: ' . $item['product_id']);
                     }
 
-                    // Only create SaleItem
+                    // ✅ Deduct stock (IMPORTANT FIX ⚠️)
+                    $inventory->decrement('stock', $item['quantity']);
+
+                    // ✅ Create Sale Item
                     SaleItem::create([
                         'sale_id' => $sale->id,
                         'product_id' => $item['product_id'],
                         'quantity' => $item['quantity'],
                         'price' => $item['price'],
+                        'total' => $item['quantity'] * $item['price'],
                     ]);
                 }
             });
 
-            return response()->json(['success' => true]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Sale completed successfully'
+            ]);
 
         } catch (\Exception $e) {
 
             return response()->json([
                 'success' => false,
-                'error' => $e->getMessage()
+                'message' => $e->getMessage()
             ], 400);
         }
     }
-    // Complete sale
-    public function completeSaleold(Request $request)
+
+    /**
+     * OLD METHOD (kept for reference)
+     * Uses StockAdjustment model instead of direct inventory update
+     */
+    public function completeSaleOld(Request $request)
     {
         DB::transaction(function () use ($request) {
 
-            // Create Sale
             $sale = Sale::create([
-                'invoice_no' => 'INV' . time(),
+                'invoice_no' => 'INV' . now()->timestamp,
                 'subtotal' => $request->subtotal,
                 'tax' => $request->tax,
                 'discount' => $request->discount,
@@ -126,8 +187,7 @@ class BillingController extends Controller
 
             foreach ($request->items as $item) {
 
-                // 🔥 Check stock before sale
-                $inventory = \App\Models\Inventory::where('product_id', $item['product_id'])
+                $inventory = Inventory::where('product_id', $item['product_id'])
                     ->lockForUpdate()
                     ->first();
 
@@ -135,7 +195,6 @@ class BillingController extends Controller
                     throw new \Exception('Insufficient stock');
                 }
 
-                // Create Sale Item
                 SaleItem::create([
                     'sale_id' => $sale->id,
                     'product_id' => $item['product_id'],
@@ -144,7 +203,7 @@ class BillingController extends Controller
                     'total' => $item['total'],
                 ]);
 
-                // 🔥 Use StockAdjustment instead
+                // Stock adjustment log
                 \App\Models\StockAdjustment::create([
                     'product_id' => $item['product_id'],
                     'type' => 'sale',

@@ -11,7 +11,10 @@ use Illuminate\Support\Facades\Crypt;
 
 class BarcodeController extends Controller
 {
-    protected $breadcrumbBarcodeReader;
+    /**
+     * Breadcrumb configuration for barcode reader pages
+     */
+    protected array $breadcrumbBarcodeReader;
 
     public function __construct()
     {
@@ -19,7 +22,7 @@ class BarcodeController extends Controller
 
         $this->breadcrumbBarcodeReader = [
             'title' => __('translation.stock_management'),
-            'route1-' => "admin.products.create",
+            'route1' => "admin.products.create", // ✅ fixed typo
             'route1Title' => __('translation.add_edit_stock'),
             'route2Title' => __('translation.add_edit_stock'),
             'route2' => 'admin.products',
@@ -30,78 +33,94 @@ class BarcodeController extends Controller
         ];
     }
 
+    /**
+     * Handle case when barcode is not found
+     * Redirects to product create page with encrypted payload
+     */
     public function nobarcode(Request $request)
     {
         $adjustmentData = Settings::getEncodeCode(1);
+
         $payload = Crypt::encrypt([
             'adjustment' => $adjustmentData,
-            'barcode' => $request->barcode,
+            'barcode' => $request->input('barcode'),
             'product_id' => null
         ]);
+
         return redirect()->route('admin.products.create', $payload);
     }
 
+    /**
+     * Show barcode reader page
+     */
     public function index(Request $request)
     {
         $breadcrumb = $this->breadcrumbBarcodeReader;
-        $routeName = $request->route()->getName();
-        $categories = Category::getCategoriesPluck();
-        $products = Product::getProductPluck();
-        return view('backend.admin.product.barcodereader', compact('breadcrumb', 'categories', 'products'));
+
+        return view('backend.admin.product.barcodereader', [
+            'breadcrumb' => $breadcrumb,
+            'categories' => Category::getCategoriesPluck(),
+            'products' => Product::getProductPluck(),
+        ]);
     }
 
+    /**
+     * Validate barcode and return product info
+     */
     public function validateBarcode(Request $request)
     {
         // ✅ Step 1: Validate request
-        $request->validate([
-            'barcode' => 'required|string',
-            'routeName' => 'required|string',
+        $validated = $request->validate([
+            'barcode' => ['required', 'string'],
+            'routeName' => ['required', 'string'],
         ]);
 
-        $barcode = trim($request->barcode);
-        $routeName = $request->routeName;
+        $barcode = trim($validated['barcode']);
+        $routeName = $validated['routeName'];
+
+        // ✅ Step 2: Get adjustment type
         $adjustmentType = Settings::getAdjustmentIdFromRoute($routeName);
         $adjustmentData = Settings::getEncodeCode($adjustmentType);
-        // ✅ Step 2: Format check (8–13 digits)
+
+        // ✅ Step 3: Format validation (8–13 digits)
         if (!preg_match('/^[0-9]{8,13}$/', $barcode)) {
             return response()->json([
                 'status' => false,
-                'message' => 'Invalid barcode format',
+                'message' => 'Barcode must be 8 to 13 digits only.',
                 'adjustmentType' => $adjustmentType
             ]);
         }
 
-        // ✅ Step 3: EAN-13 checksum validation
+        // ✅ Step 4: EAN-13 checksum validation
         if (strlen($barcode) === 13 && !Settings::isValidEAN13($barcode)) {
             return response()->json([
                 'status' => false,
-                'message' => 'Invalid barcode checksum',
+                'message' => 'Invalid EAN-13 barcode checksum.',
                 'adjustmentType' => $adjustmentType
             ]);
         }
 
-        // ✅ Step 4: Get adjustment type from route
-
         // ✅ Step 5: Find product (optimized query)
-        $product = Product::where('barcode', $barcode)
-            ->select('id', 'barcode', 'name') // adjust fields if needed
+        $product = Product::query()
+            ->where('barcode', $barcode)
+            ->select(['id', 'barcode', 'name'])
             ->first();
 
-        // ✅ Step 6: Prepare payload (single structure)
+        // ✅ Step 6: Prepare payload
         $payloadData = [
             'adjustment' => $adjustmentData,
             'adjustmentType' => $adjustmentType,
             'barcode' => $barcode,
-            'product_id' => $product->id ?? null
+            'product_id' => $product?->id
         ];
 
         $payload = Crypt::encrypt($payloadData);
 
-        // ✅ Step 7: Final response
+        // ✅ Step 7: Response
         return response()->json([
-            'status' => (bool) $product,
+            'status' => !is_null($product),
             'message' => $product
-                ? 'Product found'
+                ? 'Product found.'
                 : 'Product not found. Please add product first.',
             'product' => $product,
             'payload' => $payload,

@@ -147,22 +147,22 @@ class ProductController extends Controller
 
     public function update(Request $request)
     {
-        // try{
-        $id = Settings::getDecodeCode($request->product_id);
-        $product = Product::where('account_id', auth()->user()->account_id)->findOrFail($id);
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'selling_price' => 'required|numeric|min:0',
-            'cost_price' => 'required|numeric|min:0',
-            'status' => 'nullable|in:0,1',
-            'description' => 'nullable|string',
-            'category_id' => 'nullable|exists:categories,id',
-        ]);
-        $product->update($request->all());
-        return Settings::roleRedirect('products', 'Product Updated Successfully.');
-        // }catch (\Exception $e) {
-        //     return Settings::roleRedirect('products','Something went wrong!','error');
-        // }
+        try {
+            $id = Settings::getDecodeCode($request->product_id);
+            $product = Product::where('account_id', auth()->user()->account_id)->findOrFail($id);
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'selling_price' => 'required|numeric|min:0',
+                'cost_price' => 'required|numeric|min:0',
+                'status' => 'nullable|in:0,1',
+                'description' => 'nullable|string',
+                'category_id' => 'nullable|exists:categories,id',
+            ]);
+            $product->update($request->all());
+            return Settings::roleRedirect('products', 'Product Updated Successfully.');
+        } catch (\Exception $e) {
+            return Settings::roleRedirect('products', 'Something went wrong!', 'error');
+        }
     }
 
     public function destroy(Request $request)

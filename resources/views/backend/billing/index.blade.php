@@ -18,11 +18,12 @@
         <table class="table table-bordered" id="cart-table">
             <thead>
                 <tr>
-                    <th>{{ __('translation.product_name') }}</th>
-                    <th width="100">{{ __('translation.quantity') }}</th>
+                    <th width="20%">{{ __('translation.category_name') }}</th>
+                    <th width="50%">{{ __('translation.product_name') }}</th>
+                    <th width="10%">{{ __('translation.quantity') }}</th>
                     <th width="100">{{ __('translation.price') }}</th>
                     <th width="120">{{ __('translation.total') }}</th>
-                    <th width="50">X</th>
+                    <th width="50">{{ __('translation.action') }}</th>
                 </tr>
             </thead>
             <tbody></tbody>
@@ -32,7 +33,6 @@
         <div class="row">
             <div class="col-md-6"></div>
             <div class="col-md-6">
-
                 <p>{{ __('translation.subtotal') }} : {{ __('translation.b_ngn') }} <span id="subtotal">0.00</span></p>
                 <p>{{ __('translation.tax') }} : {{ __('translation.b_ngn') }} <span id="tax">0.00</span></p>
                 <p><strong>{{ __('translation.grand_total') }} : {{ __('translation.b_ngn') }} <span id="grand_total">0.00</span></strong></p>
@@ -55,73 +55,143 @@
     <script>
         let cart = [];
 
+        // 🔥 Auto focus barcode always
+        $(document).ready(function () {
+            $('#barcode').focus();
+
+            $(document).click(() => $('#barcode').focus());
+        });
+
+        // 🔹 Scan barcode (auto trigger on change)
         $('#barcode').on('change', function () {
 
-            let barcode = $(this).val();
+            let barcode = $(this).val().trim();
+            if (!barcode) return;
 
             $.post("{{ route('billing.scan') }}", {
                 _token: "{{ csrf_token() }}",
                 barcode: barcode
             }, function (response) {
 
-                if (response.error) {
-                    alert(response.error);
+                if (!response || response.status === false) {
+                    alert(response?.message || 'Product not found');
                     return;
                 }
 
-                addToCart(response);
+                // 🔊 Beep sound (optional)
+                try { new Audio('/beep.wav').play(); } catch (e) { }
+
+                addToCart(response.data);
                 calculateTotals();
+
+            }).fail(function () {
+                alert('Error fetching product');
             });
 
-            $('#barcode').val('');
+            $('#barcode').val('').focus();
         });
 
+        // 🔹 Add product to cart
         function addToCart(product) {
 
             let existing = cart.find(item => item.id === product.id);
 
+            let price = parseFloat(product.price) || 0;
+
             if (existing) {
                 existing.quantity++;
-                existing.total = existing.quantity * existing.price;
             } else {
                 cart.push({
-                    product_id: product.id,
-                    name: product.name,
+                    id: product.id,
+                    name: product.name || 'N/A',
+                    category_name: product.category_name || '-',
                     quantity: 1,
-                    price: parseFloat(product.price),
-                    total: parseFloat(product.price)
+                    price: price
                 });
             }
 
             renderCart();
         }
 
+        // 🔹 Render cart
         function renderCart() {
+
             let html = '';
-            cart.forEach((item, index) => {
-                html += `
-                                    <tr>
-                                        <td>${item.name}</td>
-                                        <td>${item.quantity}</td>
-                                        <td>${item.price}</td>
-                                        <td>${item.total}</td>
-                                        <td><button onclick="removeItem(${index})">X</button></td>
-                                    </tr>
-                                    `;
-            });
+
+            if (!cart.length) {
+                html = `<tr>
+                                    <td colspan="6" class="text-center">Cart is empty</td>
+                                </tr>`;
+            } else {
+
+                cart.forEach((item, index) => {
+
+                    let quantity = parseInt(item.quantity) || 1;
+                    let price = parseFloat(item.price) || 0;
+                    let total = quantity * price;
+
+                    html += `<tr>
+                                <td>${item.category_name}</td>
+
+                                <td>${item.name}</td>
+
+                                <td>
+                                    <input type="number"
+                                        class="form-control"
+                                        style="width: 80px;"
+                                        value="${quantity}"
+                                        min="1"
+                                        oninput="updateQuantity(${index}, this.value)">
+                                </td>
+
+                                <td>₹${price.toFixed(2)}</td>
+
+                                <td class="item-total">₹${total.toFixed(2)}</td>
+
+                                <td>
+                                    <button class="btn btn-sm btn-danger"
+                                        onclick="removeItem(${index})">
+                                        X
+                                    </button>
+                                </td>
+                            </tr>`;
+                });
+            }
 
             $('#cart-table tbody').html(html);
         }
 
+        // 🔹 Update quantity
+        function updateQuantity(index, qty) {
+
+            qty = parseInt(qty);
+
+            if (isNaN(qty) || qty < 1) qty = 1;
+
+            cart[index].quantity = qty;
+
+            renderCart();
+            calculateTotals();
+        }
+
+        // 🔹 Remove item
         function removeItem(index) {
             cart.splice(index, 1);
             renderCart();
             calculateTotals();
         }
 
+        // 🔹 Calculate totals
         function calculateTotals() {
 
-            let subtotal = cart.reduce((sum, item) => sum + item.total, 0);
+            let subtotal = 0;
+
+            cart.forEach(item => {
+                let price = parseFloat(item.price) || 0;
+                let qty = parseInt(item.quantity) || 1;
+                subtotal += price * qty;
+            });
+
             let tax = subtotal * 0.05;
             let grand_total = subtotal + tax;
 
@@ -130,77 +200,38 @@
             $('#grand_total').text(grand_total.toFixed(2));
         }
 
+        // 🔹 Complete Sale
         $('#complete-sale').click(function () {
 
-            $.post("{{ route('billing.complete') }}", {
+            if (!cart.length) {
+                alert('Cart is empty');
+                return;
+            }
+
+            let payload = {
                 _token: "{{ csrf_token() }}",
                 items: cart,
-                subtotal: $('#subtotal').text(),
-                tax: $('#tax').text(),
+                subtotal: parseFloat($('#subtotal').text()) || 0,
+                tax: parseFloat($('#tax').text()) || 0,
                 discount: 0,
-                total: $('#grand_total').text(),
-                paid_amount: $('#paid_amount').val(),
+                total: parseFloat($('#grand_total').text()) || 0,
+                paid_amount: parseFloat($('#paid_amount').val()) || 0,
                 change_amount: 0,
                 payment_method: $('#payment_method').val()
-            }, function (response) {
+            };
+
+            $.post("{{ route('billing.complete') }}", payload, function (response) {
 
                 if (response.success) {
-                    alert("Sale Completed!");
+                    alert("✅ Sale Completed!");
                     location.reload();
+                } else {
+                    alert(response.message || 'Sale failed');
                 }
+
+            }).fail(function () {
+                alert('Server error');
             });
         });
     </script>
-    <!-- <script>
-                                                                                                                                                                                                                                                                                                                                document.addEventListener('click', () => {
-                                                                                                                                                                                                                                                                                                                                    document.getElementById('barcode').focus();
-                                                                                                                                                                                                                                                                                                                                });
-
-                                                                                                                                                                                                                                                                                                                                document.getElementById('barcode').addEventListener('keydown', function (e) {
-                                                                                                                                                                                                                                                                                                                                    if (e.key === 'Enter') {
-                                                                                                                                                                                                                                                                                                                                        e.preventDefault();
-
-                                                                                                                                                                                                                                                                                                                                        let barcode = this.value.trim();
-                                                                                                                                                                                                                                                                                                                                        let routeName = "{{ request()->route()->getName() }}";
-
-                                                                                                                                                                                                                                                                                                                                        if (barcode !== '') {
-
-                                                                                                                                                                                                                                                                                                                                            fetch("{{ route('admin.barcode.validateBarcode') }}", {
-                                                                                                                                                                                                                                                                                                                                                method: "POST",
-                                                                                                                                                                                                                                                                                                                                                headers: {
-                                                                                                                                                                                                                                                                                                                                                    "Content-Type": "application/json",
-                                                                                                                                                                                                                                                                                                                                                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                                                                                                                                                                                                                                                                                                                                                },
-                                                                                                                                                                                                                                                                                                                                                body: JSON.stringify({ barcode: barcode, routeName: routeName })
-                                                                                                                                                                                                                                                                                                                                            })
-                                                                                                                                                                                                                                                                                                                                                .then(res => res.json())
-                                                                                                                                                                                                                                                                                                                                                .then(data => {
-                                                                                                                                                                                                                                                                                                                                                    // console.log(data); return;
-                                                                                                                                                                                                                                                                                                                                                    if (data.adjustmentType > 1 && data.status == false) {
-                                                                                                                                                                                                                                                                                                                                                        Swal.fire({
-                                                                                                                                                                                                                                                                                                                                                            icon: 'warning',
-                                                                                                                                                                                                                                                                                                                                                            title: 'Invalid Barcode',
-                                                                                                                                                                                                                                                                                                                                                            text: 'This barcode is not allowed for this operation!',
-                                                                                                                                                                                                                                                                                                                                                            confirmButtonText: 'OK'
-                                                                                                                                                                                                                                                                                                                                                        });
-                                                                                                                                                                                                                                                                                                                                                        return;
-                                                                                                                                                                                                                                                                                                                                                    }
-                                                                                                                                                                                                                                                                                                                                                    new Audio('/beep.wav').play();
-                                                                                                                                                                                                                                                                                                                                                    if (data.status) {
-                                                                                                                                                                                                                                                                                                                                                        var route = "{{ route('admin.inventory.update', 'TOKEN') }}"
-                                                                                                                                                                                                                                                                                                                                                    } else {
-                                                                                                                                                                                                                                                                                                                                                        var route = "{{ route('admin.products.create', 'TOKEN') }}"
-                                                                                                                                                                                                                                                                                                                                                    }
-                                                                                                                                                                                                                                                                                                                                                    let url = route.replace('TOKEN', encodeURIComponent(data.payload));
-                                                                                                                                                                                                                                                                                                                                                    window.location.href = url;
-                                                                                                                                                                                                                                                                                                                                                })
-                                                                                                                                                                                                                                                                                                                                                .catch(err => {
-                                                                                                                                                                                                                                                                                                                                                    console.error(err);
-                                                                                                                                                                                                                                                                                                                                                });
-
-                                                                                                                                                                                                                                                                                                                                            this.value = '';
-                                                                                                                                                                                                                                                                                                                                        }
-                                                                                                                                                                                                                                                                                                                                    }
-                                                                                                                                                                                                                                                                                                                                });
-                                                                                                                                                                                                                                                                                                                            </script> -->
 @endsection

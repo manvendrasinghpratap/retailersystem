@@ -42,6 +42,12 @@
           <a href="{{ route(App\Helpers\Settings::getUserRole() . '.barcode') }}" class="dropdown-item fourth-nav-item" data-key="t-add_stock">@lang('translation.add_update_stock')</a> -->
         </div>
       </li>
+      <li class="nav-item">
+        <a class="nav-link dropdown-toggle arrow-none" href="{{route('billing.index')}}" id="topnav-orders" role="button">
+          <i data-feather="order"></i>
+          <span data-key="t-order">@lang('translation.billing')</span>
+        </a>
+      </li>
 
 
 
