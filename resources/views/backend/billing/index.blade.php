@@ -19,10 +19,10 @@
             <thead>
                 <tr>
                     <th width="20%">{{ __('translation.category_name') }}</th>
-                    <th width="50%">{{ __('translation.product_name') }}</th>
+                    <th width="40%">{{ __('translation.product_name') }}</th>
                     <th width="10%">{{ __('translation.quantity') }}</th>
-                    <th width="100">{{ __('translation.price') }}</th>
-                    <th width="120">{{ __('translation.total') }}</th>
+                    <th width="100">{{ __('translation.b_ngn') . ' ' . __('translation.price') }}</th>
+                    <th width="120">{{ __('translation.b_ngn') . ' ' . __('translation.total') }}</th>
                     <th width="50">{{ __('translation.action') }}</th>
                 </tr>
             </thead>
@@ -120,8 +120,8 @@
 
             if (!cart.length) {
                 html = `<tr>
-                                    <td colspan="6" class="text-center">Cart is empty</td>
-                                </tr>`;
+                                                                            <td colspan="6" class="text-center">Cart is empty</td>
+                                                                        </tr>`;
             } else {
 
                 cart.forEach((item, index) => {
@@ -131,30 +131,30 @@
                     let total = quantity * price;
 
                     html += `<tr>
-                                <td>${item.category_name}</td>
+                                                        <td>${item.category_name}</td>
 
-                                <td>${item.name}</td>
+                                                        <td>${item.name}</td>
 
-                                <td>
-                                    <input type="number"
-                                        class="form-control"
-                                        style="width: 80px;"
-                                        value="${quantity}"
-                                        min="1"
-                                        oninput="updateQuantity(${index}, this.value)">
-                                </td>
+                                                        <td>
+                                                            <input type="number"
+                                                                class="form-control"
+                                                                style="width: 80px;"
+                                                                value="${quantity}"
+                                                                min="1"
+                                                                oninput="updateQuantity(${index}, this.value)">
+                                                        </td>
 
-                                <td>₹${price.toFixed(2)}</td>
+                                                        <td>₹${price.toFixed(2)}</td>
 
-                                <td class="item-total">₹${total.toFixed(2)}</td>
+                                                        <td class="item-total">₹${total.toFixed(2)}</td>
 
-                                <td>
-                                    <button class="btn btn-sm btn-danger"
-                                        onclick="removeItem(${index})">
-                                        X
-                                    </button>
-                                </td>
-                            </tr>`;
+                                                        <td>
+                                                            <button class="btn btn-sm"
+                                                                onclick="removeItem(${index})">
+                                                                <i class="fas fa-trash action-btn darkred"></i>
+                                                            </button>
+                                                        </td>
+                                                    </tr>`;
                 });
             }
 
