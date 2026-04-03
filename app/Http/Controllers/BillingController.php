@@ -57,7 +57,9 @@ class BillingController extends Controller
 
         $barcode = trim($request->barcode);
 
-        $product = Product::where('barcode', $barcode)
+        $product = Product::with(['stock', 'category:id,name'])
+            ->where('barcode', $barcode)
+            ->ofAccount() // ✅ correct usage
             ->select('id', 'name', 'selling_price', 'category_id')
             ->first();
 
