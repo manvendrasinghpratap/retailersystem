@@ -1,70 +1,59 @@
 @extends('backend.layouts.master-horizontal')
 
-
 @section('content')
     @include('backend.components.breadcrumb')
+
     <div class="container-fluid">
-        <!-- Barcode Input -->
+
+        <!-- Barcode -->
         <div class="mb-3">
-            <form method="POST" action="" autocomplete="off">
-                @csrf
-                <div class="row">
-                    <x-text-input id="barcode" name="barcode" label="Barcode" class="barcode" required placeholder="Scan barcode here" autofocus maxlength="15" />
-                </div>
-            </form>
+            <input type="text" id="barcode" class="form-control" placeholder="Scan barcode here" autofocus>
         </div>
 
-        <!-- Cart Table -->
+        <!-- Cart -->
         <table class="table table-bordered" id="cart-table">
             <thead>
                 <tr>
-                    <th width="20%">{{ __('translation.category_name') }}</th>
-                    <th width="30%">{{ __('translation.product_name') }}</th>
-                    <th width="10%">{{ __('translation.stock') }}</th>
-                    <th width="10%">{{ __('translation.quantity') }}</th>
-                    <th width="100">{{ __('translation.b_ngn') . ' ' . __('translation.price') }}</th>
-                    <th width="120">{{ __('translation.b_ngn') . ' ' . __('translation.total') }}</th>
-                    <th width="50">{{ __('translation.action') }}</th>
+                    <th>{{ __('translation.category_name') }}</th>
+                    <th>{{ __('translation.product_name') }}</th>
+                    <th>{{ __('translation.stock') }}</th>
+                    <th>{{ __('translation.quantity') }}</th>
+                    <th>{{ __('translation.b_ngn') . ' ' . __('translation.price') }}</th>
+                    <th>{{ __('translation.b_ngn') . ' ' . __('translation.total') }}</th>
+                    <th>{{ __('translation.action') }}</th>
                 </tr>
             </thead>
             <tbody></tbody>
         </table>
 
         <!-- Totals -->
-        <div class="row">
-            <div class="col-md-6"></div>
-            <div class="col-md-6">
-                <p>{{ __('translation.subtotal') }} : {{ __('translation.b_ngn') }} <span id="subtotal">0.00</span></p>
-                <p>{{ __('translation.tax') }} : {{ __('translation.b_ngn') }} <span id="tax">0.00</span></p>
-                <p><strong>{{ __('translation.grand_total') }} : {{ __('translation.b_ngn') }} <span id="grand_total">0.00</span></strong></p>
+        <div class="text-end">
+            <p>Subtotal: {{ __('translation.b_ngn') }} <span id="subtotal">0.00</span></p>
+            <p>Tax: {{ __('translation.b_ngn') }} <span id="tax">0.00</span></p>
+            <h4>Total: {{ __('translation.b_ngn') }} <span id="grand_total">0.00</span></h4>
+            <input type="number" id="paid_amount" class="form-control mb-2" placeholder="Paid Amount">
 
-                <input type="number" id="paid_amount" class="form-control mb-2" placeholder="Paid Amount">
-                <x-select-dropdown id="payment_method" name="payment_method" label="Payment Method" class="payment_method" :options="config('constants.customer_payment_method')" required />
-
-                <button class="btn btn-success w-100" id="complete-sale">
-                    Complete Payment
-                </button>
-
-            </div>
+            <button class="btn btn-success w-100" id="complete-sale">
+                Complete Payment
+            </button>
         </div>
 
     </div>
-
 @endsection
+
 @section('script')
-
     <script>
+
         let cart = [];
+        let currency = "{{ __('translation.b_ngn') }}";
 
-        // 🔥 Auto focus barcode always
-        $(document).on('click', function (e) {
 
-            if (!$(e.target).closest('#barcode, button, input, select').length) {
-                //  $('#barcode').focus();
-            }
+        // 🔥 Always focus barcode
+        $(document).ready(function () {
+            $('#barcode').focus();
         });
 
-        // 🔹 Scan barcode (auto trigger on change)
+        // 🔹 Scan barcode
         $('#barcode').on('change', function () {
 
             let barcode = $(this).val().trim();
@@ -73,47 +62,62 @@
             $.post("{{ route('billing.scan') }}", {
                 _token: "{{ csrf_token() }}",
                 barcode: barcode
-            }, function (response) {
+            }, function (res) {
 
-                if (!response || response.status === false) {
-                    alert(response?.message || 'Product not found');
+                if (!res || res.status === false) {
+                    alert(res?.message || 'Product not found');
                     return;
                 }
 
-                // 🔊 Beep sound (optional)
                 try { new Audio('/beep.wav').play(); } catch (e) { }
 
-                addToCart(response.data);
+                addToCart(res.data);
                 calculateTotals();
 
-            }).fail(function () {
-                alert('Error fetching product');
             });
 
             $('#barcode').val('').focus();
         });
 
-        // 🔹 Add product to cart
+
         function addToCart(product) {
 
-            let existing = cart.find(item => item.id === product.id);
-
+            let stock = parseInt(product.stock) || 0;
             let price = parseFloat(product.price) || 0;
 
+            if (stock <= 0) {
+                alert('Out of stock');
+                return;
+            }
+
+            // ✅ Match by ID + name (extra safety)
+            let existing = cart.find(item =>
+                item.id === product.id && item.name === product.name
+            );
+
             if (existing) {
+
+                if (existing.quantity >= stock) {
+                    alert('Stock limit reached');
+                    return;
+                }
+
                 existing.quantity++;
+
             } else {
+
                 cart.push({
                     id: product.id,
                     name: product.name || 'N/A',
                     category_name: product.category_name || '-',
                     quantity: 1,
                     price: price,
-                    stock: product.stock
+                    stock: stock
                 });
             }
 
             renderCart();
+            calculateTotals();
         }
 
         // 🔹 Render cart
@@ -122,82 +126,74 @@
             let html = '';
 
             if (!cart.length) {
-                html = `<tr><td colspan="6" class="text-center">Cart is empty</td></tr>`;
-            } else {
-
-                cart.forEach((item, index) => {
-
-                    let quantity = parseInt(item.quantity) || 1;
-                    let price = parseFloat(item.price) || 0;
-                    let total = quantity * price;
-
-                    html += `<tr><td>${item.category_name}</td><td>${item.name}</td><td>${item.stock}</td><td><input type="number" class="form-control" style="width: 100px;" value="${quantity}" min="1" max="${item.stock}" oninput="updateQuantity(${index}, this.value)"></td><td>{{ __('translation.b_ngn') }} ${price.toFixed(2)}</td><td class="item-total">{{ __('translation.b_ngn') }} ${total.toFixed(2)}</td><td><button class="btn btn-sm" onclick="removeItem(${index})"><i class="fas fa-trash action-btn darkred"></i></button></td></tr>`;
-                });
-            }
-
-            $('#cart-table tbody').html(html);
-        }
-
-        function renderCart() {
-
-            let html = '';
-            let currency = "{{ __('translation.b_ngn') }}";
-            if (!cart || cart.length === 0) {
                 html = `<tr><td colspan="7" class="text-center">Cart is empty</td></tr>`;
             } else {
 
                 cart.forEach((item, index) => {
 
-                    let category = item.category_name || '-';
-                    let name = item.name || 'N/A';
-                    let stock = parseInt(item.stock) || 0;
-
-                    let quantity = parseInt(item.quantity) || 1;
-
-                    // ✅ Prevent invalid quantity
-                    if (quantity > stock) quantity = stock;
-
+                    let qty = parseInt(item.quantity) || 1;
                     let price = parseFloat(item.price) || 0;
-                    let total = quantity * price;
+                    let stock = parseInt(item.stock) || 0;
+                    let total = qty * price;
 
-                    html += `<tr><td>${category}</td><td>${name}</td><td class="${stock <= 5 ? 'text-danger' : ''}">${stock}</td><td><input type="number" class="form-control" style="width: 100px;" value="${quantity}" min="1" max="${stock}" ${stock === 0 ? 'disabled' : ''} oninput="updateQuantity(${index}, this.value)"></td><td>${currency} ${price.toFixed(2)}</td><td class="item-total">${currency} ${total.toFixed(2)}</td><td><button class="btn btn-sm btn-danger" onclick="removeItem(${index})"><i class="fas fa-trash"></i></button></td></tr>`;
+                    html += `
+                                                                                    <tr>
+                                                                                        <td>${item.category_name}</td>
+                                                                                        <td>${item.name}</td>
+                                                                                        <td class="${stock <= 5 ? 'text-danger' : ''}">${stock}</td>
+
+                                                                                        <td>
+                                                                                            <input type="number"
+                                                                                                value="${qty}"
+                                                                                                min="1"
+                                                                                                max="${stock}"
+                                                                                                style="width:80px"
+                                                                                                onchange="updateQuantity(${index}, this.value, this)">
+                                                                                        </td>
+
+                                                                                        <td>${currency} ${price.toFixed(2)}</td>
+
+                                                                                        <td class="item-total">
+                                                                                            ${currency} ${total.toFixed(2)}
+                                                                                        </td>
+
+                                                                                        <td>
+                                                                                            <button onclick="removeItem(${index})" class="btn btn-danger btn-sm">X</button>
+                                                                                        </td>
+                                                                                    </tr>`;
                 });
             }
 
             $('#cart-table tbody').html(html);
         }
 
-        function updateQuantity(index, qty) {
+
+        // 🔹 Update quantity (NO RE-RENDER)
+        function updateQuantity(index, qty, el) {
 
             let stock = parseInt(cart[index].stock) || 0;
+
             qty = parseInt(qty);
             if (isNaN(qty) || qty < 1) qty = 1;
 
-            // ✅ Prevent overselling
             if (qty > stock) {
                 qty = stock;
-                alert('Max stock limit reached');
+                alert('Max stock reached');
             }
 
             cart[index].quantity = qty;
 
-            renderCart();
+            $(el).val(qty);
+
+            let price = parseFloat(cart[index].price);
+            let total = qty * price;
+
+            let row = $(el).closest('tr');
+            row.find('.item-total').text(`${currency} ${total.toFixed(2)}`);
+
             calculateTotals();
         }
 
-
-        // 🔹 Update quantity
-        function updateQuantitydelete(index, qty) {
-
-            qty = parseInt(qty);
-
-            if (isNaN(qty) || qty < 1) qty = 1;
-
-            cart[index].quantity = qty;
-
-            renderCart();
-            calculateTotals();
-        }
 
         // 🔹 Remove item
         function removeItem(index) {
@@ -206,26 +202,26 @@
             calculateTotals();
         }
 
-        // 🔹 Calculate totals
+
+        // 🔹 Totals
         function calculateTotals() {
 
             let subtotal = 0;
 
             cart.forEach(item => {
-                let price = parseFloat(item.price) || 0;
-                let qty = parseInt(item.quantity) || 1;
-                subtotal += price * qty;
+                subtotal += item.quantity * item.price;
             });
 
-            let tax = subtotal * 0.05;
-            let grand_total = subtotal + tax;
+            let tax = subtotal * 0.0;
+            let total = subtotal + tax;
 
             $('#subtotal').text(subtotal.toFixed(2));
             $('#tax').text(tax.toFixed(2));
-            $('#grand_total').text(grand_total.toFixed(2));
+            $('#grand_total').text(total.toFixed(2));
         }
 
-        // 🔹 Complete Sale
+
+        // 🔹 Complete sale
         $('#complete-sale').click(function () {
 
             if (!cart.length) {
@@ -233,30 +229,24 @@
                 return;
             }
 
-            let payload = {
+            $.post("{{ route('billing.complete') }}", {
                 _token: "{{ csrf_token() }}",
                 items: cart,
-                subtotal: parseFloat($('#subtotal').text()) || 0,
-                tax: parseFloat($('#tax').text()) || 0,
-                discount: 0,
-                total: parseFloat($('#grand_total').text()) || 0,
-                paid_amount: parseFloat($('#paid_amount').val()) || 0,
-                change_amount: 0,
-                payment_method: $('#payment_method').val()
-            };
+                subtotal: $('#subtotal').text(),
+                tax: $('#tax').text(),
+                total: $('#grand_total').text(),
+                paid_amount: $('#paid_amount').val(),
+                payment_method: 'cash'
+            }, function (res) {
 
-            $.post("{{ route('billing.complete') }}", payload, function (response) {
-
-                if (response.success) {
-                    alert("✅ Sale Completed!");
+                if (res.success) {
+                    alert('Sale Completed!');
                     location.reload();
                 } else {
-                    alert(response.message || 'Sale failed');
+                    alert(res.message || 'Error');
                 }
-
-            }).fail(function () {
-                alert('Server error');
             });
         });
+
     </script>
 @endsection

@@ -37,8 +37,8 @@
                             <thead>
                                 <tr>
                                     <th>#</th>
+                                    <th>{{ __('translation.category_name')}}</th>
                                     <th>{{ __('translation.product_name')}}</th>
-                                    <th>{{ __('translation.category')}}</th>
                                     <th>{{ __('translation.sku')}}</th>
                                     <th>{{ __('translation.barcode')}}</th>
                                     <th>{{ __('translation.stock')}}</th>
@@ -50,8 +50,8 @@
                                 @forelse($inventory as $stock)
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
-                                        <td>{{ $stock->product->name ?? '' }}</td>
                                         <td>{{ $stock->product->category->name ?? '' }}</td>
+                                        <td>{{ $stock->product->name ?? '' }}</td>
                                         <td>{{ $stock->product->sku ?? '' }}</td>
                                         <td>{!! DNS1D::getBarcodeSVG($stock->product->barcode, 'C128') !!}</td>
                                         <td>{{ $stock->stock }}</td>
