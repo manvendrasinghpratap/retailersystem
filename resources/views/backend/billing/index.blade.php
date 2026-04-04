@@ -6,7 +6,7 @@
     <div class="container-fluid">
         <!-- Barcode Input -->
         <div class="mb-3">
-            <form method="POST" action="" onkeydown="return event.key != 'Enter';" autocomplete="off">
+            <form method="POST" action="" autocomplete="off">
                 @csrf
                 <div class="row">
                     <x-text-input id="barcode" name="barcode" label="Barcode" class="barcode" required placeholder="Scan barcode here" autofocus maxlength="15" />
@@ -19,7 +19,8 @@
             <thead>
                 <tr>
                     <th width="20%">{{ __('translation.category_name') }}</th>
-                    <th width="40%">{{ __('translation.product_name') }}</th>
+                    <th width="30%">{{ __('translation.product_name') }}</th>
+                    <th width="10%">{{ __('translation.stock') }}</th>
                     <th width="10%">{{ __('translation.quantity') }}</th>
                     <th width="100">{{ __('translation.b_ngn') . ' ' . __('translation.price') }}</th>
                     <th width="120">{{ __('translation.b_ngn') . ' ' . __('translation.total') }}</th>
@@ -56,10 +57,11 @@
         let cart = [];
 
         // 🔥 Auto focus barcode always
-        $(document).ready(function () {
-            $('#barcode').focus();
+        $(document).on('click', function (e) {
 
-            $(document).click(() => $('#barcode').focus());
+            if (!$(e.target).closest('#barcode, button, input, select').length) {
+                //  $('#barcode').focus();
+            }
         });
 
         // 🔹 Scan barcode (auto trigger on change)
@@ -106,7 +108,8 @@
                     name: product.name || 'N/A',
                     category_name: product.category_name || '-',
                     quantity: 1,
-                    price: price
+                    price: price,
+                    stock: product.stock
                 });
             }
 
@@ -128,15 +131,63 @@
                     let price = parseFloat(item.price) || 0;
                     let total = quantity * price;
 
-                    html += `<tr><td>${item.category_name}</td><td>${item.name}</td><td><input type="number" class="form-control" style="width: 100px;" value="${quantity}" min="1" oninput="updateQuantity(${index}, this.value)"></td><td>{{ __('translation.b_ngn') }} ${price.toFixed(2)}</td><td class="item-total">{{ __('translation.b_ngn') }} ${total.toFixed(2)}</td><td><button class="btn btn-sm" onclick="removeItem(${index})"><i class="fas fa-trash action-btn darkred"></i></button></td></tr>`;
+                    html += `<tr><td>${item.category_name}</td><td>${item.name}</td><td>${item.stock}</td><td><input type="number" class="form-control" style="width: 100px;" value="${quantity}" min="1" max="${item.stock}" oninput="updateQuantity(${index}, this.value)"></td><td>{{ __('translation.b_ngn') }} ${price.toFixed(2)}</td><td class="item-total">{{ __('translation.b_ngn') }} ${total.toFixed(2)}</td><td><button class="btn btn-sm" onclick="removeItem(${index})"><i class="fas fa-trash action-btn darkred"></i></button></td></tr>`;
                 });
             }
 
             $('#cart-table tbody').html(html);
         }
 
-        // 🔹 Update quantity
+        function renderCart() {
+
+            let html = '';
+            let currency = "{{ __('translation.b_ngn') }}";
+            if (!cart || cart.length === 0) {
+                html = `<tr><td colspan="7" class="text-center">Cart is empty</td></tr>`;
+            } else {
+
+                cart.forEach((item, index) => {
+
+                    let category = item.category_name || '-';
+                    let name = item.name || 'N/A';
+                    let stock = parseInt(item.stock) || 0;
+
+                    let quantity = parseInt(item.quantity) || 1;
+
+                    // ✅ Prevent invalid quantity
+                    if (quantity > stock) quantity = stock;
+
+                    let price = parseFloat(item.price) || 0;
+                    let total = quantity * price;
+
+                    html += `<tr><td>${category}</td><td>${name}</td><td class="${stock <= 5 ? 'text-danger' : ''}">${stock}</td><td><input type="number" class="form-control" style="width: 100px;" value="${quantity}" min="1" max="${stock}" ${stock === 0 ? 'disabled' : ''} oninput="updateQuantity(${index}, this.value)"></td><td>${currency} ${price.toFixed(2)}</td><td class="item-total">${currency} ${total.toFixed(2)}</td><td><button class="btn btn-sm btn-danger" onclick="removeItem(${index})"><i class="fas fa-trash"></i></button></td></tr>`;
+                });
+            }
+
+            $('#cart-table tbody').html(html);
+        }
+
         function updateQuantity(index, qty) {
+
+            let stock = parseInt(cart[index].stock) || 0;
+            qty = parseInt(qty);
+            if (isNaN(qty) || qty < 1) qty = 1;
+
+            // ✅ Prevent overselling
+            if (qty > stock) {
+                qty = stock;
+                alert('Max stock limit reached');
+            }
+
+            cart[index].quantity = qty;
+
+            renderCart();
+            calculateTotals();
+        }
+
+
+        // 🔹 Update quantity
+        function updateQuantitydelete(index, qty) {
 
             qty = parseInt(qty);
 

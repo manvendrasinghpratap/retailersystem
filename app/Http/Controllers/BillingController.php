@@ -62,7 +62,6 @@ class BillingController extends Controller
             ->ofAccount() // ✅ correct usage
             ->select('id', 'name', 'selling_price', 'category_id')
             ->first();
-
         if (!$product) {
             return response()->json([
                 'status' => false,
@@ -76,7 +75,8 @@ class BillingController extends Controller
                 'id' => $product->id,
                 'name' => $product->name,
                 'price' => (float) $product->selling_price, // ✅ convert to number
-                'category_name' => $product->category->name ?? '-'
+                'category_name' => $product->category->name ?? '-',
+                'stock' => $product->stock->stock ?? 0,
             ]
         ]);
     }
