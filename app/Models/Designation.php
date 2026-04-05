@@ -15,4 +15,9 @@ class Designation extends Model
             ->pluck('name', 'id')
             ->toArray();
     }
+
+    public function routes()
+    {
+        return $this->belongsToMany(Route::class, 'designation_route');
+    }
 }

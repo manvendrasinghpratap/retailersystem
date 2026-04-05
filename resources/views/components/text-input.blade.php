@@ -5,13 +5,14 @@
     'placeholder' => null,
     'mainrows' => 4,
     'islabel' => true,
+    'labelclass' => '',
 ])
 
 <div class="col-xl-{{ $mainrows }} col-md-6 mb-3">
 
     {{-- Label --}}
     @if($islabel)
-        <label for="{{ $name }}" class="form-label">
+        <label for="{{ $name }}" class="form-label {{ $labelclass }}">
             {!! $label ?? Str::title(str_replace('_', ' ', $name)) !!}
             @if($attributes->get('required'))
                 <span class="text-danger">*</span>

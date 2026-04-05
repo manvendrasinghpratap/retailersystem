@@ -41,13 +41,13 @@ class SaleItem extends Model
 
             // 🔥 Automatically deduct stock using StockAdjustment
             StockAdjustment::create([
-                'account_id'   => $item->account_id,
-                'product_id'   => $item->product_id,
-                'type'         => 'sale',
-                'quantity'     => $item->quantity,
+                'account_id' => $item->account_id,
+                'product_id' => $item->product_id,
+                'type' => 'sale',
+                'quantity' => $item->quantity,
                 'reference_id' => $item->sale_id,
-                'note'         => 'POS Sale Invoice #' . $item->sale->invoice_no,
-                'created_by'   => auth()->id(),
+                'note' => 'POS Sale Invoice #' . $item->sale->invoice_no,
+                'created_by' => auth()->id(),
             ]);
         });
     }

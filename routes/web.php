@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\{
     StaffController
 };
 
+
 Route::get('/updateapp', function () {
     \Artisan::call('key:generate');
     \Artisan::call('config:cache');
@@ -21,6 +22,11 @@ Route::get('/updateapp', function () {
     \Artisan::call('optimize:clear');
     echo 'dump-autoload complete';
 });
+Route::get('syncroutes', function () {
+    \Artisan::call('sync:routes');
+    echo 'routes synced';
+});
+Route::get('admin/acl', [\App\Http\Controllers\Admin\AclController::class, 'index'])->name('acl');
 // Mail::raw('Test email', function ($message) {
 //     $message->to('m8005029425@gmail.com')
 //             ->subject('Test Mail');
@@ -32,7 +38,7 @@ Route::get('/', function () {
 })->name('home');
 
 Route::middleware(['auth'])->get('admin', [DashboardController::class, 'index'])->name('dashboard');
-Route::middleware(['auth'])->prefix('admin/staff')->group(function () {
+Route::middleware(['auth', 'route.permission'])->prefix('admin/staff')->group(function () {
     Route::get('/', [StaffController::class, 'index'])->name('admin.staff');
     Route::get('/index', [StaffController::class, 'index'])->name('admin.staff.index');
     Route::get('/add', [StaffController::class, 'create'])->name('admin.staff.add');
@@ -70,3 +76,4 @@ Route::middleware(['auth'])->group(function () {
 require __DIR__ . '/auth.php';
 require __DIR__ . '/admin.php';
 require __DIR__ . '/administrator.php';
+require __DIR__ . '/acl.php';

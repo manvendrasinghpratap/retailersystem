@@ -10,6 +10,7 @@ use App\Models\Category;
 use App\Models\Inventory;
 use Illuminate\Support\Facades\DB;
 
+
 class BillingController extends Controller
 {
     /**
@@ -65,8 +66,8 @@ class BillingController extends Controller
         if (!$product) {
             return response()->json([
                 'status' => false,
-                'message' => 'Product not found'
-            ], 404);
+                'message' => __('translation.product_not_found') . ' OR ' . __('translation.this_barcode_is_not_allowed_for_this_operation')
+            ], 200);
         }
 
         return response()->json([
@@ -90,66 +91,101 @@ class BillingController extends Controller
      */
     public function completeSale(Request $request)
     {
+        // ✅ Validation (updated for new structure)
         $request->validate([
             'items' => 'required|array|min:1',
+            'items.*.id' => 'required|integer',
+            'items.*.quantity' => 'required|numeric|min:1',
+            'items.*.price' => 'required|numeric|min:0',
+
             'subtotal' => 'required|numeric',
             'tax' => 'nullable|numeric',
             'discount' => 'nullable|numeric',
             'total' => 'required|numeric',
-            'paid_amount' => 'required|numeric',
-            'change_amount' => 'nullable|numeric',
-            'payment_method' => 'required|string',
+
+            'payment_type' => 'required|in:full,partial',
+
+            // ✅ Payments required
+            'payments' => 'required|array|min:1',
+
+            // ✅ Amount always required
+            'payments.*.amount' => 'required|numeric|min:0',
+
+            // 🔥 Method required ONLY if amount > 0
+            'payments.*.method' => 'required_with:payments.*.amount|string',
         ]);
 
         try {
             DB::transaction(function () use ($request) {
 
-                // ✅ Create Sale
+                // ✅ 1. Validate payment total
+                $totalPaid = collect($request->payments)->sum('amount');
+
+                $total = round($request->total, 2);
+                $totalPaid = round($totalPaid, 2);
+
+                if ($totalPaid !== $total) {
+                    throw new \Exception('Payment total mismatch');
+                }
+
+                // ✅ 2. Create Sale
                 $sale = Sale::create([
                     'invoice_no' => 'INV' . now()->timestamp,
                     'subtotal' => $request->subtotal,
                     'tax' => $request->tax ?? 0,
                     'discount' => $request->discount ?? 0,
-                    'total' => $request->total,
-                    'paid_amount' => $request->paid_amount,
-                    'change_amount' => $request->change_amount ?? 0,
-                    'payment_method' => $request->payment_method,
+                    'total' => $total,
+                    'paid_amount' => $totalPaid,
+                    'change_amount' => 0,
+
+                    // ✅ Only store method if FULL
+                    'payment_method' => $request->payment_type === 'full'
+                        ? $request->payments[0]['method']
+                        : null,
+
                     'status' => 'completed',
                     'user_id' => auth()->id(),
                 ]);
 
+                // ✅ 3. Process Items
                 foreach ($request->items as $item) {
 
-                    // ✅ Validate item structure
-                    if (!isset($item['product_id'], $item['quantity'], $item['price'])) {
-                        throw new \Exception('Invalid item data');
-                    }
+                    $productId = $item['id']; // 🔥 FIXED (was product_id)
 
-                    // 🔒 Lock inventory row
-                    $inventory = Inventory::where('product_id', $item['product_id'])
+                    // 🔒 Lock inventory
+                    $inventory = Inventory::where('product_id', $productId)
                         ->lockForUpdate()
                         ->first();
 
                     if (!$inventory) {
-                        throw new \Exception('Inventory not found for product ID: ' . $item['product_id']);
+                        throw new \Exception('Inventory not found for product ID: ' . $productId);
                     }
 
                     if ($inventory->stock < $item['quantity']) {
-                        throw new \Exception('Insufficient stock for product ID: ' . $item['product_id']);
+                        throw new \Exception('Insufficient stock for product ID: ' . $productId);
                     }
 
-                    // ✅ Deduct stock (IMPORTANT FIX ⚠️)
-                    $inventory->decrement('stock', $item['quantity']);
-
-                    // ✅ Create Sale Item
+                    // ✅ Save Sale Item
                     SaleItem::create([
                         'sale_id' => $sale->id,
-                        'product_id' => $item['product_id'],
+                        'product_id' => $productId,
                         'quantity' => $item['quantity'],
                         'price' => $item['price'],
                         'total' => $item['quantity'] * $item['price'],
                     ]);
+
                 }
+
+                // ✅ 4. Save Payment Breakdown (IMPORTANT)
+                foreach ($request->payments as $pay) {
+
+                    \App\Models\SalePayment::create([
+                        'sale_id' => $sale->id,
+                        'method' => $pay['method'],
+                        'amount' => $pay['amount'],
+                    ]);
+                }
+
             });
 
             return response()->json([
@@ -170,52 +206,52 @@ class BillingController extends Controller
      * OLD METHOD (kept for reference)
      * Uses StockAdjustment model instead of direct inventory update
      */
-    public function completeSaleOld(Request $request)
-    {
-        DB::transaction(function () use ($request) {
+    // public function completeSaleOld(Request $request)
+    // {
+    //     DB::transaction(function () use ($request) {
 
-            $sale = Sale::create([
-                'invoice_no' => 'INV' . now()->timestamp,
-                'subtotal' => $request->subtotal,
-                'tax' => $request->tax,
-                'discount' => $request->discount,
-                'total' => $request->total,
-                'paid_amount' => $request->paid_amount,
-                'change_amount' => $request->change_amount,
-                'payment_method' => $request->payment_method,
-                'status' => 'completed',
-                'user_id' => auth()->id(),
-            ]);
+    //         $sale = Sale::create([
+    //             'invoice_no' => 'INV' . now()->timestamp,
+    //             'subtotal' => $request->subtotal,
+    //             'tax' => $request->tax,
+    //             'discount' => $request->discount,
+    //             'total' => $request->total,
+    //             'paid_amount' => $request->paid_amount,
+    //             'change_amount' => $request->change_amount,
+    //             'payment_method' => $request->payment_method,
+    //             'status' => 'completed',
+    //             'user_id' => auth()->id(),
+    //         ]);
 
-            foreach ($request->items as $item) {
+    //         foreach ($request->items as $item) {
 
-                $inventory = Inventory::where('product_id', $item['product_id'])
-                    ->lockForUpdate()
-                    ->first();
+    //             $inventory = Inventory::where('product_id', $item['product_id'])
+    //                 ->lockForUpdate()
+    //                 ->first();
 
-                if (!$inventory || $inventory->stock < $item['quantity']) {
-                    throw new \Exception('Insufficient stock');
-                }
+    //             if (!$inventory || $inventory->stock < $item['quantity']) {
+    //                 throw new \Exception('Insufficient stock');
+    //             }
 
-                SaleItem::create([
-                    'sale_id' => $sale->id,
-                    'product_id' => $item['product_id'],
-                    'quantity' => $item['quantity'],
-                    'price' => $item['price'],
-                    'total' => $item['total'],
-                ]);
+    //             SaleItem::create([
+    //                 'sale_id' => $sale->id,
+    //                 'product_id' => $item['product_id'],
+    //                 'quantity' => $item['quantity'],
+    //                 'price' => $item['price'],
+    //                 'total' => $item['total'],
+    //             ]);
 
-                // Stock adjustment log
-                \App\Models\StockAdjustment::create([
-                    'product_id' => $item['product_id'],
-                    'type' => 'sale',
-                    'quantity' => $item['quantity'],
-                    'reference_id' => $sale->id,
-                    'note' => 'POS Sale',
-                ]);
-            }
-        });
+    //             // Stock adjustment log
+    //             \App\Models\StockAdjustment::create([
+    //                 'product_id' => $item['product_id'],
+    //                 'type' => 'sale',
+    //                 'quantity' => $item['quantity'],
+    //                 'reference_id' => $sale->id,
+    //                 'note' => 'POS Sale',
+    //             ]);
+    //         }
+    //     });
 
-        return response()->json(['success' => true]);
-    }
+    //     return response()->json(['success' => true]);
+    // }
 }

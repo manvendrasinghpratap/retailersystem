@@ -10,6 +10,7 @@ class Sale extends Model
 
     protected $fillable = [
         'invoice_no',
+		'account_id',
         'customer_id',
         'subtotal',
         'tax',
@@ -26,21 +27,27 @@ class Sale extends Model
      * Relationships
      */
 
-    // One Sale has many items
+    // ✅ One Sale has many items
     public function items()
     {
-        return $this->hasMany(SaleItem::class);
+        return $this->hasMany(SaleItem::class, 'sale_id');
     }
 
-    // Sale belongs to customer
+    // ✅ One Sale has many payments (NEW 🔥)
+    public function payments()
+    {
+        return $this->hasMany(SalePayment::class, 'sale_id');
+    }
+
+    // ✅ Sale belongs to customer
     public function customer()
     {
-        return $this->belongsTo(Customer::class);
+        return $this->belongsTo(Customer::class, 'customer_id');
     }
 
-    // Sale belongs to user (cashier)
+    // ✅ Sale belongs to user (cashier)
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

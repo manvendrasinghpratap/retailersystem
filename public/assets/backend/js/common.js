@@ -158,10 +158,9 @@ $(document).ready(function () {
         placeholder: 'Select Payment Method',
         allowClear: true,
     });
-    $(".disabledoption").select2({
-        placeholder: "Select Option",
-        allowClear: false,
-        disabled: true
+    $(".routedropdown").select2({
+        placeholder: "Select Route",
+        allowClear: true,
     });
     $(".category").select2({
         placeholder: "Select Category",
@@ -339,6 +338,18 @@ function validatePassword() {
 
     return valid;
 
+}
+
+function showAlert(type = 'info', title = '', message = '', options = {}) {
+    Swal.fire({
+        icon: type, // success | error | warning | info | question
+        title: title || 'Notification',
+        text: message || '',
+        confirmButtonText: options.confirmText || 'OK',
+        timer: options.timer || null,
+        showConfirmButton: options.showConfirmButton ?? true,
+        ...options
+    });
 }
 
 
