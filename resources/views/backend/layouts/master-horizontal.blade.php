@@ -12,7 +12,12 @@
   <meta content="@lang('translation.webname') | @lang('translation.administrationpanel')" name="description" />
   <meta content="@lang('translation.webname')" name="author" />
   <!-- App favicon -->
-  <link rel="shortcut icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('assets/images/icons/apple-touch-icon.png')}}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('assets/images/icons/favicon-32x32.png')}}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('assets/images/icons/favicon-16x16.png')}}">
+  <!-- <link rel="manifest" href="assets/images/icons/site.webmanifest"> -->
+  <link rel="mask-icon" href="assets/images/icons/safari-pinned-tab.svg" color="#666666">
+  <!-- <link rel="shortcut icon" href="assets/images/icons/favicon.ico"> -->
   <meta name="csrf-token" content="{{ csrf_token() }}" />
   @include('backend.layouts.head-css')
 </head>

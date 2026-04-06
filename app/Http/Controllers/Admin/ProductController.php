@@ -103,6 +103,9 @@ class ProductController extends Controller
         ]);
 
         try {
+            $request->merge([
+                'cost_price' => $request->selling_price,
+            ]);
             $request->validate([
                 'name' => 'required|string|max:255',
                 'selling_price' => 'required|numeric|min:0',

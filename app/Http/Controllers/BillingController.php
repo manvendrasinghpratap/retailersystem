@@ -89,7 +89,7 @@ class BillingController extends Controller
      * - Deducts inventory
      * - Stores sale items
      */
-    public function completeSale(Request $request)
+    public function completeSaleOld(Request $request)
     {
         // ✅ Validation (updated for new structure)
         $request->validate([
@@ -114,8 +114,8 @@ class BillingController extends Controller
             // 🔥 Method required ONLY if amount > 0
             'payments.*.method' => 'required_with:payments.*.amount|string',
         ]);
-
         try {
+            $saleId = null;
             DB::transaction(function () use ($request) {
 
                 // ✅ 1. Validate payment total
@@ -132,6 +132,8 @@ class BillingController extends Controller
                 $sale = Sale::create([
                     'invoice_no' => 'INV' . now()->timestamp,
                     'subtotal' => $request->subtotal,
+                    'account_id' => 1,
+                    // 'account_id' => auth()->user()->account_id,
                     'tax' => $request->tax ?? 0,
                     'discount' => $request->discount ?? 0,
                     'total' => $total,
@@ -146,7 +148,8 @@ class BillingController extends Controller
                     'status' => 'completed',
                     'user_id' => auth()->id(),
                 ]);
-
+                // ✅ Now this will work
+                $saleId = $sale->id;
                 // ✅ 3. Process Items
                 foreach ($request->items as $item) {
 
@@ -184,12 +187,15 @@ class BillingController extends Controller
                         'method' => $pay['method'],
                         'amount' => $pay['amount'],
                     ]);
+
                 }
+
 
             });
 
             return response()->json([
                 'success' => true,
+                'sale_id' => $saleId,
                 'message' => 'Sale completed successfully'
             ]);
 
@@ -197,6 +203,115 @@ class BillingController extends Controller
 
             return response()->json([
                 'success' => false,
+                'sale_id' => '',
+                'message' => $e->getMessage()
+            ], 400);
+        }
+    }
+
+    public function completeSale(Request $request)
+    {
+        // ✅ Validation
+        $request->validate([
+            'items' => 'required|array|min:1',
+            'items.*.id' => 'required|integer',
+            'items.*.quantity' => 'required|numeric|min:1',
+            'items.*.price' => 'required|numeric|min:0',
+
+            'subtotal' => 'required|numeric',
+            'tax' => 'nullable|numeric',
+            'discount' => 'nullable|numeric',
+            'total' => 'required|numeric',
+
+            'payment_type' => 'required|in:full,partial',
+
+            'payments' => 'required|array|min:1',
+            'payments.*.amount' => 'required|numeric|min:0',
+            'payments.*.method' => 'required_with:payments.*.amount|string',
+        ]);
+
+        try {
+
+            // ✅ Use transaction RETURN (IMPORTANT FIX)
+            $sale = DB::transaction(function () use ($request) {
+
+                // ✅ 1. Validate payment total
+                $total = round($request->total, 2);
+                $totalPaid = round(collect($request->payments)->sum('amount'), 2);
+
+                if ($totalPaid !== $total) {
+                    throw new \Exception('Payment total mismatch');
+                }
+
+                // ✅ 2. Create Sale
+                $sale = Sale::create([
+                    'invoice_no' => 'INV' . now()->timestamp,
+                    'account_id' => auth()->user()->account_id,
+                    'subtotal' => $request->subtotal,
+                    'tax' => $request->tax ?? 0,
+                    'discount' => $request->discount ?? 0,
+                    'total' => $total,
+                    'paid_amount' => $totalPaid,
+                    'change_amount' => 0,
+                    'payment_method' => $request->payment_type === 'full'
+                        ? $request->payments[0]['method']
+                        : null,
+                    'status' => 'completed',
+                    'user_id' => auth()->id(),
+                ]);
+
+                // ✅ 3. Process Items + Reduce Stock
+                foreach ($request->items as $item) {
+
+                    $inventory = Inventory::where('product_id', $item['id'])
+                        ->lockForUpdate()
+                        ->first();
+
+                    if (!$inventory) {
+                        throw new \Exception('Inventory not found for product ID: ' . $item['id']);
+                    }
+
+                    if ($inventory->stock < $item['quantity']) {
+                        throw new \Exception('Insufficient stock for product ID: ' . $item['id']);
+                    }
+
+                    // ✅ Save Sale Item
+                    SaleItem::create([
+                        'sale_id' => $sale->id,
+                        'product_id' => $item['id'],
+                        'quantity' => $item['quantity'],
+                        'price' => $item['price'],
+                        'total' => $item['quantity'] * $item['price'],
+                    ]);
+
+                    // 🔥 IMPORTANT: Reduce stock
+                    $inventory->decrement('stock', $item['quantity']);
+                }
+
+                // ✅ 4. Save Payments
+                foreach ($request->payments as $pay) {
+                    \App\Models\SalePayment::create([
+                        'sale_id' => $sale->id,
+                        'method' => $pay['method'],
+                        'amount' => $pay['amount'],
+                    ]);
+                }
+
+                return $sale; // ✅ CRITICAL FIX
+            });
+
+            // ✅ FINAL RESPONSE
+            return response()->json([
+                'success' => true,
+                'sale_id' => $sale->id, // ✅ NOW WORKS
+                'message' => 'Sale completed successfully'
+            ]);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'success' => false,
+                'sale_id' => null,
                 'message' => $e->getMessage()
             ], 400);
         }

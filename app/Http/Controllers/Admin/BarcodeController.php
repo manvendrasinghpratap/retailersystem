@@ -22,8 +22,8 @@ class BarcodeController extends Controller
 
         $this->breadcrumbBarcodeReader = [
             'title' => __('translation.stock_management'),
-            'route1' => "admin.products.create", // ✅ fixed typo
-            'route1Title' => __('translation.add_edit_stock'),
+            'route1' => "admin.no-barcode", // ✅ fixed typo
+            'route1Title' => __('translation.add_product_without_barcode'),
             'route2Title' => __('translation.add_edit_stock'),
             'route2' => 'admin.products',
             'route3Title' => __('translation.add_update_stock'),

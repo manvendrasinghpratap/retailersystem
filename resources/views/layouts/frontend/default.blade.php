@@ -7,10 +7,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ config('app.name', 'Retailer	System') }} || {{ config('app.subtitle') }}</title>
-    <meta name="keywords"
-        content=" {{ config('app.name') }}, {{ config('app.subtitle') }}, {{ config('constants.slogan') }}">
-    <meta name="description"
-        content="{{ config('app.name') }} - {{ config('app.subtitle') }}. {{ config('constants.slogan') }}">
+    <meta name="keywords" content=" {{ config('app.name') }}, {{ config('app.subtitle') }}, {{ config('constants.slogan') }}">
+    <meta name="description" content="{{ config('app.name') }} - {{ config('app.subtitle') }}. {{ config('constants.slogan') }}">
     <meta content="@lang('translation.webname')" name="author" vale="{{ Config::get('constants.author') }}" />
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <!-- Favicon -->
@@ -18,9 +16,9 @@
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('assets/images/icons/apple-touch-icon.png')}}">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('assets/images/icons/favicon-32x32.png')}}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('assets/images/icons/favicon-16x16.png')}}">
-    <link rel="manifest" href="assets/images/icons/site.webmanifest">
+    <!-- <link rel="manifest" href="assets/images/icons/site.webmanifest"> -->
     <link rel="mask-icon" href="assets/images/icons/safari-pinned-tab.svg" color="#666666">
-    <link rel="shortcut icon" href="assets/images/icons/favicon.ico">
+    <!-- <link rel="shortcut icon" href="assets/images/icons/favicon.ico"> -->
     <meta name="apple-mobile-web-app-title" content="Molla">
     <meta name="application-name" content="{{ config('app.name') }}">
     <meta name="msapplication-TileColor" content="#cc9966">
@@ -62,8 +60,7 @@
 
                 <!-- Right Image -->
                 <div class="col-lg-6 text-center mt-4 mt-lg-0">
-                    <img src="{{ asset('assets/images/celeberation/' . rand(1, 7) . '.png') }}"
-                        class="img-fluid rounded shadow" alt="African girl working in a retail shop using POS system">
+                    <img src="{{ asset('assets/images/celeberation/' . rand(1, 7) . '.png') }}" class="img-fluid rounded shadow" alt="African girl working in a retail shop using POS system">
                 </div>
 
             </div>
@@ -346,8 +343,7 @@
 
                             <div class="row mb-3">
                                 <div class="col-md-6 mb-3 mb-md-0">
-                                    <input type="text" name="name" class="form-control" placeholder="Full Name"
-                                        required>
+                                    <input type="text" name="name" class="form-control" placeholder="Full Name" required>
                                 </div>
 
                                 <div class="col-md-6">
@@ -356,13 +352,11 @@
                             </div>
 
                             <div class="mb-3">
-                                <input type="text" name="organization" class="form-control"
-                                    placeholder="Organization Name">
+                                <input type="text" name="organization" class="form-control" placeholder="Organization Name">
                             </div>
 
                             <div class="mb-3">
-                                <textarea name="message" class="form-control" rows="4" placeholder="Message"
-                                    required></textarea>
+                                <textarea name="message" class="form-control" rows="4" placeholder="Message" required></textarea>
                             </div>
 
                             <button type="submit" class="btn btn-primary w-100">

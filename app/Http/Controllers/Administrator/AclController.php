@@ -18,7 +18,7 @@ class AclController extends Controller
     {
         $this->middleware('auth');
         $this->breadcrumbSync = ['title' => __('translation.accounts'), 'route1' => 'administrator.account.add', 'route1Title' => __('translation.add_new_account'), 'route2' => 'administrator.account.add', 'route2Title' => __('translation.add_new_account'), 'reset_route' => 'administrator.accounts', 'reset_route_title' => __('translation.cancel')];
-        $this->breadcrumbList = ['title' => __('translation.access_control_list'), 'route1' => 'administrator.acl.sync', 'route1Title' => __('translation.access_control_list'), 'route2' => 'administrator.acl', 'route2Title' => __('translation.access_control_list'), 'reset_route' => 'administrator.acl', 'reset_route_title' => __('translation.cancel')];
+        $this->breadcrumbList = ['title' => __('translation.access_control_list'), 'route1' => 'administrator.acl.sync', 'route1Title' => __('translation.access_control_list'), 'route4' => 'syncroutes', 'route4Title' => __('translation.sync_routes'), 'reset_route' => 'administrator.acl', 'reset_route_title' => __('translation.cancel')];
     }
 
     public function index(Request $request)
@@ -92,6 +92,7 @@ class AclController extends Controller
         });
         return redirect()->route('administrator.acl')->with('success', __('translation.sync_acl_success'));
     }
+
     public function update(Request $request)
     {
         $request->validate([
@@ -109,6 +110,11 @@ class AclController extends Controller
         ]);
     }
 
+    public function syncRoutes()
+    {
+        \Artisan::call('sync:routes');
 
+        return redirect()->back()->with('success', 'Routes synced successfully!');
+    }
 
 }

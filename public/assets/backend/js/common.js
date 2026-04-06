@@ -341,7 +341,7 @@ function validatePassword() {
 }
 
 function showAlert(type = 'info', title = '', message = '', options = {}) {
-    Swal.fire({
+    return Swal.fire({
         icon: type, // success | error | warning | info | question
         title: title || 'Notification',
         text: message || '',

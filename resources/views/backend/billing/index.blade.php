@@ -7,7 +7,7 @@
 
         <!-- Barcode -->
         <div class="mb-3">
-            <input type="text" id="barcode" class="form-control" placeholder="Scan barcode here" autofocus>
+            <input type="text" id="barcode" class="form-control" placeholder="Scan barcode here" autofocus autocomplete="off">
         </div>
 
         <!-- Cart -->
@@ -334,7 +334,7 @@
 
         // 🔹 Complete sale
 
-        $('#complete-sale').click(function () {
+        $('#complete-sale-Delete').click(function () {
 
             let paymentData = processPayment();
             if (!paymentData) return;
@@ -351,67 +351,70 @@
             }, function (res) {
 
                 if (res.success) {
-                    showAlert('success', 'Success', 'Sale Completed!');
-                    location.reload();
+                    if (res.success) {
+                        showAlert('success', 'Success', 'Sale Completed!')
+                            .then((result) => {
+                                if (result.isConfirmed) {
+                                    printReceipt(res.sale_id);   // 🖨️ print first
+                                    location.reload();
+                                }
+                            });
+                    }
                 }
             });
         });
 
-
-        $('#complete-sale-delete').click(function () {
-            if (!cart.length) {
-                showAlert('error', 'Error', 'Cart is empty');
-                return;
-            }
+        $('#complete-sale').click(function () {
 
             let paymentData = processPayment();
-            if (!paymentData) return; // ❌ stop if invalid
-
-            let payload = {
-                _token: "{{ csrf_token() }}",
-                items: cart,
-                subtotal: parseFloat($('#subtotal').text()) || 0,
-                tax: parseFloat($('#tax').text()) || 0,
-                total: parseFloat($('#grand_total').text()) || 0,
-                payment_type: paymentData.payment_type,
-                payments: paymentData.payments
-            };
-
-            $.post("{{ route('billing.complete') }}", payload, function (res) {
-
-                if (res.success) {
-                    showAlert('success', 'Success', 'Sale Completed!');
-                    location.reload();
-                } else {
-                    showAlert('error', 'Error', res.message || 'Error');
-                }
-            });
-        });
-        $('#complete-sale-old').click(function () {
-
-            if (!cart.length) {
-                showAlert('error', 'Error', 'Cart is empty');
-                return;
-            }
+            if (!paymentData) return;
 
             $.post("{{ route('billing.complete') }}", {
                 _token: "{{ csrf_token() }}",
                 items: cart,
-                subtotal: $('#subtotal').text(),
-                tax: $('#tax').text(),
-                total: $('#grand_total').text(),
-                paid_amount: $('#paid_amount').val(),
-                payment_method: 'cash'
-            }, function (res) {
+                subtotal: parseFloat($('#subtotal').text()) || 0,
+                tax: parseFloat($('#tax').text()) || 0,
+                discount: 0,
+                total: parseFloat($('#grand_total').text()) || 0,
+                payment_type: paymentData.payment_type,
+                payments: paymentData.payments
+            })
+                .done(function (res) {
 
-                if (res.success) {
-                    showAlert('success', 'Success', 'Sale Completed!');
-                    location.reload();
-                } else {
-                    showAlert('error', 'Error', res.message || 'Error');
-                }
-            });
+                    if (!res || !res.success) {
+                        showAlert('error', 'Error', res?.message || 'Something went wrong');
+                        return;
+                    }
+
+                    // ✅ Success flow
+                    showAlert('success', 'Success', 'Sale Completed!')
+                        .then((result) => {
+                            if (result.isConfirmed) {
+                                if (!res.sale_id) {
+                                    showAlert('error', 'Error', res?.message || 'Something went wrong');
+                                    return;
+                                }
+                                // 🖨️ Print receipt
+                                printReceipt(res.sale_id);
+                                // 🔄 Small delay before reload (important)
+                                setTimeout(() => {
+                                    location.reload();
+                                }, 500);
+                            }
+                        });
+                })
+                .fail(function (xhr) {
+                    let message = xhr.responseJSON?.message || 'Server Error';
+                    showAlert('error', 'Error', message);
+                });
+
         });
 
+
+
+        function printReceipt(sale_id) {
+            let url = "{{ route('printinvoice', ':id') }}".replace(':id', sale_id);
+            window.open(url, '_blank');
+        }
     </script>
 @endsection

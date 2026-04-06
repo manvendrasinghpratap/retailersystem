@@ -43,14 +43,17 @@
         </div>
       </li>
       <li class="nav-item">
-        <a class="nav-link dropdown-toggle arrow-none" href="{{route('billing.index')}}" id="topnav-orders" role="button">
+        <a class="nav-link dropdown-toggle arrow-none {{ request()->routeIs('billing.index') ? 'active' : '' }}" href="{{ route('billing.index') }}" id="topnav-orders" role="button">
           <i data-feather="order"></i>
           <span data-key="t-order">@lang('translation.billing')</span>
         </a>
       </li>
-
-
-
+      <!-- <li class="nav-item">
+        <a class="nav-link dropdown-toggle arrow-none {{ request()->routeIs('admin.sales.index') || request()->routeIs('admin.sales.show') ? 'active' : '' }}" href="{{ route('admin.sales.index') }}" id="topnav-sales" role="button">
+          <i data-feather="order"></i>
+          <span data-key="t-sales">@lang('translation.sales')</span>
+        </a>
+      </li> -->
 
       @php $posRoutes = [App\Helpers\Settings::getUserRole() . '.pos']; @endphp
 

@@ -10,7 +10,7 @@ class Sale extends Model
 
     protected $fillable = [
         'invoice_no',
-		'account_id',
+        'account_id',
         'customer_id',
         'subtotal',
         'tax',
@@ -49,5 +49,12 @@ class Sale extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+    public function getPaymentMethodsAttribute()
+    {
+        return $this->payments
+            ->pluck('method')
+            ->map(fn($method) => ucwords($method))
+            ->implode(', ');
     }
 }

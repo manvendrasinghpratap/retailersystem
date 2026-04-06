@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -14,21 +15,21 @@
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('assets/images/icons/apple-touch-icon.png')}}">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('assets/images/icons/favicon-32x32.png')}}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('assets/images/icons/favicon-16x16.png')}}">
-    <link rel="manifest" href="assets/images/icons/site.webmanifest">
+    <!-- <link rel="manifest" href="assets/images/icons/site.webmanifest"> -->
     <link rel="mask-icon" href="assets/images/icons/safari-pinned-tab.svg" color="#666666">
-    <link rel="shortcut icon" href="assets/images/icons/favicon.ico">
+    <!-- <link rel="shortcut icon" href="assets/images/icons/favicon.ico"> -->
     <meta name="apple-mobile-web-app-title" content="Molla">
     <meta name="application-name" content="Molla">
     <meta name="msapplication-TileColor" content="#cc9966">
     <meta name="msapplication-config" content="assets/images/icons/browserconfig.xml">
-    <meta name="theme-color" content="#ffffff">    
-    @include('layouts.frontend.css') 
+    <meta name="theme-color" content="#ffffff">
+    @include('layouts.frontend.css')
 </head>
 
 <body>
     <div class="page-wrapper">
-        
-        @include('layouts.frontend.header') 
+
+        @include('layouts.frontend.header')
         <main class="main">
             <div class="intro-slider-container">
                 <div class="intro-slider owl-carousel owl-theme owl-nav-inside owl-light" data-toggle="owl" data-owl-options='{
@@ -121,8 +122,7 @@
 
                 <div class="tab-content tab-content-carousel">
                     <div class="tab-pane p-0 fade show active" id="trending-all-tab" role="tabpanel" aria-labelledby="trending-all-link">
-                        <div class="owl-carousel owl-simple carousel-equal-height carousel-with-shadow" data-toggle="owl" 
-                            data-owl-options='{
+                        <div class="owl-carousel owl-simple carousel-equal-height carousel-with-shadow" data-toggle="owl" data-owl-options='{
                                 "nav": false, 
                                 "dots": true,
                                 "margin": 20,
@@ -316,12 +316,11 @@
                                     </div><!-- End .product-nav -->
                                 </div><!-- End .product-body -->
                             </div><!-- End .product -->
-                            
+
                         </div><!-- End .owl-carousel -->
                     </div><!-- .End .tab-pane -->
                     <div class="tab-pane p-0 fade" id="trending-women-tab" role="tabpanel" aria-labelledby="trending-women-link">
-                        <div class="owl-carousel owl-simple carousel-equal-height carousel-with-shadow" data-toggle="owl" 
-                            data-owl-options='{
+                        <div class="owl-carousel owl-simple carousel-equal-height carousel-with-shadow" data-toggle="owl" data-owl-options='{
                                 "nav": false, 
                                 "dots": true,
                                 "margin": 20,
@@ -453,8 +452,7 @@
                     </div><!-- .End .tab-pane -->
 
                     <div class="tab-pane p-0 fade" id="trending-men-tab" role="tabpanel" aria-labelledby="trending-men-link">
-                        <div class="owl-carousel owl-simple carousel-equal-height carousel-with-shadow" data-toggle="owl" 
-                            data-owl-options='{
+                        <div class="owl-carousel owl-simple carousel-equal-height carousel-with-shadow" data-toggle="owl" data-owl-options='{
                                 "nav": false, 
                                 "dots": true,
                                 "margin": 20,
@@ -891,8 +889,7 @@
 
                     <h2 class="title text-center mb-4">shop by brands</h2><!-- End .title text-center -->
 
-                    <div class="owl-carousel owl-simple" data-toggle="owl" 
-                        data-owl-options='{
+                    <div class="owl-carousel owl-simple" data-toggle="owl" data-owl-options='{
                             "nav": false, 
                             "dots": false,
                             "margin": 30,
@@ -983,16 +980,15 @@
             </div><!-- End .bg-gray -->
 
             <div class="mb-2"></div><!-- End .mb-5 -->
-            
+
             <div class="container">
             </div><!-- End .container -->
-            
+
             <div class="blog-posts mb-5">
                 <div class="container">
                     <h2 class="title text-center mb-4">From Our Blog</h2><!-- End .title text-center -->
 
-                    <div class="owl-carousel owl-simple mb-3" data-toggle="owl" 
-                        data-owl-options='{
+                    <div class="owl-carousel owl-simple mb-3" data-toggle="owl" data-owl-options='{
                             "nav": false, 
                             "dots": true,
                             "items": 3,
@@ -1079,8 +1075,8 @@
                 </div><!-- End .container -->
             </div><!-- End .blog-posts -->
         </main><!-- End .main -->
-        @include('layouts.frontend.footer') 
-        
+        @include('layouts.frontend.footer')
+
     </div><!-- End .page-wrapper -->
     <button id="scroll-top" title="Back to Top"><i class="icon-arrow-up"></i></button>
 
@@ -1096,7 +1092,7 @@
                 <input type="search" class="form-control" name="mobile-search" id="mobile-search" placeholder="Search in..." required>
                 <button class="btn btn-primary" type="submit"><i class="icon-search"></i></button>
             </form>
-            @include('layouts.frontend.mobilemenu')            
+            @include('layouts.frontend.mobilemenu')
 
             <div class="social-icons">
                 <a href="#" class="social-icon" target="_blank" title="Facebook"><i class="icon-facebook-f"></i></a>
@@ -1107,13 +1103,13 @@
         </div><!-- End .mobile-menu-wrapper -->
     </div><!-- End .mobile-menu-container -->
 
-    <!-- Sign in / Register Modal -->    
-    @include('model.signin-register-modal')     
+    <!-- Sign in / Register Modal -->
+    @include('model.signin-register-modal')
     <!-- End .modal -->
     <!-- Newsletter Popup -->
-    @include('model.newsletter-popup')       
+    @include('model.newsletter-popup')
     <!-- Plugins JS File -->
-    @include('layouts.frontend.js')  
+    @include('layouts.frontend.js')
 </body>
 
 </html>

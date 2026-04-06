@@ -3,7 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{
     ProfileController,
-    BarcodeController
+    BarcodeController,
+    SaleController
 };
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\Admin\{
@@ -26,7 +27,7 @@ Route::get('syncroutes', function () {
     \Artisan::call('sync:routes');
     echo 'routes synced';
 });
-Route::get('admin/acl', [\App\Http\Controllers\Admin\AclController::class, 'index'])->name('acl');
+Route::get('admin/acl', [\App\Http\Controllers\Administrator\AclController::class, 'index'])->name('acl');
 // Mail::raw('Test email', function ($message) {
 //     $message->to('m8005029425@gmail.com')
 //             ->subject('Test Mail');
@@ -49,17 +50,20 @@ Route::middleware(['auth', 'route.permission'])->prefix('admin/staff')->group(fu
     Route::get('/downloadstaffpdf', [StaffController::class, 'downloadstaffpdf'])->name('downloadstaffpdf');
 });
 
-Route::middleware(['auth'])->prefix('admin/members')->group(function () {
+Route::middleware(['auth', 'route.permission'])->prefix('admin/members')->group(function () {
     Route::post('/destroy', [StaffController::class, 'delete'])->name('destroy');
     Route::post('/status-update', [StaffController::class, 'statusUpdate'])->name('statusUpdate');
 });
 
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['route.permission', 'auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+Route::middleware(['auth', 'route.permission'])->group(function () {
     Route::get('/barcode-scan-product', [BarcodeController::class, 'index'])->name('barcode.scan.product');
     Route::post('/barcode-scan-inventory', [BarcodeController::class, 'scan'])->name('barcode.scan.inventory');
 });
@@ -67,10 +71,20 @@ Route::middleware('auth')->group(function () {
 //  Route::get('/profile', [App\Http\Controllers\Auth\PasswordController::class, 'edit'])->name('profile');
 Route::post('update-password', [\App\Http\Controllers\Auth\PasswordController::class, 'update'])->name('update-password');
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'route.permission'])->group(function () {
     Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
     Route::post('/billing/scan', [BillingController::class, 'scanProduct'])->name('billing.scan');
     Route::post('/billing/complete', [BillingController::class, 'completeSale'])->name('billing.complete');
+});
+Route::middleware(['auth', 'route.permission'])->group(function () {
+    Route::get('/sales', [SaleController::class, 'index'])->name('admin.sales.index');
+    Route::get('/sales/{sale}', [SaleController::class, 'show'])->name('admin.sales.show');
+});
+Route::middleware(['auth', 'route.permission'])->group(function () {
+    Route::get('admin/print/invoice/{id}', [SaleController::class, 'printinvoice'])->name('printinvoice');
+});
+Route::middleware(['auth'])->group(function () {
+    Route::get('admin/sync-routes', [\App\Http\Controllers\Administrator\AclController::class, 'syncRoutes'])->name('syncroutes');
 });
 
 require __DIR__ . '/auth.php';

@@ -24,7 +24,7 @@
                         <div class="row">
                             <x-select-dropdown name="category_id" label="{{ __('translation.category')}}" :options="$categories" :selected="$product->category_id ?? ''" class="category" required />
                             <x-text-input name="name" label="{{ __('translation.product_name')}}" value="{{ $product->name ?? '' }}" required />
-                            <x-text-input name="cost_price" :label="__('translation.cost_price') . ' ' . __('translation.b_ngn')" value="{{ $product->cost_price ?? '' }}" class='onlydecimal' required />
+                            <!-- <x-text-input name="cost_price" :label="__('translation.cost_price') . ' ' . __('translation.b_ngn')" value="{{ $product->cost_price ?? '' }}" class='onlydecimal' required /> -->
                             <x-text-input name="selling_price" :label="__('translation.selling_price') . ' ' . __('translation.b_ngn')" value="{{ $product->selling_price ?? '' }}" required class='onlydecimal' />
                             <x-textarea-input name="description" label="{{ __('translation.short_description')}}" value="{{ $product->description ?? '' }}" rows='1' />
                             <x-select-dropdown name="status" label="{{ __('translation.status')}}" :options="config('constants.accountstatus')" :selected="$product->status ?? 1" required class="status" />
