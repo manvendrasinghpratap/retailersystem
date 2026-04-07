@@ -317,6 +317,10 @@ class Settings
 
     public static function applyDateRange($query, Request $request, $column = 'date', $defaultdate = false)
     {
+        if ($request->has('invoice_no')) {
+            $defaultdate = false;
+        }
+
         if ($request->filled('from_date') && $request->filled('to_date')) {
             $fromDate = Settings::formatDate($request->get('from_date'), 'Y-m-d');
             $toDate = Settings::formatDate($request->get('to_date'), 'Y-m-d');
