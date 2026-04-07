@@ -35,7 +35,7 @@
             <div class="card">
                 <div class="card-header">
                     <h4 class="card-title">
-                        {{array_key_exists('route2Title', $breadcrumb) ? $breadcrumb['route2Title'] : ''}} ( {{ request('from_date') ? request('from_date') : App\Helpers\Settings::getFormattedDate(date('Y-m-d')) }} - {{ request('to_date') ? request('to_date') : App\Helpers\Settings::getFormattedDate(date('Y-m-d')) }} )
+                        {{array_key_exists('route2Title', $breadcrumb) ? $breadcrumb['route2Title'] : ''}} {{ request()->has('invoice_no') ? '' : (request('from_date') ? request('from_date') : App\Helpers\Settings::getFormattedDate(date('Y-m-d'))) }} {{ request()->has('invoice_no') ? '' : '-' }} {{ request()->has('invoice_no') ? '' : (request('to_date') ? request('to_date') : App\Helpers\Settings::getFormattedDate(date('Y-m-d'))) }}
                     </h4>
                 </div>
                 <div class="card-body">
