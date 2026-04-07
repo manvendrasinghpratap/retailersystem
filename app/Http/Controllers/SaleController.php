@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Sale;
 use Illuminate\Http\Request;
+use App\Helpers\Settings;
 
 class SaleController extends Controller
 {
@@ -48,13 +49,7 @@ class SaleController extends Controller
         $query = Sale::with('user', 'payments');
 
         // Filter by date
-        if ($request->from_date && $request->to_date) {
-            $query->whereBetween('created_at', [
-                $request->from_date . ' 00:00:00',
-                $request->to_date . ' 23:59:59'
-            ]);
-        }
-
+        $query = Settings::applyDateRange($query, $request, 'created_at', true);
         // Filter by invoice
         if ($request->invoice_no) {
             $query->where('invoice_no', 'like', '%' . $request->invoice_no . '%');

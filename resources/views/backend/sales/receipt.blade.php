@@ -85,7 +85,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="text-center">No Sales Found</td>
+                        <td colspan="7" class="text-center">{{ __('translation.no_sales_found') }}</td>
                     </tr>
                 @endforelse
             </tbody>
