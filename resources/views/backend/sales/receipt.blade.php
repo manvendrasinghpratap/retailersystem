@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>{{ Config::get('constants.shop_name') . '|' . __('translation.receipt') }}</title>
+    <title>{{ __('translation.webname') }} | {{ __('translation.receipt') }} | {{ Config::get('constants.shop_name')}}</title>
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('assets/images/icons/favicon-16x16.png')}}">
 
     <style>

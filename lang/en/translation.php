@@ -205,7 +205,7 @@ return [
     'add_product_without_barcode' => 'Add Product Without Barcode',
     'product_name' => 'Product Name',
     'inventory_details' => 'Inventory Details',
-    'billing' => 'Billing',
+    'billing' => 'Create Invoice',
     'total_amount' => 'Total Amount',
     'total' => 'Total',
     'subtotal' => 'Subtotal',
