@@ -60,7 +60,7 @@
                                         <td>{{ App\Helpers\Settings::getFormattedDatetime($sale->created_at)}}</td>
                                         <td>{{ $sale->user->name ?? '-' }}</td>
                                         <td>{{ __('translation.b_ngn') . ' ' . number_format($sale->total, 2) }}</td>
-                                        <td>{{ ($sale->payment_method == null) ? 'Partial' : 'Full' }}</td>
+                                        <td>{{ ($sale->payment_method == null) ? 'Partial Payment' : 'Full Payment' }}</td>
                                         <td>{{ $sale->payment_methods }}</td>
                                         <td>
                                             <span class="badge bg-success">

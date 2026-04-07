@@ -51,6 +51,8 @@
         <div class="centered">
             <img src="{{ asset('assets/images/logo.png') }}" style="width:60px;"><br>
             <strong>{{ Config::get('constants.shop_name') }} </strong><br>
+            {{ __('translation.webaddress') }}<br>
+            {{ Config::get('constants.mainwebsite') }}<br>
             {{ __('translation.phone') }} : {{ __('translation.webphone') }}<br>
             <p><strong>{{ __('translation.cashier') }}:</strong> {{ $sale->user->name ?? '-' }}</p>
             --------------------------------
@@ -94,10 +96,15 @@
                 </tr>
             </tfoot>
         </table>
-
+        <div>
+            <p><strong>{{ __('translation.payment_type') }}:</strong> {{ ($sale->payment_method == null) ? 'Partial Payment' : 'Full Payment' }}</p>
+            <p><strong>{{ __('translation.payment_method') }}:</strong> {{ $sale->payment_methods ?? '-' }}</p>
+        </div>
         <div class="centered">
             --------------------------------<br>
-            Thank You!<br>
+            {{ __('translation.thanks_for_your_visit') }}<br />
+            {{ __('translation.we_value_your_patronage') }}<br />
+            {{ __('translation.also_visit_our_havana_kitchen_and_lounge') }}<br>
         </div>
 
     </div>

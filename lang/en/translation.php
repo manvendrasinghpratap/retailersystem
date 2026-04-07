@@ -4,8 +4,8 @@ return [
     "webname" => 'Retailer Management System',
     "administrationpanel" => 'Administration Panel',
     "adminpanel" => 'Admin Panel',
-    "webphone" => '+234 9164978999 | 9031609398',
-    "webaddress" => 'Location: Kilometer 3, New Umuahia Road, Abia State, Nigeria',
+    "webphone" => '09164978999 | 09031609398',
+    "webaddress" => 'Location: Kilometer 3, New Umuahia Road, Aba.',
 
     "login" => 'Log In',
     "loginlink" => 'Login',
@@ -253,4 +253,8 @@ return [
     'payment_details' => 'Payment Details',
     'receipt' => 'Receipt',
     'phone' => 'Phone',
+    'no_sales_found' => 'No Sales Found',
+    'thanks_for_your_visit' => 'Thanks for your visit to Havana Super Market.',
+    'we_value_your_patronage' => 'We value your patronage.',
+    'also_visit_our_havana_kitchen_and_lounge' => 'Also visit our Havana Kitchen and Lounge for ready prepared meals and Lounge for your entertainment.',
 ];
