@@ -51,7 +51,13 @@
       <li class="nav-item">
         <a class="nav-link dropdown-toggle arrow-none {{ request()->routeIs('admin.sales.index') || request()->routeIs('admin.sales.show') ? 'active' : '' }}" href="{{ route('admin.sales.index') }}" id="topnav-sales" role="button">
           <i data-feather="order"></i>
-          <span data-key="t-sales">@lang('translation.sales')</span>
+          <span data-key="t-sales">@lang('translation.sales_record')</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link dropdown-toggle arrow-none {{ request()->routeIs('admin.coupons.index') || request()->routeIs('admin.coupons.show') ? 'active' : '' }}" href="{{ route('admin.coupons.index') }}" id="topnav-coupons" role="button">
+          <i data-feather="order"></i>
+          <span data-key="t-coupons">@lang('translation.coupons')</span>
         </a>
       </li>
 

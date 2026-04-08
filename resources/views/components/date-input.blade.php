@@ -6,7 +6,6 @@
 		<label for="{{ $name }}">{{ $label ?? Str::title(str_replace('_', ' ', $name)) }} 
 		@if($attributes->get('required'))<span class="required error_{{ $name }}"> </span>@endif
 		</label>
-		<!--<input name="hire_date" id="hire_date" data-year="1970" type="text" class="form-control hire_date flatdatepickr" required=""   value=""  placeholder="dd/mm/yy" >-->
 		<input
         type="text"
         name="{{ $name }}"

@@ -85,7 +85,7 @@ return [
 
     "ngn" => '₦',
     "b_ngn" => '(₦)',
-
+    'currency' => '(₦)',
     "duration" => 'Duration',
     "add_new_account" => 'Add New Client',
 
@@ -257,4 +257,24 @@ return [
     'thanks_for_your_visit' => 'Thanks for your visit to Havana Super Market.',
     'we_value_your_patronage' => 'We value your patronage.',
     'also_visit_our_havana_kitchen_and_lounge' => 'Also visit our Havana Kitchen and Lounge for ready prepared meals and Lounge for your entertainment.',
+    'add_new_coupon' => 'Add New Coupon',
+    'coupon_code' => 'Coupon Code',
+    'coupons' => 'Coupons',
+    'discount_type' => 'Discount Type',
+    'discount_value' => 'Discount Value',
+    'max_discount' => 'Max Discount',
+    'expires_at' => 'Expires At',
+    'coupon_listing' => 'Coupon Listing',
+    'update_coupon' => 'Update Coupon',
+    'coupon_added_successfully' => 'Coupon added successfully',
+    'coupon_updated_successfully' => 'Coupon updated successfully',
+    'coupon_deleted_successfully' => 'Coupon deleted successfully',
+    'coupon_status_updated_successfully' => 'Coupon status updated successfully',
+    'couponcode' => 'Coupon Code',
+    'type' => 'Type',
+    'value' => 'Value',
+    'minamount' => 'Min Amount',
+    'maxdiscount' => 'Max Discount',
+    'expirydate' => 'Expiry Date',
+    'sales_record' => 'Sales Record',
 ];

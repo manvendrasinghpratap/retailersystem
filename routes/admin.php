@@ -7,7 +7,8 @@ use App\Http\Controllers\Admin\{
     ProductModifierController,
     InventoryController,
     StockAdjustmentController,
-    BarcodeController
+    BarcodeController,
+    CouponController
 };
 
 Route::prefix('admin')->middleware(['auth', 'route.permission'])->group(function () {
@@ -56,6 +57,17 @@ Route::prefix('admin/barcode')->middleware(['auth', 'route.permission'])->group(
     Route::get('/damage-barcode', [BarcodeController::class, 'index'])->name('admin.damage-barcode');
     Route::get('/deduct-barcode', [BarcodeController::class, 'index'])->name('admin.deduct-barcode');
     Route::post('/validateBarcode', [BarcodeController::class, 'validateBarcode'])->name('admin.barcode.validateBarcode');
+});
+
+Route::prefix('admin')->middleware(['auth', 'route.permission'])->group(function () {
+    Route::get('coupons', [CouponController::class, 'index'])->name('admin.coupons.index');
+    Route::get('coupons/create', [CouponController::class, 'create'])->name('admin.coupons.create');
+    Route::post('coupons/store', [CouponController::class, 'store'])->name('admin.coupons.store');
+    Route::get('coupons/edit/{id}', [CouponController::class, 'edit'])->name('admin.coupons.edit');
+    Route::post('coupons/update', [CouponController::class, 'update'])->name('admin.coupons.update');
+    Route::post('coupons/delete', [CouponController::class, 'destroy'])->name('admin.coupons.destroy');
+    Route::post('coupons/status-update', [CouponController::class, 'statusUpdate'])->name('admin.coupons.status');
+    Route::post('coupons/soft-delete', [CouponController::class, 'softdelete'])->name('admin.coupons.softdelete');
 });
 
 
