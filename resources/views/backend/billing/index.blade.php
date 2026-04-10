@@ -53,7 +53,7 @@
                 <x-text-input :islabel="true" labelclass="left" name="card_amount" data-method="card" :label="__('translation.card')" :value="request('card_amount')" :placeholder="__('translation.card')" class="form-control partial-amount onlydecimal default-zero" mainrows="12" />
                 <x-text-input :islabel="true" labelclass="left" name="transfer_amount" data-method="transfer" :label="__('translation.transfer')" :value="request('transfer_amount')" :placeholder="__('translation.transfer')" class="form-control partial-amount onlydecimal default-zero" mainrows="12" />
             </div>
-            <button class="btn btn-success w-100" id="complete-sale">{{ __('translation.complete_payment') }}</button>
+            <button class="btn btn-success w-100 mb-4" id="complete-sale">{{ __('translation.complete_payment') }}</button>
 
         </div>
 

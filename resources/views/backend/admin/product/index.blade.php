@@ -26,7 +26,7 @@
                         <div class="row">
                             {{-- Product Name --}}
                             <x-select-dropdown name="category_id" label="Category" :options="$categories ?? []" :selected="request('category_id')" mainrows="3" class="category" />
-                            <x-text-input name="name" label="Product Name" value="{{ request('name') }}" mainrows="3" />
+                            <x-text-input name="name" label="{{ __('translation.product_name') }}" value="{{ request('name') }}" mainrows="3" />
                             <x-select-dropdown name="is_active" label="Status" :options="config('constants.accountstatus') ?? []" :selected="request()->get('is_active') ?? ''" class="is_active accountstatus" mainrows="2" />
                             <div class="col-xl-2 col-md-2">
                                 <div class="form-group mb-3">

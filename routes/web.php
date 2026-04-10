@@ -72,7 +72,7 @@ Route::middleware(['auth', 'route.permission'])->group(function () {
 Route::post('update-password', [\App\Http\Controllers\Auth\PasswordController::class, 'update'])->name('update-password');
 
 Route::middleware(['auth', 'route.permission'])->group(function () {
-    Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
+    Route::get('/create/transaction', [BillingController::class, 'index'])->name('billing.index');
     Route::post('/billing/scan', [BillingController::class, 'scanProduct'])->name('billing.scan');
     Route::post('/billing/complete', [BillingController::class, 'completeSale'])->name('billing.complete');
 });
