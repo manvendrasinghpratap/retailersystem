@@ -121,7 +121,7 @@
             {{ __('translation.also_visit_our_havana_kitchen_and_lounge') }}<br>
             <p>
                 We offer special discounts and promotions to our loyal customers.
-                To enjoy these benefits, please use the following link to register:
+                To enjoy these benefits, please visit the link below to register:
                 <a href="https://havanaworlds.com/customerregistration/" target="_blank">
                     https://havanaworlds.com/customerregistration/
                 </a>

@@ -3,60 +3,65 @@
 @section('content')
     @include('backend.components.breadcrumb')
 
-    <div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <!-- Barcode -->
+                    <div class="mb-3">
+                        <input type="text" id="barcode" class="form-control" placeholder="Scan barcode here" autofocus autocomplete="off">
+                    </div>
 
-        <!-- Barcode -->
-        <div class="mb-3">
-            <input type="text" id="barcode" class="form-control" placeholder="Scan barcode here" autofocus autocomplete="off">
+                    <!-- Cart -->
+                    <table class="table table-bordered" id="cart-table">
+                        <thead>
+                            <tr>
+                                <th>{{ __('translation.category_name') }}</th>
+                                <th>{{ __('translation.product_name') }}</th>
+                                <th>{{ __('translation.stock') }}</th>
+                                <th>{{ __('translation.quantity') }}</th>
+                                <th>{{ __('translation.b_ngn') . ' ' . __('translation.price') }}</th>
+                                <th>{{ __('translation.b_ngn') . ' ' . __('translation.total') }}</th>
+                                <th>{{ __('translation.action') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+
+                    <!-- Totals -->
+                    <div class="text-end">
+                        <p>Subtotal: {{ __('translation.b_ngn') }} <span id="subtotal">0.00</span></p>
+                        <p>Tax: {{ __('translation.b_ngn') }} <span id="tax">0.00</span></p>
+                        <h4>Total: {{ __('translation.b_ngn') }} <span id="grand_total">0.00</span></h4>
+                        <!-- <input type="number" id="paid_amount" class="form-control mb-2" placeholder="Paid Amount"> -->
+                        <!-- Payment Type -->
+                        <div class="mt-4 mb-2">
+                            <x-select-dropdown :noselect="true" :nolabel="true" id="payment_type" name="payment_type" label="{{ __('translation.payment_type') }}" :options="config('constants.paymenttypes')" :selected="request('payment_type')" class="payment_type" mainrows="12" />
+                        </div>
+                        <!-- FULL PAYMENT -->
+                        <div id="full_payment_section">
+                            <x-text-input :islabel="true" labelclass="left" name="full_amount" :label="__('translation.amount')" :value="request('full_amount')" :placeholder="__('translation.amount')" class="form-control onlydecimal default-zero" mainrows="12" />
+                            <x-select-dropdown :nolabel="true" id="full_method" name="full_method" label="{{ __('translation.customer_payment_method') }}" :options="config('constants.customer_payment_method')" :selected="request('full_method')" class="full_method" mainrows="12" />
+                        </div>
+                        <div class="mb-2 d-flex gap-2 justify-content-end">
+                            <input type="text" id="coupon_code" class="form-control" style="max-width:200px;" placeholder="Enter Coupon">
+                            <button type="button" class="btn btn-primary" id="apply_coupon">Apply</button>
+                        </div>
+
+                        <p>Discount: {{ __('translation.b_ngn') }} <span id="discount">0.00</span></p>
+                        <!-- PARTIAL PAYMENT -->
+                        <div id="partial_payment_section" style="display:none;">
+                            <x-text-input :islabel="true" labelclass="left" name="cash_amount" data-method="cash" :label="__('translation.cash')" :value="request('cash_amount')" :placeholder="__('translation.cash')" class="form-control partial-amount onlydecimal default-zero" mainrows="12" />
+                            <x-text-input :islabel="true" labelclass="left" name="card_amount" data-method="card" :label="__('translation.card')" :value="request('card_amount')" :placeholder="__('translation.card')" class="form-control partial-amount onlydecimal default-zero" mainrows="12" />
+                            <x-text-input :islabel="true" labelclass="left" name="transfer_amount" data-method="transfer" :label="__('translation.transfer')" :value="request('transfer_amount')" :placeholder="__('translation.transfer')" class="form-control partial-amount onlydecimal default-zero" mainrows="12" />
+                        </div>
+                        <button class="btn btn-success w-100 mb-4" id="complete-sale">{{ __('translation.complete_payment') }}</button>
+
+                    </div>
+
+                </div>
+            </div>
         </div>
-
-        <!-- Cart -->
-        <table class="table table-bordered" id="cart-table">
-            <thead>
-                <tr>
-                    <th>{{ __('translation.category_name') }}</th>
-                    <th>{{ __('translation.product_name') }}</th>
-                    <th>{{ __('translation.stock') }}</th>
-                    <th>{{ __('translation.quantity') }}</th>
-                    <th>{{ __('translation.b_ngn') . ' ' . __('translation.price') }}</th>
-                    <th>{{ __('translation.b_ngn') . ' ' . __('translation.total') }}</th>
-                    <th>{{ __('translation.action') }}</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-
-        <!-- Totals -->
-        <div class="text-end">
-            <p>Subtotal: {{ __('translation.b_ngn') }} <span id="subtotal">0.00</span></p>
-            <p>Tax: {{ __('translation.b_ngn') }} <span id="tax">0.00</span></p>
-            <h4>Total: {{ __('translation.b_ngn') }} <span id="grand_total">0.00</span></h4>
-            <!-- <input type="number" id="paid_amount" class="form-control mb-2" placeholder="Paid Amount"> -->
-            <!-- Payment Type -->
-            <div class="mt-4 mb-2">
-                <x-select-dropdown :noselect="true" :nolabel="true" id="payment_type" name="payment_type" label="{{ __('translation.payment_type') }}" :options="config('constants.paymenttypes')" :selected="request('payment_type')" class="payment_type" mainrows="12" />
-            </div>
-            <!-- FULL PAYMENT -->
-            <div id="full_payment_section">
-                <x-text-input :islabel="true" labelclass="left" name="full_amount" :label="__('translation.amount')" :value="request('full_amount')" :placeholder="__('translation.amount')" class="form-control onlydecimal default-zero" mainrows="12" />
-                <x-select-dropdown :nolabel="true" id="full_method" name="full_method" label="{{ __('translation.customer_payment_method') }}" :options="config('constants.customer_payment_method')" :selected="request('full_method')" class="full_method" mainrows="12" />
-            </div>
-            <div class="mb-2 d-flex gap-2 justify-content-end">
-                <input type="text" id="coupon_code" class="form-control" style="max-width:200px;" placeholder="Enter Coupon">
-                <button type="button" class="btn btn-primary" id="apply_coupon">Apply</button>
-            </div>
-
-            <p>Discount: {{ __('translation.b_ngn') }} <span id="discount">0.00</span></p>
-            <!-- PARTIAL PAYMENT -->
-            <div id="partial_payment_section" style="display:none;">
-                <x-text-input :islabel="true" labelclass="left" name="cash_amount" data-method="cash" :label="__('translation.cash')" :value="request('cash_amount')" :placeholder="__('translation.cash')" class="form-control partial-amount onlydecimal default-zero" mainrows="12" />
-                <x-text-input :islabel="true" labelclass="left" name="card_amount" data-method="card" :label="__('translation.card')" :value="request('card_amount')" :placeholder="__('translation.card')" class="form-control partial-amount onlydecimal default-zero" mainrows="12" />
-                <x-text-input :islabel="true" labelclass="left" name="transfer_amount" data-method="transfer" :label="__('translation.transfer')" :value="request('transfer_amount')" :placeholder="__('translation.transfer')" class="form-control partial-amount onlydecimal default-zero" mainrows="12" />
-            </div>
-            <button class="btn btn-success w-100 mb-4" id="complete-sale">{{ __('translation.complete_payment') }}</button>
-
-        </div>
-
     </div>
 @endsection
 
