@@ -51,9 +51,9 @@
                                 <tr>
                                     <th>#</th>
                                     <th>{{__('translation.category_name')}}</th>
+                                    <th>{{__('translation.brand_name')}}</th>
                                     <th>{{__('translation.slug')}}</th>
                                     <th>{{__('translation.image')}}</th>
-                                    <th>{{__('translation.short_description')}}</th>
                                     <th>{{__('translation.status')}}</th>
                                     <th>{{__('translation.createdat')}}</th>
                                     <th>{{__('translation.actions')}}</th>
@@ -65,11 +65,11 @@
                                         <tr>
                                             <td>{{ $loop->iteration }}</td>
                                             <td>{{ $categoriesType->name }}</td>
+                                            <td>{{ substr($categoriesType->description, 0, 50) }}</td>
                                             <td>{{ $categoriesType->slug }}</td>
                                             <td>
                                                 <img src="{{ (!empty($categoriesType->image) && file_exists(public_path('uploads/categories/small/' . $categoriesType->image))) ? asset('uploads/categories/small/' . $categoriesType->image) : asset('assets/images/no-image.png') }}" width="80" height="60" alt="Category Image">
                                             </td>
-                                            <td>{{ substr($categoriesType->description, 0, 50) }}</td>
                                             <td>
                                                 @if($categoriesType->status == 1)
                                                     <span class="badge bg-success">Active</span>

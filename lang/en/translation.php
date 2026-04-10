@@ -205,7 +205,7 @@ return [
     'add_product_without_barcode' => 'Add Product Without Barcode',
     'product_name' => 'Product Name',
     'inventory_details' => 'Inventory Details',
-    'billing' => 'Create Invoice',
+    'billing' => 'Create Transaction',
     'total_amount' => 'Total Amount',
     'total' => 'Total',
     'subtotal' => 'Subtotal',
@@ -290,4 +290,5 @@ return [
     'update_customer' => 'Update Customer',
     'customer_name' => 'Customer Name',
     'add_new_customer' => 'Add New Customer',
+    'brand_name' => 'Brand Name',
 ];
