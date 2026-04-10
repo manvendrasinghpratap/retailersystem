@@ -41,7 +41,12 @@
                 <x-text-input :islabel="true" labelclass="left" name="full_amount" :label="__('translation.amount')" :value="request('full_amount')" :placeholder="__('translation.amount')" class="form-control onlydecimal default-zero" mainrows="12" />
                 <x-select-dropdown :nolabel="true" id="full_method" name="full_method" label="{{ __('translation.customer_payment_method') }}" :options="config('constants.customer_payment_method')" :selected="request('full_method')" class="full_method" mainrows="12" />
             </div>
+            <div class="mb-2 d-flex gap-2 justify-content-end">
+                <input type="text" id="coupon_code" class="form-control" style="max-width:200px;" placeholder="Enter Coupon">
+                <button type="button" class="btn btn-primary" id="apply_coupon">Apply</button>
+            </div>
 
+            <p>Discount: {{ __('translation.b_ngn') }} <span id="discount">0.00</span></p>
             <!-- PARTIAL PAYMENT -->
             <div id="partial_payment_section" style="display:none;">
                 <x-text-input :islabel="true" labelclass="left" name="cash_amount" data-method="cash" :label="__('translation.cash')" :value="request('cash_amount')" :placeholder="__('translation.cash')" class="form-control partial-amount onlydecimal default-zero" mainrows="12" />
@@ -57,44 +62,19 @@
 
 @section('script')
     <script>
-
         let cart = [];
         let currency = "{{ __('translation.b_ngn') }}";
+        let discount = 0;
+        let scanning = false;
 
-
-        // 🔥 Always focus barcode
+        // 🔥 Auto focus
         $(document).ready(function () {
             $('#barcode').focus();
         });
 
-        // 🔹 Scan barcode
-        // $('#barcode').on('change', function () {
-
-        //     let barcode = $(this).val().trim();
-        //     if (!barcode) return;
-
-        //     $.post("{{ route('billing.scan') }}", {
-        //         _token: "{{ csrf_token() }}",
-        //         barcode: barcode
-        //     }, function (res) {
-        //         console.log(res);
-        //         if (!res || res.status === false) {
-        //             showAlert('error', 'Error', res?.message || 'Product not found || This barcode is not allowed for this operation!');
-        //             return;
-        //         }
-
-        //         try { new Audio('/beep.wav').play(); } catch (e) { }
-
-        //         addToCart(res.data);
-        //         calculateTotals();
-
-        //     });
-
-        //     $('#barcode').val('').focus();
-        // });
-
-        let scanning = false;
-
+        // =========================
+        // 🔹 SCAN BARCODE
+        // =========================
         $('#barcode').on('change', function () {
 
             if (scanning) return;
@@ -113,23 +93,20 @@
                 barcode: barcode
             })
                 .done(function (res) {
+
                     if (!res || res.status === false) {
-                        showAlert('error', 'Error', res?.message || 'Product not found || This barcode is not allowed for this operation!');
-                        // showAlert('error', 'Error', res?.message || 'Product not found || ');
+                        showAlert('error', 'Error', res?.message || 'Product not found');
                         return;
                     }
 
                     try { new Audio('/beep.wav').play(); } catch (e) { }
 
                     addToCart(res.data);
-                    calculateTotals();
-                })
 
+                })
                 .fail(function (xhr) {
-                    let message = xhr.responseJSON?.message || 'Error';
-                    showAlert('error', 'Error', message);
+                    showAlert('error', 'Error', xhr.responseJSON?.message || 'Server error');
                 })
-
                 .always(function () {
                     input.val('').focus();
                     scanning = false;
@@ -137,41 +114,9 @@
 
         });
 
-        $('#payment_type').on('change', function () {
-
-            let type = $(this).val();
-
-            if (type === 'full') {
-                $('#full_payment_section').show();
-                $('#partial_payment_section').hide();
-            } else {
-                $('#full_payment_section').hide();
-                $('#partial_payment_section').show();
-            }
-        });
-
-        function syncFullAmount() {
-            let total = parseFloat($('#grand_total').text()) || 0;
-            $('#full_amount').val(total.toFixed(2));
-        }
-
-        // call whenever total changes
-        function calculateTotals() {
-            let subtotal = 0;
-
-            cart.forEach(item => {
-                subtotal += item.quantity * item.price;
-            });
-
-            let tax = subtotal * 0.0;
-            let total = subtotal + tax;
-
-            $('#subtotal').text(subtotal.toFixed(2));
-            $('#tax').text(tax.toFixed(2));
-            $('#grand_total').text(total.toFixed(2));
-
-            syncFullAmount(); // 🔥 auto update
-        }
+        // =========================
+        // 🔹 ADD TO CART
+        // =========================
         function addToCart(product) {
 
             let stock = parseInt(product.stock) || 0;
@@ -182,10 +127,7 @@
                 return;
             }
 
-            // ✅ Match by ID + name (extra safety)
-            let existing = cart.find(item =>
-                item.id === product.id && item.name === product.name
-            );
+            let existing = cart.find(item => item.id === product.id);
 
             if (existing) {
 
@@ -208,11 +150,14 @@
                 });
             }
 
+            resetCoupon();
             renderCart();
             calculateTotals();
         }
 
-        // 🔹 Render cart
+        // =========================
+        // 🔹 RENDER CART
+        // =========================
         function renderCart() {
 
             let html = '';
@@ -228,15 +173,16 @@
                     let stock = parseInt(item.stock) || 0;
                     let total = qty * price;
 
-                    html += `<tr> <td>${item.category_name}</td> <td>${item.name}</td> <td class="${stock <= 5 ? 'text-danger' : ''}">${stock}</td> <td><input type="number" value="${qty}" min="1" max="${stock}" style="width:80px" onchange="updateQuantity(${index}, this.value, this)"></td> <td>${currency} ${price.toFixed(2)}</td> <td class="item-total"> ${currency} ${total.toFixed(2)}</td><td><button onclick="removeItem(${index})" class="btn btn-danger btn-sm">X</button></td></tr>`;
+                    html += `<tr><td>${item.category_name}</td><td>${item.name}</td><td class="${stock <= 5 ? 'text-danger' : ''}">${stock}</td><td><input type="number" value="${qty}" min="1" max="${stock}" style="width:80px" onchange="updateQuantity(${index}, this.value, this)"></td><td>${currency} ${price.toFixed(2)}</td><td class="item-total">${currency} ${total.toFixed(2)}</td><td><button onclick="removeItem(${index})" class="btn btn-danger btn-sm">X</button></td></tr>`;
                 });
             }
 
             $('#cart-table tbody').html(html);
         }
 
-
-        // 🔹 Update quantity (NO RE-RENDER)
+        // =========================
+        // 🔹 UPDATE QTY
+        // =========================
         function updateQuantity(index, qty, el) {
 
             let stock = parseInt(cart[index].stock) || 0;
@@ -259,20 +205,116 @@
             let row = $(el).closest('tr');
             row.find('.item-total').text(`${currency} ${total.toFixed(2)}`);
 
+            resetCoupon();
             calculateTotals();
         }
 
-
-        // 🔹 Remove item
+        // =========================
+        // 🔹 REMOVE ITEM
+        // =========================
         function removeItem(index) {
             cart.splice(index, 1);
+            resetCoupon();
             renderCart();
             calculateTotals();
         }
 
+        // =========================
+        // 🔹 APPLY COUPON
+        // =========================
+        $('#apply_coupon').click(function () {
 
-        // 🔹 Totals
+            let code = $('#coupon_code').val().trim();
+            let subtotal = parseFloat($('#subtotal').text()) || 0;
 
+            if (!code) {
+                showAlert('error', 'Error', 'Enter coupon code');
+                return;
+            }
+
+            $.post("{{ route('coupon.apply') }}", {
+                _token: "{{ csrf_token() }}",
+                code: code,
+                total: subtotal
+            })
+                .done(function (res) {
+
+                    if (!res.success) {
+                        showAlert('error', 'Error', res.message);
+                        return;
+                    }
+
+                    discount = parseFloat(res.discount) || 0;
+
+                    $('#discount').text(discount.toFixed(2));
+
+                    calculateTotals();
+
+                    showAlert('success', 'Success', 'Coupon Applied');
+
+                })
+                .fail(function () {
+                    showAlert('error', 'Error', 'Server error');
+                });
+        });
+
+        // =========================
+        // 🔹 RESET COUPON
+        // =========================
+        function resetCoupon() {
+            discount = 0;
+            $('#discount').text('0.00');
+            $('#coupon_code').val('');
+        }
+
+        // =========================
+        // 🔹 TOTALS
+        // =========================
+        function calculateTotals() {
+
+            let subtotal = 0;
+
+            cart.forEach(item => {
+                subtotal += item.quantity * item.price;
+            });
+
+            let tax = subtotal * 0.0;
+
+            let total = subtotal + tax - discount;
+
+            if (total < 0) total = 0;
+
+            $('#subtotal').text(subtotal.toFixed(2));
+            $('#tax').text(tax.toFixed(2));
+            $('#grand_total').text(total.toFixed(2));
+
+            syncFullAmount();
+        }
+
+        function syncFullAmount() {
+            let total = parseFloat($('#grand_total').text()) || 0;
+            $('#full_amount').val(total.toFixed(2));
+        }
+
+        // =========================
+        // 🔹 PAYMENT TYPE SWITCH
+        // =========================
+        $('#payment_type').on('change', function () {
+
+            let type = $(this).val();
+
+            if (type === 'full') {
+                $('#full_payment_section').show();
+                $('#partial_payment_section').hide();
+            } else {
+                $('#full_payment_section').hide();
+                $('#partial_payment_section').show();
+            }
+        });
+
+        // =========================
+        // 🔹 PROCESS PAYMENT
+        // =========================
         function processPayment() {
 
             let type = $('#payment_type').val();
@@ -281,7 +323,6 @@
             let payments = [];
             let totalPaid = 0;
 
-            // ✅ FULL
             if (type === 'full') {
 
                 let amount = parseFloat($('#full_amount').val()) || 0;
@@ -298,10 +339,8 @@
                 }
 
                 payments.push({ method, amount });
-                totalPaid = amount;
             }
 
-            // ✅ PARTIAL
             if (type === 'partial') {
 
                 $('.partial-amount').each(function () {
@@ -332,49 +371,92 @@
             };
         }
 
-        // 🔹 Complete sale
+        // =========================
+        // 🔹 OPEN CUSTOMER POPUP   
+        // =========================
+        function openCustomerPopup(paymentData) {
 
-        $('#complete-sale-Delete').click(function () {
-
-            let paymentData = processPayment();
-            if (!paymentData) return;
-
-            $.post("{{ route('billing.complete') }}", {
-                _token: "{{ csrf_token() }}",
-                items: cart,
-                subtotal: parseFloat($('#subtotal').text()) || 0,
-                tax: parseFloat($('#tax').text()) || 0,
-                discount: 0,
-                total: parseFloat($('#grand_total').text()) || 0,
-                payment_type: paymentData.payment_type,
-                payments: paymentData.payments
-            }, function (res) {
-
-                if (res.success) {
-                    if (res.success) {
-                        showAlert('success', 'Success', 'Sale Completed!')
-                            .then((result) => {
-                                if (result.isConfirmed) {
-                                    printReceipt(res.sale_id);   // 🖨️ print first
-                                    location.reload();
-                                }
-                            });
+            Swal.fire({
+                title: 'Enter Customer Phone',
+                input: 'text',
+                inputPlaceholder: 'Enter phone number',
+                showCancelButton: true,
+                confirmButtonText: 'Next',
+                preConfirm: (phone) => {
+                    if (!phone) {
+                        Swal.showValidationMessage('Phone required');
+                        return false;
                     }
+                    return phone;
                 }
+            }).then((result) => {
+
+                if (!result.isConfirmed) return;
+
+                let phone = result.value;
+
+                $.post("{{ route('admin.customers.findByPhone') }}", {
+                    _token: "{{ csrf_token() }}",
+                    phone: phone
+                })
+                    .done(function (res) {
+
+                        if (res.exists) {
+                            // ✅ Existing customer
+                            completeSale(paymentData, res.customer.id);
+                        } else {
+                            // ✅ New customer
+                            askCustomerName(phone, paymentData);
+                        }
+                    });
             });
-        });
+        }
 
-        $('#complete-sale').click(function () {
+        // =========================
+        // 🔹 ASK CUSTOMER NAME
+        // =========================
+        function askCustomerName(phone, paymentData) {
 
-            let paymentData = processPayment();
-            if (!paymentData) return;
+            Swal.fire({
+                title: 'New Customer Name',
+                input: 'text',
+                inputPlaceholder: 'Enter name',
+                showCancelButton: true,
+                confirmButtonText: 'Save & Continue',
+                preConfirm: (name) => {
+                    if (!name) {
+                        Swal.showValidationMessage('Name required');
+                        return false;
+                    }
+                    return name;
+                }
+            }).then((result) => {
+
+                if (!result.isConfirmed) return;
+
+                $.post("{{ route('admin.customers.quickStore') }}", {
+                    _token: "{{ csrf_token() }}",
+                    name: result.value,
+                    phone: phone
+                })
+                    .done(function (res) {
+                        completeSale(paymentData, res.customer.id);
+                    });
+            });
+        }
+
+        // =========================
+        // 🔹 COMPLETE SALE
+        // =========================
+        function completeSale(paymentData, customer_id) {
 
             $.post("{{ route('billing.complete') }}", {
                 _token: "{{ csrf_token() }}",
+                customer_id: customer_id,
                 items: cart,
                 subtotal: parseFloat($('#subtotal').text()) || 0,
                 tax: parseFloat($('#tax').text()) || 0,
-                discount: 0,
+                discount: discount || 0,
                 total: parseFloat($('#grand_total').text()) || 0,
                 payment_type: paymentData.payment_type,
                 payments: paymentData.payments
@@ -386,35 +468,71 @@
                         return;
                     }
 
-                    // ✅ Success flow
                     showAlert('success', 'Success', 'Sale Completed!')
-                        .then((result) => {
-                            if (result.isConfirmed) {
-                                if (!res.sale_id) {
-                                    showAlert('error', 'Error', res?.message || 'Something went wrong');
-                                    return;
-                                }
-                                // 🖨️ Print receipt
-                                printReceipt(res.sale_id);
-                                // 🔄 Small delay before reload (important)
-                                setTimeout(() => {
-                                    location.reload();
-                                }, 500);
-                            }
+                        .then(() => {
+                            printReceipt(res.sale_id);
+                            setTimeout(() => location.reload(), 500);
                         });
+
                 })
                 .fail(function (xhr) {
-                    let message = xhr.responseJSON?.message || 'Server Error';
-                    showAlert('error', 'Error', message);
+                    showAlert('error', 'Error', xhr.responseJSON?.message || 'Server Error');
                 });
+        }
+        // =========================
+        // 🔹 COMPLETE SALE
+        // =========================
+        $('#complete-sale').click(function () {
 
+            if (!cart.length) {
+                showAlert('error', 'Error', 'Cart is empty');
+                return;
+            }
+
+            let paymentData = processPayment();
+            if (!paymentData) return;
+
+            openCustomerPopup(paymentData);
+            return;
+            // $.post("{{ route('billing.complete') }}", {
+            //     _token: "{{ csrf_token() }}",
+            //     items: cart,
+            //     subtotal: parseFloat($('#subtotal').text()) || 0,
+            //     tax: parseFloat($('#tax').text()) || 0,
+            //     discount: discount,
+            //     total: parseFloat($('#grand_total').text()) || 0,
+            //     payment_type: paymentData.payment_type,
+            //     payments: paymentData.payments
+            // })
+            //     .done(function (res) {
+
+            //         if (!res || !res.success) {
+            //             showAlert('error', 'Error', res?.message || 'Something went wrong');
+            //             return;
+            //         }
+
+            //         showAlert('success', 'Success', 'Sale Completed!')
+            //             .then(() => {
+            //                 printReceipt(res.sale_id);
+            //                 setTimeout(() => location.reload(), 500);
+            //             });
+
+            //     })
+            //     .fail(function (xhr) {
+            //         showAlert('error', 'Error', xhr.responseJSON?.message || 'Server Error');
+            //     });
         });
 
 
-
+        // =========================
+        // 🔹 PRINT
+        // =========================
         function printReceipt(sale_id) {
             let url = "{{ route('printinvoice', ':id') }}".replace(':id', sale_id);
             window.open(url, '_blank');
         }
+
+        // 
+
     </script>
 @endsection

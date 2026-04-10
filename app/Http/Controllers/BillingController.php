@@ -285,7 +285,7 @@ class BillingController extends Controller
                     ]);
 
                     // 🔥 IMPORTANT: Reduce stock
-                    $inventory->decrement('stock', $item['quantity']);
+                    //$inventory->decrement('stock', $item['quantity']);
                 }
 
                 // ✅ 4. Save Payments

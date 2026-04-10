@@ -7,7 +7,7 @@
 @section('content')
     @include('backend.components.breadcrumb')
 
-    {{-- FILTER SECTION --}}
+    {{-- ================= FILTER SECTION ================= --}}
     <div class="row">
         <div class="col-12">
             <div class="card">
@@ -18,19 +18,19 @@
                 <div class="card-body">
                     <form method="GET">
                         <div class="row">
-                            <x-text-input name="code" label="Coupon Code" value="{{ request()->get('code') ?? '' }}" mainrows="3" />
 
-                            <x-select-dropdown name="status" label="{{ __('translation.status') }}" :options="config('constants.accountstatus')" :selected="request()->get('status') ?? ''" mainrows="2" class="accountstatus" />
+                            <x-text-input name="name" label="Customer Name" value="{{ request()->get('name') ?? '' }}" mainrows="3" />
+                            <x-text-input name="phone" label="Phone" value="{{ request()->get('phone') ?? '' }}" mainrows="3" />
+                            <x-select-dropdown name="status" label="{{ __('translation.status') }}" :options="$status ?? []" :selected="request()->get('status') ?? ''" class="accountstatus" mainrows="2" />
 
                             <div class="col-xl-2 col-md-2">
                                 <div class="form-group mb-3">
                                     <label class="d-inline-block w-100">&nbsp;</label>
-
                                     <x-filter-submit-button name="submit" label="{{ __('translation.filter') }}" />
-
                                     <x-filter-href-button name="reset" href="{!! !empty($breadcrumb['route2']) ? route($breadcrumb['route2']) : '' !!}" label="Reset" />
                                 </div>
                             </div>
+
                         </div>
                     </form>
                 </div>
@@ -38,10 +38,11 @@
         </div>
     </div>
 
-    {{-- LISTING SECTION --}}
+    {{-- ================= LISTING SECTION ================= --}}
     <div class="row">
         <div class="col-12">
             <div class="card">
+
                 <div class="card-header">
                     <h4 class="card-title">
                         {{ array_key_exists('title', $breadcrumb) ? $breadcrumb['title'] : '' }}
@@ -55,12 +56,9 @@
                             <thead>
                                 <tr>
                                     <th>#</th>
-                                    <th>{{ __('translation.couponcode') }}</th>
-                                    <th>{{ __('translation.type') }}</th>
-                                    <th>{{ __('translation.value') }}</th>
-                                    <th>{{ __('translation.minamount') }}</th>
-                                    <th>{{ __('translation.maxdiscount') }}</th>
-                                    <th>{{ __('translation.expirydate') }}</th>
+                                    <th>{{ __('translation.customer_name') }}</th>
+                                    <th>{{ __('translation.phone') }}</th>
+                                    <th>{{ __('translation.wallet_balance') }}</th>
                                     <th>{{ __('translation.status') }}</th>
                                     <th>{{ __('translation.createdat') }}</th>
                                     <th>{{ __('translation.actions') }}</th>
@@ -68,55 +66,46 @@
                             </thead>
 
                             <tbody>
-                                @if(!empty($coupons) && $coupons->count() > 0)
-                                    @foreach($coupons as $coupon)
+                                @if(!empty($customers) && $customers->count() > 0)
+                                    @foreach($customers as $customer)
                                         <tr>
                                             <td>{{ $loop->iteration }}</td>
-                                            <td>{{ $coupon->code }}</td>
+                                            <td>{{ $customer->name }}</td>
+                                            <td>{{ $customer->phone }}</td>
+                                            <td>{{ __('translation.currency') . number_format($customer->wallet_balance, 2) }}</td>
                                             <td>
-                                                @if($coupon->type == 'flat')
-                                                    <span class="badge bg-info">Flat</span>
-                                                @else
-                                                    <span class="badge bg-primary">Percent</span>
-                                                @endif
-                                            </td>
-                                            <td>
-                                                @if($coupon->type == 'percent')
-                                                    {{ $coupon->value }}%
-                                                @else
-                                                    {{ __('translation.currency') . number_format($coupon->value, 2) }}
-                                                @endif
-                                            </td>
-                                            <td>{{ __('translation.currency') . number_format($coupon->min_amount ?? 0, 2) }}</td>
-                                            <td>{{ __('translation.currency') . number_format($coupon->max_discount ?? 0, 2) }}</td>
-                                            <td>{{ $coupon->expired_date }}</td>
-                                            <td>
-                                                @if($coupon->is_active == 1)
+                                                @if($customer->status == 1)
                                                     <span class="badge bg-success">Active</span>
                                                 @else
                                                     <span class="badge bg-danger">Inactive</span>
                                                 @endif
                                             </td>
-                                            <td>{{ $coupon->created_date }}</td>
+                                            <td>{{ \App\Helpers\Settings::getFormattedDatetime($customer->created_at) }}</td>
                                             <td>
-                                                <x-href-input name="edit" label="Edit" required href="{{ route('admin.coupons.edit', ['id' => \App\Helpers\Settings::getEncodeCode($coupon->id)]) }}" />
-                                                <x-deletehref-input name="DeleteButton" label="Delete" required href="javascript:void(0)" class="deleteData" data-deleteid="{{ \App\Helpers\Settings::getEncodeCode($coupon->id) }}" data-routeurl="{{ route('admin.coupons.softdelete', $coupon->id) }}" />
+                                                <x-href-input name="edit" label="Edit" required href="{{ route('admin.customers.edit', ['id' => \App\Helpers\Settings::getEncodeCode($customer->id)]) }}" />
+                                                <x-deletehref-input name="DeleteButton" label="Delete" required href="javascript:void(0)" class="deleteData" data-deleteid="{{ \App\Helpers\Settings::getEncodeCode($customer->id) }}" data-routeurl="{{ route('admin.customers.softdelete', $customer->id) }}" />
                                             </td>
+
                                         </tr>
+
                                     @endforeach
+
                                 @else
                                     <tr>
-                                        <td colspan="10" class="text-center">No Coupons Available</td>
+                                        <td colspan="7" class="text-center">
+                                            No customers available
+                                        </td>
                                     </tr>
                                 @endif
                             </tbody>
+
                         </table>
                     </div>
 
                     {{-- Pagination --}}
-                    @if(!empty($coupons) && $coupons->count() > 0)
-                        <div class="right user-navigation">
-                            {!! $coupons->appends(request()->input())->links() !!}
+                    @if(!empty($customers) && $customers->count() > 0)
+                        <div class="right user-navigation right">
+                            {!! $customers->appends(request()->input())->links() !!}
                         </div>
                     @endif
 
@@ -124,5 +113,4 @@
             </div>
         </div>
     </div>
-
 @endsection

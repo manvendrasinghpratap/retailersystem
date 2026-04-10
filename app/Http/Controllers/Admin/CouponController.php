@@ -243,4 +243,66 @@ class CouponController extends Controller
         return redirect()->route('coupons.index')
             ->with('success', 'Coupon permanently deleted.');
     }
+
+
+    public function apply(Request $request)
+    {
+        $request->validate([
+            'code' => 'required|string',
+            'total' => 'required|numeric|min:0'
+        ]);
+
+        $coupon = Coupon::where('code', $request->code)
+            ->where('is_active', 1)
+            ->first();
+
+        // ❌ Not found
+        if (!$coupon) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid coupon code'
+            ]);
+        }
+
+        // ❌ Expired
+        if ($coupon->expires_at && now()->gt($coupon->expires_at)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Coupon expired'
+            ]);
+        }
+
+        // ❌ Minimum amount
+        if ($coupon->min_amount && $request->total < $coupon->min_amount) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Minimum amount not reached'
+            ]);
+        }
+
+        // ✅ Calculate discount
+        $discount = 0;
+
+        if ($coupon->type === 'flat') {
+            $discount = $coupon->value;
+        } else {
+            $discount = ($request->total * $coupon->value) / 100;
+
+            if ($coupon->max_discount) {
+                $discount = min($discount, $coupon->max_discount);
+            }
+        }
+
+        // ❌ Prevent negative total
+        if ($discount > $request->total) {
+            $discount = $request->total;
+        }
+
+        return response()->json([
+            'success' => true,
+            'discount' => round($discount, 2),
+            'final_total' => round($request->total - $discount, 2),
+            'code' => $coupon->code
+        ]);
+    }
 }

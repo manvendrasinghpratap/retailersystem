@@ -8,7 +8,8 @@ use App\Http\Controllers\Admin\{
     InventoryController,
     StockAdjustmentController,
     BarcodeController,
-    CouponController
+    CouponController,
+    CustomerController
 };
 
 Route::prefix('admin')->middleware(['auth', 'route.permission'])->group(function () {
@@ -68,6 +69,20 @@ Route::prefix('admin')->middleware(['auth', 'route.permission'])->group(function
     Route::post('coupons/delete', [CouponController::class, 'destroy'])->name('admin.coupons.destroy');
     Route::post('coupons/status-update', [CouponController::class, 'statusUpdate'])->name('admin.coupons.status');
     Route::post('coupons/soft-delete', [CouponController::class, 'softdelete'])->name('admin.coupons.softdelete');
+    Route::post('/coupon/apply', [CouponController::class, 'apply'])->name('coupon.apply');
+});
+
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('customers', [CustomerController::class, 'index'])->name('customers.index');
+    Route::get('customers/create', [CustomerController::class, 'create'])->name('customers.create');
+    Route::post('customers/store', [CustomerController::class, 'store'])->name('customers.store');
+    Route::get('customers/edit/{id}', [CustomerController::class, 'edit'])->name('customers.edit');
+    Route::put('customers/update', [CustomerController::class, 'update'])->name('customers.update');
+    Route::post('customers/delete', [CustomerController::class, 'destroy'])->name('customers.destroy');
+    Route::post('customers/soft-delete', [CustomerController::class, 'softdelete'])->name('customers.softdelete');
+    Route::post('customers/status-update', [CustomerController::class, 'statusUpdate'])->name('customers.status');
+    Route::post('customers/find-by-phone', [CustomerController::class, 'findByPhone'])->name('customers.findByPhone');
+    Route::post('customers/quick-store', [CustomerController::class, 'quickStore'])->name('customers.quickStore');
 });
 
 

@@ -91,7 +91,21 @@
             </tbody>
             <tfoot>
                 <tr>
-                    <th colspan="4" class="text-right">{{ __('translation.total') }}</th>
+                    <th colspan="4" class="text-right">{{ __('translation.subtotal') }}</th>
+                    <th>{{ __('translation.b_ngn') . ' ' . number_format($sale->subtotal, 2) }}</th>
+                </tr>
+                <tr>
+                    <th colspan="4" class="text-right">{{ __('translation.tax') }}</th>
+                    <th>{{ __('translation.b_ngn') . ' ' . number_format($sale->tax, 2) }}</th>
+                </tr>
+                @if($sale->discount > 0)
+                    <tr>
+                        <th colspan="4" class="text-right">{{ __('translation.discount') }}</th>
+                        <th>{{ __('translation.b_ngn') . ' ' . number_format($sale->discount, 2) }}</th>
+                    </tr>
+                @endif
+                <tr>
+                    <th colspan="4" class="text-right">{{ __('translation.total_payment') }}</th>
                     <th>{{ __('translation.b_ngn') . ' ' . number_format($sale->total, 2) }}</th>
                 </tr>
             </tfoot>
