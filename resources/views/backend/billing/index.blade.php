@@ -47,7 +47,26 @@
                             <input type="text" id="coupon_code" class="form-control" style="max-width:200px;" placeholder="Enter Coupon">
                             <button type="button" class="btn btn-primary" id="apply_coupon">Apply</button>
                         </div>
+                        <!-- CUSTOMER SECTION -->
+                        <div class="mt-3 p-3 border rounded">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <strong>Customer</strong>
+                                <a href="javascript:void(0)" id="toggle_customer_form">+ Add Customer</a>
+                            </div>
 
+                            <!-- Selected Customer -->
+                            <div id="selected_customer" class="text-muted mb-2">
+                                No customer selected
+                            </div>
+
+                            <!-- Hidden Form -->
+                            <div id="customer_form" style="display:none;">
+                                <x-text-input :islabel="false" labelclass="left" id="customer_phone" name="customer_phone" :value="request('customer_phone')" :placeholder="__('translation.phone_number or whatsappnumber')" class="form-control onlyinteger default-zero" mainrows="12" maxlength="11" />
+                                <x-text-input :islabel="false" labelclass="left" id="customer_name" name="customer_name" :value="request('customer_name')" :placeholder="__('translation.customer_name')" class="form-control" mainrows="12" />
+                                <!-- <input type="text" id="customer_name" class="form-control mb-2" placeholder="Customer name"> -->
+                                <button type="button" class="btn btn-sm btn-primary" id="save_customer_btn">Save Customer</button>
+                            </div>
+                        </div>
                         <p>Discount: {{ __('translation.b_ngn') }} <span id="discount">0.00</span></p>
                         <!-- PARTIAL PAYMENT -->
                         <div id="partial_payment_section" style="display:none;">
@@ -71,10 +90,112 @@
         let currency = "{{ __('translation.b_ngn') }}";
         let discount = 0;
         let scanning = false;
+        let selectedCustomerId = null;
 
         // 🔥 Auto focus
         $(document).ready(function () {
             $('#barcode').focus();
+        });
+
+        // =========================
+        // 🔹 CUSTOMER TOGGLE
+        // =========================
+        $('#toggle_customer_form').click(function () {
+            $('#customer_form').toggle();
+        });
+
+        // =========================
+        // 🔹 AUTO CHECK PHONE
+        // =========================
+        $('#customer_phone').on('blur', function () {
+
+            let phone = $(this).val().trim();
+
+            if (!phone) return;
+
+            $.post("{{ route('admin.customers.findByPhone') }}", {
+                _token: "{{ csrf_token() }}",
+                phone: phone
+            })
+                .done(function (res) {
+
+                    if (res.exists) {
+
+                        selectedCustomerId = res.customer.id;
+
+                        // ✅ Autofill name
+                        $('#customer_name').val(res.customer.name);
+
+                        // ✅ Show selected
+                        $('#selected_customer').html(
+                            `Customer: ${res.customer.name} (${res.customer.phone})`
+                        );
+                        $('#save_customer_btn').hide();
+
+                    } else {
+
+                        // ❌ New customer → clear name & ID
+                        selectedCustomerId = null;
+                        $('#customer_name').val('');
+
+                        $('#selected_customer').html('New customer (not saved)');
+                        $('#save_customer_btn').show();
+                    }
+                });
+        });
+
+        // =========================
+        // 🔹 SAVE CUSTOMER
+        // =========================
+        $('#save_customer_btn').click(function () {
+
+            let phone = $('#customer_phone').val().trim();
+            let name = $('#customer_name').val().trim();
+
+            if (!phone) {
+                showAlert('error', 'Error', 'Phone is required');
+                return;
+            }
+
+            $.post("{{ route('admin.customers.findByPhone') }}", {
+                _token: "{{ csrf_token() }}",
+                phone: phone
+            })
+                .done(function (res) {
+
+                    if (res.exists) {
+                        selectedCustomerId = res.customer.id;
+
+                        $('#selected_customer').html(
+                            `Customer: ${res.customer.name} (${res.customer.phone})`
+                        );
+
+                        showAlert('success', 'Found', 'Existing customer selected');
+
+                    } else {
+
+                        if (!name) {
+                            showAlert('error', 'Error', 'Enter name for new customer');
+                            return;
+                        }
+
+                        $.post("{{ route('admin.customers.quickStore') }}", {
+                            _token: "{{ csrf_token() }}",
+                            name: name,
+                            phone: phone
+                        })
+                            .done(function (res) {
+
+                                selectedCustomerId = res.customer.id;
+
+                                $('#selected_customer').html(
+                                    `Customer: ${res.customer.name} (${res.customer.phone})`
+                                );
+
+                                showAlert('success', 'Success', 'Customer created');
+                            });
+                    }
+                });
         });
 
         // =========================
@@ -178,7 +299,21 @@
                     let stock = parseInt(item.stock) || 0;
                     let total = qty * price;
 
-                    html += `<tr><td>${item.category_name}</td><td>${item.name}</td><td class="${stock <= 5 ? 'text-danger' : ''}">${stock}</td><td><input type="number" value="${qty}" min="1" max="${stock}" style="width:80px" onchange="updateQuantity(${index}, this.value, this)"></td><td>${currency} ${price.toFixed(2)}</td><td class="item-total">${currency} ${total.toFixed(2)}</td><td><button onclick="removeItem(${index})" class="btn btn-danger btn-sm">X</button></td></tr>`;
+                    html += `<tr>
+                                <td>${item.category_name}</td>
+                                <td>${item.name}</td>
+                                <td class="${stock <= 5 ? 'text-danger' : ''}">${stock}</td>
+                                <td>
+                                    <input type="number" value="${qty}" min="1" max="${stock}"
+                                        style="width:80px"
+                                        onchange="updateQuantity(${index}, this.value, this)">
+                                </td>
+                                <td>${currency} ${price.toFixed(2)}</td>
+                                <td class="item-total">${currency} ${total.toFixed(2)}</td>
+                                <td>
+                                    <button onclick="removeItem(${index})" class="btn btn-danger btn-sm">X</button>
+                                </td>
+                            </tr>`;
                 });
             }
 
@@ -283,8 +418,7 @@
                 subtotal += item.quantity * item.price;
             });
 
-            let tax = subtotal * 0.0;
-
+            let tax = 0;
             let total = subtotal + tax - discount;
 
             if (total < 0) total = 0;
@@ -377,81 +511,77 @@
         }
 
         // =========================
-        // 🔹 OPEN CUSTOMER POPUP   
+        // 🔹 COMPLETE SALE
         // =========================
-        function openCustomerPopup(paymentData) {
+        $('#complete-sale').click(function () {
 
-            Swal.fire({
-                title: 'Enter Customer Phone',
-                input: 'text',
-                inputPlaceholder: 'Enter phone number',
-                showCancelButton: true,
-                confirmButtonText: 'Next',
-                preConfirm: (phone) => {
-                    if (!phone) {
-                        Swal.showValidationMessage('Phone required');
-                        return false;
-                    }
-                    return phone;
+            if (!cart.length) {
+                showAlert('error', 'Error', 'Cart is empty');
+                return;
+            }
+
+            let paymentData = processPayment();
+            if (!paymentData) return;
+
+            let phone = $('#customer_phone').val().trim();
+            let name = $('#customer_name').val().trim();
+
+            return false;
+            // ✅ Customer optional
+            completeSale(paymentData, selectedCustomerId || null);
+        });
+
+        $('#complete-sale').click(function () {
+
+            if (!cart.length) {
+                showAlert('error', 'Error', 'Cart is empty');
+                return;
+            }
+
+            let paymentData = processPayment();
+            if (!paymentData) return;
+
+            let phone = $('#customer_phone').val().trim();
+            let name = $('#customer_name').val().trim();
+
+            // ✅ If Save button is visible → customer not saved yet
+            if ($('#save_customer_btn').is(':visible')) {
+
+                if (!phone) {
+                    showAlert('error', 'Error', 'Phone is required');
+                    return;
                 }
-            }).then((result) => {
 
-                if (!result.isConfirmed) return;
-
-                let phone = result.value;
-
-                $.post("{{ route('admin.customers.findByPhone') }}", {
-                    _token: "{{ csrf_token() }}",
-                    phone: phone
-                })
-                    .done(function (res) {
-
-                        if (res.exists) {
-                            // ✅ Existing customer
-                            completeSale(paymentData, res.customer.id);
-                        } else {
-                            // ✅ New customer
-                            askCustomerName(phone, paymentData);
-                        }
-                    });
-            });
-        }
-
-        // =========================
-        // 🔹 ASK CUSTOMER NAME
-        // =========================
-        function askCustomerName(phone, paymentData) {
-
-            Swal.fire({
-                title: 'New Customer Name',
-                input: 'text',
-                inputPlaceholder: 'Enter name',
-                showCancelButton: true,
-                confirmButtonText: 'Save & Continue',
-                preConfirm: (name) => {
-                    if (!name) {
-                        Swal.showValidationMessage('Name required');
-                        return false;
-                    }
-                    return name;
+                if (!name) {
+                    showAlert('error', 'Error', 'Name is required for new customer');
+                    return;
                 }
-            }).then((result) => {
 
-                if (!result.isConfirmed) return;
-
+                // 🔥 Auto create customer
                 $.post("{{ route('admin.customers.quickStore') }}", {
                     _token: "{{ csrf_token() }}",
-                    name: result.value,
+                    name: name,
                     phone: phone
                 })
                     .done(function (res) {
-                        completeSale(paymentData, res.customer.id);
+
+                        selectedCustomerId = res.customer.id;
+
+                        // ✅ Now complete sale
+                        completeSale(paymentData, selectedCustomerId);
+                    })
+                    .fail(function () {
+                        showAlert('error', 'Error', 'Failed to create customer');
                     });
-            });
-        }
+
+            } else {
+                // ✅ Already existing customer OR already saved
+                completeSale(paymentData, selectedCustomerId || null);
+            }
+        });
 
         // =========================
-        // 🔹 COMPLETE SALE
+        // 🔹 FINAL API
         // =========================
         function completeSale(paymentData, customer_id) {
 
@@ -484,50 +614,6 @@
                     showAlert('error', 'Error', xhr.responseJSON?.message || 'Server Error');
                 });
         }
-        // =========================
-        // 🔹 COMPLETE SALE
-        // =========================
-        $('#complete-sale').click(function () {
-
-            if (!cart.length) {
-                showAlert('error', 'Error', 'Cart is empty');
-                return;
-            }
-
-            let paymentData = processPayment();
-            if (!paymentData) return;
-
-            openCustomerPopup(paymentData);
-            return;
-            // $.post("{{ route('billing.complete') }}", {
-            //     _token: "{{ csrf_token() }}",
-            //     items: cart,
-            //     subtotal: parseFloat($('#subtotal').text()) || 0,
-            //     tax: parseFloat($('#tax').text()) || 0,
-            //     discount: discount,
-            //     total: parseFloat($('#grand_total').text()) || 0,
-            //     payment_type: paymentData.payment_type,
-            //     payments: paymentData.payments
-            // })
-            //     .done(function (res) {
-
-            //         if (!res || !res.success) {
-            //             showAlert('error', 'Error', res?.message || 'Something went wrong');
-            //             return;
-            //         }
-
-            //         showAlert('success', 'Success', 'Sale Completed!')
-            //             .then(() => {
-            //                 printReceipt(res.sale_id);
-            //                 setTimeout(() => location.reload(), 500);
-            //             });
-
-            //     })
-            //     .fail(function (xhr) {
-            //         showAlert('error', 'Error', xhr.responseJSON?.message || 'Server Error');
-            //     });
-        });
-
 
         // =========================
         // 🔹 PRINT
@@ -536,8 +622,4 @@
             let url = "{{ route('printinvoice', ':id') }}".replace(':id', sale_id);
             window.open(url, '_blank');
         }
-
-        // 
-
-    </script>
-@endsection
+</script>@endsection
