@@ -291,4 +291,11 @@ return [
     'customer_name' => 'Customer Name',
     'add_new_customer' => 'Add New Customer',
     'brand_name' => 'Brand Name',
+    'thank_you_for_your_purchase' => 'Thank you for your purchase',
+    'phone_number_or_whatsapp_number' => 'Phone Number or Whatsapp Number',
+    'we_offer_special_discounts_and_promotions_to_our_loyal_customers' => 'We offer special discounts and promotions to our loyal customers.',
+    'to_enjoy_these_benefits_please_visit_the_link_below_to_register' => 'To enjoy these benefits, please visit the link below to register:',
+    'havana_worlds' => 'Havana Worlds',
+    'havana_worlds_registration' => 'Havana Worlds Registration',
+    'havana_worlds_registration_link' => 'https://havanaworlds.com/customerregistration/',
 ];

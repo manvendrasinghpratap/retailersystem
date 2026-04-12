@@ -10,6 +10,7 @@ class Customer extends Model
         'account_id',
         'name',
         'phone',
+        'email',
         'wallet_balance',
         'status',
     ];

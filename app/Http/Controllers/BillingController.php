@@ -5,11 +5,14 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Sale;
+use App\Models\Customer;
 use App\Models\SaleItem;
 use App\Models\Category;
 use App\Models\Inventory;
 use Illuminate\Support\Facades\DB;
-
+use App\Helpers\EmailHelper;
+use App\Mail\CustomerInvoiceMail;
+use Illuminate\Support\Facades\Mail;
 
 class BillingController extends Controller
 {
@@ -89,9 +92,10 @@ class BillingController extends Controller
      * - Deducts inventory
      * - Stores sale items
      */
-    public function completeSaleOld(Request $request)
+
+    public function completeSale(Request $request)
     {
-        // ✅ Validation (updated for new structure)
+        // ✅ Validation
         $request->validate([
             'items' => 'required|array|min:1',
             'items.*.id' => 'required|integer',
@@ -105,97 +109,113 @@ class BillingController extends Controller
 
             'payment_type' => 'required|in:full,partial',
 
-            // ✅ Payments required
             'payments' => 'required|array|min:1',
-
-            // ✅ Amount always required
             'payments.*.amount' => 'required|numeric|min:0',
-
-            // 🔥 Method required ONLY if amount > 0
             'payments.*.method' => 'required_with:payments.*.amount|string',
         ]);
-        try {
-            $saleId = null;
-            DB::transaction(function () use ($request) {
 
-                // ✅ 1. Validate payment total
-                $totalPaid = collect($request->payments)->sum('amount');
+        try {
+
+            $sale = DB::transaction(function () use ($request) {
 
                 $total = round($request->total, 2);
-                $totalPaid = round($totalPaid, 2);
+                $totalPaid = round(collect($request->payments)->sum('amount'), 2);
 
-                if ($totalPaid !== $total) {
+                // ✅ Safer float comparison
+                if (abs($totalPaid - $total) > 0.01) {
                     throw new \Exception('Payment total mismatch');
                 }
 
-                // ✅ 2. Create Sale
+                // ✅ Create Sale
                 $sale = Sale::create([
                     'invoice_no' => 'INV' . now()->timestamp,
+                    'customer_id' => $request->customer_id ?? null,
+                    'account_id' => auth()->user()->account_id,
                     'subtotal' => $request->subtotal,
-                    'account_id' => 1,
-                    // 'account_id' => auth()->user()->account_id,
                     'tax' => $request->tax ?? 0,
                     'discount' => $request->discount ?? 0,
                     'total' => $total,
                     'paid_amount' => $totalPaid,
                     'change_amount' => 0,
-
-                    // ✅ Only store method if FULL
                     'payment_method' => $request->payment_type === 'full'
-                        ? $request->payments[0]['method']
+                        ? ($request->payments[0]['method'] ?? null)
                         : null,
-
                     'status' => 'completed',
                     'user_id' => auth()->id(),
                 ]);
-                // ✅ Now this will work
-                $saleId = $sale->id;
-                // ✅ 3. Process Items
+
+                // ✅ Process Items + Reduce Stock
                 foreach ($request->items as $item) {
 
-                    $productId = $item['id']; // 🔥 FIXED (was product_id)
-
-                    // 🔒 Lock inventory
-                    $inventory = Inventory::where('product_id', $productId)
+                    $inventory = Inventory::where('product_id', $item['id'])
                         ->lockForUpdate()
                         ->first();
 
                     if (!$inventory) {
-                        throw new \Exception('Inventory not found for product ID: ' . $productId);
+                        throw new \Exception('Inventory not found for product ID: ' . $item['id']);
                     }
 
                     if ($inventory->stock < $item['quantity']) {
-                        throw new \Exception('Insufficient stock for product ID: ' . $productId);
+                        throw new \Exception('Insufficient stock for product ID: ' . $item['id']);
                     }
 
                     // ✅ Save Sale Item
                     SaleItem::create([
                         'sale_id' => $sale->id,
-                        'product_id' => $productId,
+                        'product_id' => $item['id'],
                         'quantity' => $item['quantity'],
                         'price' => $item['price'],
                         'total' => $item['quantity'] * $item['price'],
                     ]);
 
+                    // 🔥 Reduce stock (IMPORTANT)
+                    $inventory->decrement('stock', $item['quantity']);
                 }
 
-                // ✅ 4. Save Payment Breakdown (IMPORTANT)
+                // ✅ Save Payments
                 foreach ($request->payments as $pay) {
-
                     \App\Models\SalePayment::create([
                         'sale_id' => $sale->id,
                         'method' => $pay['method'],
                         'amount' => $pay['amount'],
                     ]);
-
                 }
 
-
+                return $sale;
             });
 
+            // ✅ Load relationships (avoid lazy issues)
+            $sale->load('items');
+
+            // $customer = $request->customer_id
+            //     ? Customer::find($request->customer_id)
+            //     : null;
+
+            // // ✅ Email only if customer + email exists
+            // if ($customer && !empty($customer->email)) {
+
+            //     $data = [
+            //         'sale' => $sale,
+            //         'items' => $sale->items,
+            //         'customer' => $customer,
+            //         'total' => $sale->total,
+            //         'invoice_no' => $sale->invoice_no,
+            //         'date' => $sale->created_at->format('Y-m-d'),
+            //         'time' => $sale->created_at->format('H:i A'),
+            //     ];
+
+            //     \App\Helpers\EmailHelper::sendCustomerEmail(
+            //         $customer->email,
+            //         'Invoice #' . $sale->invoice_no,
+            //         'emails.invoice',
+            //         $data
+            //     );
+            // }
+
+            // ✅ Response
             return response()->json([
                 'success' => true,
-                'sale_id' => $saleId,
+                'sale_id' => $sale->id,
                 'message' => 'Sale completed successfully'
             ]);
 
@@ -203,13 +223,13 @@ class BillingController extends Controller
 
             return response()->json([
                 'success' => false,
-                'sale_id' => '',
+                'sale_id' => null,
                 'message' => $e->getMessage()
             ], 400);
         }
     }
 
-    public function completeSale(Request $request)
+    public function OldcompleteoldSale(Request $request)
     {
         // ✅ Validation
         $request->validate([
@@ -246,6 +266,7 @@ class BillingController extends Controller
                 // ✅ 2. Create Sale
                 $sale = Sale::create([
                     'invoice_no' => 'INV' . now()->timestamp,
+                    'customer_id' => $request->customer_id ?? null,
                     'account_id' => auth()->user()->account_id,
                     'subtotal' => $request->subtotal,
                     'tax' => $request->tax ?? 0,
@@ -300,6 +321,23 @@ class BillingController extends Controller
                 return $sale; // ✅ CRITICAL FIX
             });
 
+            $customer = Customer::find($request->customer_id);
+            $data = [
+                'sale' => $sale,
+                'items' => $sale->items,
+                'customer' => $customer,
+                'total' => $sale->total,
+                'invoice_no' => $sale->invoice_no,
+                'date' => $sale->created_at->format('Y-m-d'),
+                'time' => $sale->created_at->format('H:i:A'),
+            ];
+
+            EmailHelper::sendCustomerEmail(
+                $customer->email,
+                'Invoice',
+                'emails.invoice',
+                $data
+            );
             // ✅ FINAL RESPONSE
             return response()->json([
                 'success' => true,

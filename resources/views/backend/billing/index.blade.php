@@ -61,8 +61,9 @@
 
                             <!-- Hidden Form -->
                             <div id="customer_form" style="display:none;">
-                                <x-text-input :islabel="false" labelclass="left" id="customer_phone" name="customer_phone" :value="request('customer_phone')" :placeholder="__('translation.phone_number or whatsappnumber')" class="form-control onlyinteger default-zero" mainrows="12" maxlength="11" />
+                                <x-text-input :islabel="false" labelclass="left" id="customer_phone" name="customer_phone" :value="request('customer_phone')" :placeholder="__('translation.phone_number_or_whatsapp_number')" class="form-control onlyinteger default-zero" mainrows="12" maxlength="11" />
                                 <x-text-input :islabel="false" labelclass="left" id="customer_name" name="customer_name" :value="request('customer_name')" :placeholder="__('translation.customer_name')" class="form-control" mainrows="12" />
+                                <x-text-input :islabel="false" labelclass="left" id="customer_email" name="customer_email" :value="request('customer_email')" :placeholder="__('translation.email')" class="form-control" mainrows="12" />
                                 <!-- <input type="text" id="customer_name" class="form-control mb-2" placeholder="Customer name"> -->
                                 <button type="button" class="btn btn-sm btn-primary" id="save_customer_btn">Save Customer</button>
                             </div>
@@ -151,6 +152,7 @@
 
             let phone = $('#customer_phone').val().trim();
             let name = $('#customer_name').val().trim();
+            let email = $('#customer_email').val().trim();
 
             if (!phone) {
                 showAlert('error', 'Error', 'Phone is required');
@@ -182,7 +184,8 @@
                         $.post("{{ route('admin.customers.quickStore') }}", {
                             _token: "{{ csrf_token() }}",
                             name: name,
-                            phone: phone
+                            phone: phone,
+                            email: email
                         })
                             .done(function (res) {
 
@@ -191,7 +194,9 @@
                                 $('#selected_customer').html(
                                     `Customer: ${res.customer.name} (${res.customer.phone})`
                                 );
-
+                                $('#save_customer_btn').hide();
+                                $('#customer_form').hide();
+                                $('#toggle_customer_form').hide();
                                 showAlert('success', 'Success', 'Customer created');
                             });
                     }
@@ -299,21 +304,7 @@
                     let stock = parseInt(item.stock) || 0;
                     let total = qty * price;
 
-                    html += `<tr>
-                                <td>${item.category_name}</td>
-                                <td>${item.name}</td>
-                                <td class="${stock <= 5 ? 'text-danger' : ''}">${stock}</td>
-                                <td>
-                                    <input type="number" value="${qty}" min="1" max="${stock}"
-                                        style="width:80px"
-                                        onchange="updateQuantity(${index}, this.value, this)">
-                                </td>
-                                <td>${currency} ${price.toFixed(2)}</td>
-                                <td class="item-total">${currency} ${total.toFixed(2)}</td>
-                                <td>
-                                    <button onclick="removeItem(${index})" class="btn btn-danger btn-sm">X</button>
-                                </td>
-                            </tr>`;
+                    html += `<tr><td>${item.category_name}</td><td>${item.name}</td><td class="${stock <= 5 ? 'text-danger' : ''}">${stock}</td><td><input type="number" value="${qty}" min="1" max="${stock}" style="width:80px" onchange="updateQuantity(${index}, this.value, this)"></td><td>${currency} ${price.toFixed(2)}</td><td class="item-total">${currency} ${total.toFixed(2)}</td><td><button onclick="removeItem(${index})" class="btn btn-danger btn-sm">X</button></td></tr>`;
                 });
             }
 
@@ -520,65 +511,71 @@
                 return;
             }
 
-            let paymentData = processPayment();
-            if (!paymentData) return;
+            // ✅ Confirmation popup FIRST
+            Swal.fire({
+                title: 'Complete Purchase?',
+                text: `Total: ${currency} ${$('#grand_total').text()}`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Complete Purchase',
+                cancelButtonText: 'Add More Items',
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#6c757d'
+            }).then((result) => {
 
-            let phone = $('#customer_phone').val().trim();
-            let name = $('#customer_name').val().trim();
-
-            return false;
-            // ✅ Customer optional
-            completeSale(paymentData, selectedCustomerId || null);
-        });
-
-        $('#complete-sale').click(function () {
-
-            if (!cart.length) {
-                showAlert('error', 'Error', 'Cart is empty');
-                return;
-            }
-
-            let paymentData = processPayment();
-            if (!paymentData) return;
-
-            let phone = $('#customer_phone').val().trim();
-            let name = $('#customer_name').val().trim();
-
-            // ✅ If Save button is visible → customer not saved yet
-            if ($('#save_customer_btn').is(':visible')) {
-
-                if (!phone) {
-                    showAlert('error', 'Error', 'Phone is required');
+                // ❌ User wants to continue shopping
+                if (!result.isConfirmed) {
+                    $('#barcode').focus();
                     return;
                 }
 
-                if (!name) {
-                    showAlert('error', 'Error', 'Name is required for new customer');
-                    return;
-                }
+                // ✅ Now process payment AFTER confirmation
+                let paymentData = processPayment();
+                if (!paymentData) return;
 
-                // 🔥 Auto create customer
-                $.post("{{ route('admin.customers.quickStore') }}", {
-                    _token: "{{ csrf_token() }}",
-                    name: name,
-                    phone: phone
-                })
-                    .done(function (res) {
+                let phone = $('#customer_phone').val().trim();
+                let name = $('#customer_name').val().trim();
+                let email = $('#customer_email').val().trim();
 
-                        selectedCustomerId = res.customer.id;
+                // ✅ If Save button is visible → customer not saved yet
+                if ($('#save_customer_btn').is(':visible')) {
 
-                        // ✅ Now complete sale
-                        completeSale(paymentData, selectedCustomerId);
+                    if (!phone) {
+                        showAlert('error', 'Error', 'Phone is required');
+                        return;
+                    }
+
+                    if (!name) {
+                        showAlert('error', 'Error', 'Name is required for new customer');
+                        return;
+                    }
+
+                    // 🔥 Auto create customer
+                    $.post("{{ route('admin.customers.quickStore') }}", {
+                        _token: "{{ csrf_token() }}",
+                        name: name,
+                        phone: phone,
+                        email: email
                     })
-                    .fail(function () {
-                        showAlert('error', 'Error', 'Failed to create customer');
-                    });
+                        .done(function (res) {
 
-            } else {
-                // ✅ Already existing customer OR already saved
-                completeSale(paymentData, selectedCustomerId || null);
-            }
+                            selectedCustomerId = res.customer.id;
+
+                            // ✅ Complete sale
+                            completeSale(paymentData, selectedCustomerId);
+                        })
+                        .fail(function () {
+                            showAlert('error', 'Error', 'Failed to create customer');
+                        });
+
+                } else {
+                    // ✅ Existing customer or optional
+                    completeSale(paymentData, selectedCustomerId || null);
+                }
+
+            });
         });
+
 
         // =========================
         // 🔹 FINAL API
@@ -605,8 +602,9 @@
 
                     showAlert('success', 'Success', 'Sale Completed!')
                         .then(() => {
-                            printReceipt(res.sale_id);
-                            setTimeout(() => location.reload(), 500);
+                            // printReceipt(res.sale_id);
+                            // setTimeout(() => location.reload(), 500);
+                            location.reload();
                         });
 
                 })

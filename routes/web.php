@@ -23,6 +23,28 @@ Route::get('/updateapp', function () {
     \Artisan::call('optimize:clear');
     echo 'dump-autoload complete';
 });
+Route::get('/composerautofix', function () {
+
+    \Artisan::call('key:generate');
+    \Artisan::call('config:clear');
+    \Artisan::call('config:cache');
+    \Artisan::call('cache:clear');
+    \Artisan::call('route:clear');
+    \Artisan::call('view:clear');
+    \Artisan::call('optimize:clear');
+
+    // ✅ Run composer dump-autoload
+    try {
+        exec('composer dump-autoload 2>&1', $output, $resultCode);
+    } catch (\Exception $e) {
+        $output = ['Composer execution failed'];
+    }
+
+    return response()->json([
+        'status' => 'success',
+        'composer_output' => $output
+    ]);
+});
 Route::get('syncroutes', function () {
     \Artisan::call('sync:routes');
     echo 'routes synced';
@@ -30,7 +52,7 @@ Route::get('syncroutes', function () {
 Route::get('admin/acl', [\App\Http\Controllers\Administrator\AclController::class, 'index'])->name('acl');
 // Mail::raw('Test email', function ($message) {
 //     $message->to('m8005029425@gmail.com')
-//             ->subject('Test Mail');
+//         ->subject('Test Mail');
 // });
 
 Route::get('/generate-barcode', [BarcodeController::class, 'index']);
@@ -82,6 +104,7 @@ Route::middleware(['auth', 'route.permission'])->group(function () {
 });
 Route::middleware(['auth', 'route.permission'])->group(function () {
     Route::get('admin/print/invoice/{id}', [SaleController::class, 'printinvoice'])->name('printinvoice');
+    Route::post('admin/send-invoice-email', [SaleController::class, 'sendInvoiceEmail'])->name('sendinvoice');
 });
 Route::middleware(['auth'])->group(function () {
     Route::get('admin/sync-routes', [\App\Http\Controllers\Administrator\AclController::class, 'syncRoutes'])->name('syncroutes');

@@ -67,13 +67,9 @@
                                                 {{ ucfirst($sale->status) }}
                                             </span>
                                         </td>
-                                        <td>
-                                            <a href="{{ route('admin.sales.show', $sale->id) }}" class="" title="View">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                            <a href="{{ route('printinvoice', $sale->id) }}" class="" title="Receipt">
-                                                <i class="fas fa-receipt"></i>
-                                            </a>
+                                        <td><a href="{{ route('admin.sales.show', $sale->id) }}" class="" title="View"><i class="fas fa-eye"></i></a>
+                                            <a href="{{ route('printinvoice', $sale->id) }}" class="" title="Receipt"><i class="fas fa-receipt"></i></a>
+                                            <a href="javascript:void(0)" class="send-invoice-btn" data-sale-id="{{ $sale->id }}" title="Send Invoice via Email"><i class="fas fa-envelope"></i></a>
                                         </td>
                                     </tr>
                                 @empty
@@ -92,4 +88,45 @@
             <!-- end cardaa -->
         </div> <!-- end col -->
     </div> <!-- end row -->
+@endsection
+
+@section('script')
+    <script>
+        $(document).ready(function () {
+            $('.send-invoice-btn').on('click', function () {
+                var saleId = $(this).data('sale-id');
+                var btn = $(this);
+
+                // Disable button and show loading state
+                btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Sending...');
+
+                $.ajax({
+                    url: '{{ route("sendinvoice") }}',
+                    type: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        sale_id: saleId
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            showAlert('success', 'Success', 'Invoice sent successfully!');
+                        } else {
+                            showAlert('error', 'Error', response.message);
+                        }
+                    },
+                    error: function (xhr) {
+                        var errorMsg = 'Failed to send invoice. Please try again.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMsg = xhr.responseJSON.message;
+                        }
+                        alert('Error: ' + errorMsg);
+                    },
+                    complete: function () {
+                        // Re-enable button
+                        btn.prop('disabled', false).html('<i class="fas fa-envelope"></i>');
+                    }
+                });
+            });
+        });
+    </script>
 @endsection

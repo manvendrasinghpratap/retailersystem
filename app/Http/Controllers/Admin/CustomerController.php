@@ -86,6 +86,7 @@ class CustomerController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'phone' => 'required|unique:customers,phone',
+            'email' => 'nullable|email',
             'wallet_balance' => 'nullable|numeric',
             'status' => 'nullable|boolean',
         ]);
@@ -96,6 +97,7 @@ class CustomerController extends Controller
                 'account_id' => auth()->user()->account_id,
                 'name' => $request->name,
                 'phone' => $request->phone,
+                'email' => $request->email,
                 'wallet_balance' => $request->wallet_balance ?? 0,
                 'status' => $request->status ?? 1,
             ]);
@@ -146,6 +148,7 @@ class CustomerController extends Controller
             $request->validate([
                 'name' => 'required|string|max:255',
                 'phone' => 'required|unique:customers,phone,' . $customer->id,
+                'email' => 'nullable|email',
                 'wallet_balance' => 'nullable|numeric',
                 'status' => 'nullable|boolean',
             ]);
@@ -153,6 +156,7 @@ class CustomerController extends Controller
             $customer->update([
                 'name' => $request->name,
                 'phone' => $request->phone,
+                'email' => $request->email,
                 'wallet_balance' => $request->wallet_balance ?? 0,
                 'status' => $request->status ?? 1,
             ]);
@@ -250,6 +254,7 @@ class CustomerController extends Controller
         $customer = Customer::create([
             'name' => $request->name,
             'phone' => $request->phone,
+            'email' => $request->email,
             'account_id' => auth()->user()->account_id,
             'wallet_balance' => 0
         ]);

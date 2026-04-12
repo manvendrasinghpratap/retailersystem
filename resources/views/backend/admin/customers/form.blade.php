@@ -33,6 +33,8 @@
                             <x-text-input name="name" label="{{ __('translation.customer_name') }}" value="{{ old('name', $customer->name ?? '') }}" required />
                             <!-- Phone -->
                             <x-text-input name="phone" label="{{ __('translation.phone') }}" value="{{ old('phone', $customer->phone ?? '') }}" required class="onlyinteger" minlength="10" maxlength="10" />
+                            <!---Email-->
+                            <x-text-input name="email" label="{{ __('translation.email') }}" value="{{ old('email', $customer->email ?? '') }}" />
                             <!-- Wallet Balance -->
                             <x-text-input name="wallet_balance" label="{{ __('translation.wallet_balance') }}" value="{{ old('wallet_balance', $customer->wallet_balance ?? 0) }}" class="onlydecimal" />
                             {{-- Status --}}

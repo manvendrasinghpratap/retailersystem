@@ -60,6 +60,12 @@
           <span data-key="t-coupons">@lang('translation.coupons')</span>
         </a>
       </li>
+      <li class="nav-item">
+        <a class="nav-link dropdown-toggle arrow-none {{ request()->routeIs('admin.customers.index') || request()->routeIs('admin.customers.show') ? 'active' : '' }}" href="{{ route('admin.customers.index') }}" id="topnav-customers" role="button">
+          <i data-feather="order"></i>
+          <span data-key="t-customers">@lang('translation.customers')</span>
+        </a>
+      </li>
 
       @php $posRoutes = [App\Helpers\Settings::getUserRole() . '.pos']; @endphp
 

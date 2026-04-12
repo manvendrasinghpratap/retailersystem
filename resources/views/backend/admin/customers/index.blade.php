@@ -58,6 +58,7 @@
                                     <th>#</th>
                                     <th>{{ __('translation.customer_name') }}</th>
                                     <th>{{ __('translation.phone') }}</th>
+                                    <th>{{ __('translation.email') }}</th>
                                     <th>{{ __('translation.wallet_balance') }}</th>
                                     <th>{{ __('translation.status') }}</th>
                                     <th>{{ __('translation.createdat') }}</th>
@@ -72,6 +73,7 @@
                                             <td>{{ $loop->iteration }}</td>
                                             <td>{{ $customer->name }}</td>
                                             <td>{{ $customer->phone }}</td>
+                                            <td>{{ $customer->email }}</td>
                                             <td>{{ __('translation.currency') . number_format($customer->wallet_balance, 2) }}</td>
                                             <td>
                                                 @if($customer->status == 1)

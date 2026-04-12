@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Sale;
 use Illuminate\Http\Request;
 use App\Helpers\Settings;
+use App\Models\Customer;
+use App\Mail\CustomerInvoiceMail;
+use Illuminate\Support\Facades\Mail;
 
 class SaleController extends Controller
 {
@@ -85,5 +88,46 @@ class SaleController extends Controller
         $sale = Sale::find($id);
         $sale->load('items.product', 'user', 'payments');
         return view('backend.sales.receipt', compact("sale"));
+    }
+
+
+
+    public function sendInvoiceEmail(Request $request)
+    {
+
+        $request->validate([
+            'sale_id' => 'required|integer|exists:sales,id',
+        ]);
+
+        try {
+
+            $sale = Sale::with('items.product')->findOrFail($request->sale_id);
+            $customer = Customer::find($sale->customer_id);
+
+            // ✅ Check customer + email
+            if (!$customer || empty($customer->email)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Customer email not available'
+                ], 400);
+            }
+
+            // ✅ Send email
+            Mail::to($customer->email)->send(new CustomerInvoiceMail($sale, $customer));
+            // echo '<pre>';
+            // print_r($sale);
+            // die;
+            return response()->json([
+                'success' => true,
+                'message' => 'Invoice email sent successfully'
+            ]);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 }
