@@ -300,4 +300,8 @@ return [
     'havana_worlds_registration_link' => 'https://havanaworlds.com/customerregistration/',
     'customer_email' => 'Customer Email',
     'customer_phone' => 'Customer Phone',
+    'sales_orders' => 'Sales Orders',
+    'products' => 'Products',
+    'total_revenue' => 'Total Revenue',
+    'hourly_sales' => 'Hourly Sales',
 ];

@@ -81,7 +81,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="text-center">{{ __('translation.no_sales_found') }}</td>
+                                        <td colspan="11" class="text-center">{{ __('translation.no_sales_found') }}</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -126,7 +126,7 @@
                         if (xhr.responseJSON && xhr.responseJSON.message) {
                             errorMsg = xhr.responseJSON.message;
                         }
-                        alert('Error: ' + errorMsg);
+                        showAlert('error', 'Error', errorMsg);
                     },
                     complete: function () {
                         // Re-enable button
