@@ -8,7 +8,7 @@ use App\Helpers\Settings;
 use App\Models\Customer;
 use App\Mail\CustomerInvoiceMail;
 use Illuminate\Support\Facades\Mail;
-
+use Barryvdh\DomPDF\Facade\Pdf;
 class SaleController extends Controller
 {
 
@@ -84,10 +84,19 @@ class SaleController extends Controller
 
     public function printinvoice($id)
     {
-        // $id = base64_decode($id);
-        $sale = Sale::find($id);
-        $sale->load('items.product', 'user', 'payments');
-        return view('backend.sales.receipt', compact("sale"));
+        $id = Settings::getDecodeCodeWithHashids($id);
+        try {
+            if (empty($id)) {
+                return redirect()->route('admin.sales.index')->with('error', 'Invalid sale ID');
+            }
+            $id = $id[0];
+            $sale = Sale::find($id);
+            $sale->load('items.product', 'user', 'payments');
+            return view('backend.sales.receipt', compact("sale"));
+        } catch (\Exception $e) {
+            return redirect()->route('admin.sales.index')->with('error', 'Invalid sale ID');
+        }
+
     }
 
 
@@ -114,9 +123,6 @@ class SaleController extends Controller
 
             // ✅ Send email
             Mail::to($customer->email)->send(new CustomerInvoiceMail($sale, $customer));
-            // echo '<pre>';
-            // print_r($sale);
-            // die;
             return response()->json([
                 'success' => true,
                 'message' => 'Invoice email sent successfully'
@@ -130,4 +136,29 @@ class SaleController extends Controller
             ], 500);
         }
     }
+
+    public function downloadInvoice($id)
+    {
+        $id = Settings::getDecodeCodeWithHashids($id);
+        try {
+            if (empty($id)) {
+                return redirect()->route('admin.sales.index')->with('error', 'Invalid sale ID');
+            }
+            $id = $id[0];
+            $pdfHeaderdata = \Config::get('constants.downloadinvoicpdf');
+            $sale = Sale::with(['items.product', 'customer'])->findOrFail($id);
+            $customer = Customer::find($sale->customer_id);
+            $pdf = Pdf::loadView('backend.pdf.invoice', compact('sale', 'customer'));
+            $pdf = Settings::downloadpdf($pdf);
+            $fileName = $pdfHeaderdata['filename'] . '-' . $sale->invoice_no . '.pdf';
+            return $pdf->stream($fileName);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
 }

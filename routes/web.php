@@ -105,6 +105,7 @@ Route::middleware(['auth', 'route.permission'])->group(function () {
 Route::middleware(['auth', 'route.permission'])->group(function () {
     Route::get('admin/print/invoice/{id}', [SaleController::class, 'printinvoice'])->name('printinvoice');
     Route::post('admin/send-invoice-email', [SaleController::class, 'sendInvoiceEmail'])->name('sendinvoice');
+    Route::get('admin/download-invoice/{id}', [SaleController::class, 'downloadInvoice'])->name('downloadinvoice');
 });
 Route::middleware(['auth'])->group(function () {
     Route::get('admin/sync-routes', [\App\Http\Controllers\Administrator\AclController::class, 'syncRoutes'])->name('syncroutes');

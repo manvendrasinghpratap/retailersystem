@@ -126,12 +126,13 @@
 
                         // ✅ Autofill name
                         $('#customer_name').val(res.customer.name);
+                        $('#customer_email').val(res.customer.email || '');
 
                         // ✅ Show selected
                         $('#selected_customer').html(
-                            `Customer: ${res.customer.name} (${res.customer.phone})`
+                            `Customer: ${res.customer.name} (${res.customer.phone}) ${res.customer.email ? '- ' + res.customer.email : ''}`
                         );
-                        $('#save_customer_btn').hide();
+                        // $('#save_customer_btn').hide();
 
                     } else {
 
@@ -140,7 +141,7 @@
                         $('#customer_name').val('');
 
                         $('#selected_customer').html('New customer (not saved)');
-                        $('#save_customer_btn').show();
+                        // $('#save_customer_btn').show();
                     }
                 });
         });
@@ -165,16 +166,39 @@
             })
                 .done(function (res) {
 
+                    // ✅ EXISTING CUSTOMER → UPDATE
                     if (res.exists) {
-                        selectedCustomerId = res.customer.id;
 
-                        $('#selected_customer').html(
-                            `Customer: ${res.customer.name} (${res.customer.phone})`
-                        );
+                        if (!name) {
+                            showAlert('error', 'Error', 'Name is required to update');
+                            return;
+                        }
 
-                        showAlert('success', 'Found', 'Existing customer selected');
+                        $.post("{{ route('admin.customers.updateByPhone') }}", {
+                            _token: "{{ csrf_token() }}",
+                            phone: phone,
+                            name: name,
+                            email: email
+                        })
+                            .done(function (updateRes) {
 
-                    } else {
+                                selectedCustomerId = updateRes.customer.id;
+
+                                $('#selected_customer').html(
+                                    `Customer: ${updateRes.customer.name} (${updateRes.customer.phone}) 
+                                                                                                                                         ${updateRes.customer.email ? '- ' + updateRes.customer.email : ''}`
+                                );
+
+                                $('#save_customer_btn').hide();
+                                $('#customer_form').hide();
+                                $('#toggle_customer_form').hide();
+
+                                showAlert('success', 'Updated', 'Customer updated successfully');
+                            });
+
+                    }
+                    // ❌ NEW CUSTOMER → CREATE
+                    else {
 
                         if (!name) {
                             showAlert('error', 'Error', 'Enter name for new customer');
@@ -192,11 +216,13 @@
                                 selectedCustomerId = res.customer.id;
 
                                 $('#selected_customer').html(
-                                    `Customer: ${res.customer.name} (${res.customer.phone})`
+                                    `Customer: ${res.customer.name} (${res.customer.phone}) ${res.customer.email ? '- ' + res.customer.email : ''}`
                                 );
+
                                 $('#save_customer_btn').hide();
                                 $('#customer_form').hide();
                                 $('#toggle_customer_form').hide();
+
                                 showAlert('success', 'Success', 'Customer created');
                             });
                     }
@@ -504,6 +530,7 @@
         // =========================
         // 🔹 COMPLETE SALE
         // =========================
+
         $('#complete-sale').click(function () {
 
             if (!cart.length) {
@@ -511,7 +538,6 @@
                 return;
             }
 
-            // ✅ Confirmation popup FIRST
             Swal.fire({
                 title: 'Complete Purchase?',
                 text: `Total: ${currency} ${$('#grand_total').text()}`,
@@ -523,13 +549,11 @@
                 cancelButtonColor: '#6c757d'
             }).then((result) => {
 
-                // ❌ User wants to continue shopping
                 if (!result.isConfirmed) {
                     $('#barcode').focus();
                     return;
                 }
 
-                // ✅ Now process payment AFTER confirmation
                 let paymentData = processPayment();
                 if (!paymentData) return;
 
@@ -537,46 +561,74 @@
                 let name = $('#customer_name').val().trim();
                 let email = $('#customer_email').val().trim();
 
-                // ✅ If Save button is visible → customer not saved yet
-                if ($('#save_customer_btn').is(':visible')) {
-
-                    if (!phone) {
-                        showAlert('error', 'Error', 'Phone is required');
-                        return;
-                    }
-
-                    if (!name) {
-                        showAlert('error', 'Error', 'Name is required for new customer');
-                        return;
-                    }
-
-                    // 🔥 Auto create customer
-                    $.post("{{ route('admin.customers.quickStore') }}", {
-                        _token: "{{ csrf_token() }}",
-                        name: name,
-                        phone: phone,
-                        email: email
-                    })
-                        .done(function (res) {
-
-                            selectedCustomerId = res.customer.id;
-
-                            // ✅ Complete sale
-                            completeSale(paymentData, selectedCustomerId);
-                        })
-                        .fail(function () {
-                            showAlert('error', 'Error', 'Failed to create customer');
-                        });
-
-                } else {
-                    // ✅ Existing customer or optional
-                    completeSale(paymentData, selectedCustomerId || null);
+                // ✅ If no phone → proceed without customer
+                if (!phone) {
+                    completeSale(paymentData, null);
+                    return;
                 }
+
+                // 🔍 Step 1: Check if customer exists
+                $.post("{{ route('admin.customers.findByPhone') }}", {
+                    _token: "{{ csrf_token() }}",
+                    phone: phone
+                })
+                    .done(function (res) {
+
+                        // ==============================
+                        // ✅ EXISTING CUSTOMER → UPDATE
+                        // ==============================
+                        if (res.exists) {
+
+                            $.post("{{ route('admin.customers.updateByPhone') }}", {
+                                _token: "{{ csrf_token() }}",
+                                phone: phone,
+                                name: name || res.customer.name,
+                                email: email
+                            })
+                                .done(function (updateRes) {
+
+                                    selectedCustomerId = updateRes.customer.id;
+
+                                    completeSale(paymentData, selectedCustomerId);
+                                })
+                                .fail(function () {
+                                    showAlert('error', 'Error', 'Failed to update customer');
+                                });
+
+                        }
+                        // ==============================
+                        // ❌ NEW CUSTOMER → CREATE
+                        // ==============================
+                        else {
+
+                            if (!name) {
+                                showAlert('error', 'Error', 'Name is required for new customer');
+                                return;
+                            }
+
+                            $.post("{{ route('admin.customers.quickStore') }}", {
+                                _token: "{{ csrf_token() }}",
+                                name: name,
+                                phone: phone,
+                                email: email
+                            })
+                                .done(function (res) {
+
+                                    selectedCustomerId = res.customer.id;
+
+                                    completeSale(paymentData, selectedCustomerId);
+                                })
+                                .fail(function () {
+                                    showAlert('error', 'Error', 'Failed to create customer');
+                                });
+                        }
+                    })
+                    .fail(function () {
+                        showAlert('error', 'Error', 'Customer lookup failed');
+                    });
 
             });
         });
-
-
         // =========================
         // 🔹 FINAL API
         // =========================

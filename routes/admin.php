@@ -83,6 +83,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('customers/status-update', [CustomerController::class, 'statusUpdate'])->name('customers.status');
     Route::post('customers/find-by-phone', [CustomerController::class, 'findByPhone'])->name('customers.findByPhone');
     Route::post('customers/quick-store', [CustomerController::class, 'quickStore'])->name('customers.quickStore');
+    Route::post('customers/update-by-phone', [CustomerController::class, 'updateByPhone'])->name('customers.updateByPhone');
 });
 
 

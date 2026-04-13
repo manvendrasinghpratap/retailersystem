@@ -187,30 +187,34 @@ class BillingController extends Controller
             // ✅ Load relationships (avoid lazy issues)
             $sale->load('items');
 
-            // $customer = $request->customer_id
-            //     ? Customer::find($request->customer_id)
-            //     : null;
+            $customer = $request->customer_id
+                ? Customer::find($request->customer_id)
+                : null;
 
-            // // ✅ Email only if customer + email exists
-            // if ($customer && !empty($customer->email)) {
+            // ✅ Email only if customer + email exists
+            if (!empty($customer?->email)) {
 
-            //     $data = [
-            //         'sale' => $sale,
-            //         'items' => $sale->items,
-            //         'customer' => $customer,
-            //         'total' => $sale->total,
-            //         'invoice_no' => $sale->invoice_no,
-            //         'date' => $sale->created_at->format('Y-m-d'),
-            //         'time' => $sale->created_at->format('H:i A'),
-            //     ];
+                $data = [
+                    'sale' => $sale,
+                    'items' => $sale->items ?? [],
+                    'customer' => $customer,
+                    'total' => $sale->total ?? 0,
+                    'invoice_no' => $sale->invoice_no ?? ('INV-' . $sale->id),
+                    'date' => optional($sale->created_at)->format('Y-m-d'),
+                    'time' => optional($sale->created_at)->format('h:i A'),
+                ];
 
-            //     \App\Helpers\EmailHelper::sendCustomerEmail(
-            //         $customer->email,
-            //         'Invoice #' . $sale->invoice_no,
-            //         'emails.invoice',
-            //         $data
-            //     );
-            // }
+                // try {
+                //     sendCustomerEmail(
+                //         $customer->email,
+                //         'Invoice #' . $data['invoice_no'],
+                //         'emails.invoice',
+                //         $data
+                //     );
+                // } catch (\Exception $e) {
+                //     \Log::error('Invoice Email Failed: ' . $e->getMessage());
+                // }
+            }
 
             // ✅ Response
             return response()->json([

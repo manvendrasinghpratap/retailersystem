@@ -43,6 +43,9 @@
                         <table class="table table-striped align-middle">
                             <thead>
                                 <tr>
+                                    <th>{{ __('translation.customer_name') }}</th>
+                                    <th>{{ __('translation.customer_phone') }}</th>
+                                    <th>{{ __('translation.customer_email') }}</th>
                                     <th>{{ __('translation.invoice_no') }}</th>
                                     <th>{{ __('translation.transaction_date') }}</th>
                                     <th>{{ __('translation.cashier') }}</th>
@@ -56,6 +59,9 @@
                             <tbody>
                                 @forelse($sales as $sale)
                                     <tr>
+                                        <td>{{ $sale->customer->name ?? '-' }}</td>
+                                        <td>{{ $sale->customer->phone ?? '-' }}</td>
+                                        <td>{{ $sale->customer->email ?? '-' }}</td>
                                         <td>{{ $sale->invoice_no }}</td>
                                         <td>{{ App\Helpers\Settings::getFormattedDatetime($sale->created_at)}}</td>
                                         <td>{{ $sale->user->name ?? '-' }}</td>
@@ -68,7 +74,8 @@
                                             </span>
                                         </td>
                                         <td><a href="{{ route('admin.sales.show', $sale->id) }}" class="" title="View"><i class="fas fa-eye"></i></a>
-                                            <a href="{{ route('printinvoice', $sale->id) }}" class="" title="Receipt"><i class="fas fa-receipt"></i></a>
+                                            <a href="{{ route('printinvoice', \App\Helpers\Settings::getEncodeCodeWithHashids($sale->id)) }}" class="" title="Receipt" target="_blank"><i class="fas fa-receipt"></i></a>
+                                            <a href="{{ route('downloadinvoice', \App\Helpers\Settings::getEncodeCodeWithHashids($sale->id)) }}" class="" title="Download Invoice" target="_blank"><i class="fas fa-download"></i></a>
                                             <a href="javascript:void(0)" class="send-invoice-btn" data-sale-id="{{ $sale->id }}" title="Send Invoice via Email"><i class="fas fa-envelope"></i></a>
                                         </td>
                                     </tr>

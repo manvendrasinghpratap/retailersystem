@@ -25,11 +25,24 @@ class Settings
     }
     public static function downloadpdf($pdf)
     {
-        $pdf->output();
+        // ✅ Set paper correctly (A4 Landscape)
+        $pdf->setPaper('a4', 'portrait');
+        // ✅ Get DomPDF instance
         $domPdf = $pdf->getDomPDF();
-        $canvas = $domPdf->get_canvas();
-        $canvas->page_text(500, 10, "Page {PAGE_NUM} of {PAGE_COUNT}", 'sans-serif', 8, [90 / 255, 62 / 255, 43 / 255]);
-        $pdf->setPaper('L', 'landscape');
+        // ✅ Render first
+        $domPdf->render();
+
+        // ✅ Add page number
+        $canvas = $domPdf->getCanvas();
+        $canvas->page_text(
+            500,
+            820,
+            "Page {PAGE_NUM} of {PAGE_COUNT}",
+            null,
+            8,
+            [0.35, 0.24, 0.17]
+        );
+
         return $pdf;
     }
     public static function downloadlandscapepdf($pdf)

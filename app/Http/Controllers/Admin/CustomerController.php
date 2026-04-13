@@ -241,10 +241,33 @@ class CustomerController extends Controller
 
     public function findByPhone(Request $request)
     {
-        $customer = Customer::where('phone', $request->phone)->first();
+        $customer = Customer::where('account_id', auth()->user()->account_id)
+            ->where('phone', $request->phone)
+            ->first();
 
         return response()->json([
             'exists' => (bool) $customer,
+            'customer' => $customer
+        ]);
+    }
+
+    public function updateByPhone(Request $request)
+    {
+        $request->validate([
+            'phone' => 'required',
+            'name' => 'required|string|max:255',
+            'email' => 'nullable|email',
+        ]);
+
+        $customer = Customer::where('phone', $request->phone)->firstOrFail();
+
+        $customer->update([
+            'name' => $request->name,
+            'email' => $request->email,
+        ]);
+
+        return response()->json([
+            'success' => true,
             'customer' => $customer
         ]);
     }

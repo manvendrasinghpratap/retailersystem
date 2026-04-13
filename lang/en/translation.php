@@ -298,4 +298,6 @@ return [
     'havana_worlds' => 'Havana Worlds',
     'havana_worlds_registration' => 'Havana Worlds Registration',
     'havana_worlds_registration_link' => 'https://havanaworlds.com/customerregistration/',
+    'customer_email' => 'Customer Email',
+    'customer_phone' => 'Customer Phone',
 ];
