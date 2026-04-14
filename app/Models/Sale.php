@@ -54,11 +54,20 @@ class Sale extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
-    public function getPaymentMethodsAttribute()
+    public function getPaymentMethodsOldAttribute()
     {
         return $this->payments
             ->pluck('method')
             ->map(fn($method) => ucwords($method))
+            ->implode(', ');
+    }
+
+    public function getPaymentMethodsAttribute()
+    {
+        return $this->payments
+            ->map(function ($payment) {
+                return ucwords($payment->method) . ' (' . __('translation.b_ngn') . ' ' . $payment->amount . ')';
+            })
             ->implode(', ');
     }
 

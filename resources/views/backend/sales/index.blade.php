@@ -47,12 +47,12 @@
                                     <th>{{ __('translation.customer_phone') }}</th>
                                     <th>{{ __('translation.customer_email') }}</th>
                                     <th>{{ __('translation.invoice_no') }}</th>
-                                    <th>{{ __('translation.transaction_date') }}</th>
                                     <th>{{ __('translation.cashier') }}</th>
-                                    <th>{{ __('translation.b_ngn') . ' ' . __('translation.total_amount') }}</th>
                                     <th>{{ __('translation.payment_type') }}</th>
                                     <th>{{ __('translation.payment_method') }}</th>
-                                    <th>{{ __('translation.status') }}</th>
+                                    <th>{{ __('translation.b_ngn') . ' ' . __('translation.total_amount') }}</th>
+                                    <!-- <th>{{ __('translation.status') }}</th> -->
+                                    <th>{{ __('translation.transaction_date') }}</th>
                                     <th width="80">{{ __('translation.action') }}</th>
                                 </tr>
                             </thead>
@@ -63,16 +63,16 @@
                                         <td>{{ $sale->customer->phone ?? '-' }}</td>
                                         <td>{{ $sale->customer->email ?? '-' }}</td>
                                         <td>{{ $sale->invoice_no }}</td>
-                                        <td>{{ App\Helpers\Settings::getFormattedDatetime($sale->created_at)}}</td>
                                         <td>{{ $sale->user->name ?? '-' }}</td>
-                                        <td>{{ __('translation.b_ngn') . ' ' . number_format($sale->total, 2) }}</td>
                                         <td>{{ ($sale->payment_method == null) ? 'Partial Payment' : 'Full Payment' }}</td>
                                         <td>{{ $sale->payment_methods }}</td>
-                                        <td>
-                                            <span class="badge bg-success">
-                                                {{ ucfirst($sale->status) }}
-                                            </span>
-                                        </td>
+                                        <td>{{ __('translation.b_ngn') . ' ' . number_format($sale->total, 2) }}</td>
+                                        <!-- <td>
+                                                            <span class="badge bg-success">
+                                                                {{ ucfirst($sale->status) }}
+                                                            </span>
+                                                        </td> -->
+                                        <td>{{ App\Helpers\Settings::getFormattedDatetime($sale->created_at)}}</td>
                                         <td><a href="{{ route('admin.sales.show', $sale->id) }}" class="" title="View"><i class="fas fa-eye"></i></a>
                                             <a href="{{ route('printinvoice', \App\Helpers\Settings::getEncodeCodeWithHashids($sale->id)) }}" class="" title="Receipt" target="_blank"><i class="fas fa-receipt"></i></a>
                                             <a href="{{ route('downloadinvoice', \App\Helpers\Settings::getEncodeCodeWithHashids($sale->id)) }}" class="" title="Download Invoice" target="_blank"><i class="fas fa-download"></i></a>
