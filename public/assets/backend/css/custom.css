@@ -992,3 +992,40 @@ body::before {
 .top {
     top: -6px !important;
 }
+
+.naira-icon {
+    font-size: 17px !important;
+    font-weight: bold;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 8px 12px;
+    border-radius: 10px;
+}
+
+.gradient1 {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+.gradient2 {
+    background: linear-gradient(135deg, #43cea2, #185a9d);
+}
+
+.gradient3 {
+    background: linear-gradient(135deg, #f7971e, #ffd200);
+}
+
+.gradient4 {
+    background: linear-gradient(135deg, #ff6a00, #ee0979);
+}
+
+.icon {
+    font-size: 28px;
+}
+
+.card {
+    border-radius: 15px;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    transition: 0.3s;
+}

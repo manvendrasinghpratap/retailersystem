@@ -3,15 +3,6 @@
 @section('title')
     {{ Config::get('constants.admin') || $breadcrumb['title'] ?? __('translation.dashboard') }}
 @endsection
-<style>
-    .naira-icon {
-        font-size: 17px !important;
-        font-weight: bold;
-        background: rgba(255, 255, 255, 0.2);
-        padding: 8px 12px;
-        border-radius: 10px;
-    }
-</style>
 @section('content')
     @include('backend.components.breadcrumb')
 
@@ -87,7 +78,6 @@
         <!-- CHART -->
         <div class="card shadow border-0">
             <div class="card-body">
-
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
                         <h5 class="mb-0">{{ __('translation.hourly_sales') }}</h5>
@@ -111,43 +101,45 @@
                 </div>
 
                 <div id="chart" style="height:400px;"></div>
+                <!-- PRODUCT CHARTS -->
+                <div class="row mt-3">
+
+                    <!-- DAILY -->
+                    <div class="col-md-12">
+                        <div class="card shadow border-0">
+                            <div class="card-body">
+                                <h6 class="mb-3">Product Sales (Daily)</h6>
+                                <div id="dailyChart" style="height:300px;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- WEEKLY -->
+                    <div class="col-md-12">
+                        <div class="card shadow border-0">
+                            <div class="card-body">
+                                <h6 class="mb-3">Product Sales (Weekly)</h6>
+                                <div id="weeklyChart" style="height:300px;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MONTHLY -->
+                    <div class="col-md-12">
+                        <div class="card shadow border-0">
+                            <div class="card-body">
+                                <h6 class="mb-3">Product Sales (Monthly)</h6>
+                                <div id="monthlyChart" style="height:300px;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
 
             </div>
         </div>
 
     </div>
-
-    <!-- Styles -->
-    <style>
-        .gradient1 {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-        }
-
-        .gradient2 {
-            background: linear-gradient(135deg, #43cea2, #185a9d);
-        }
-
-        .gradient3 {
-            background: linear-gradient(135deg, #f7971e, #ffd200);
-        }
-
-        .gradient4 {
-            background: linear-gradient(135deg, #ff6a00, #ee0979);
-        }
-
-        .icon {
-            font-size: 28px;
-        }
-
-        .card {
-            border-radius: 15px;
-        }
-
-        .card:hover {
-            transform: translateY(-4px);
-            transition: 0.3s;
-        }
-    </style>
 
     <!-- Highcharts -->
     <script src="https://code.highcharts.com/highcharts.js"></script>
@@ -184,7 +176,7 @@
                 },
 
                 tooltip: {
-                    pointFormat: '<b>₹ {point.y}</b>'
+                    pointFormat: '<b>{{ __('translation.ngn') }} {point.y}</b>'
                 },
 
                 legend: { enabled: false },
@@ -204,7 +196,57 @@
 
             });
 
+            // =============================
+            // DAILY
+            // =============================
+            renderDonut('dailyChart', @json($productDaily), 'Daily Sales');
+
+            // =============================
+            // WEEKLY
+            // =============================
+            renderDonut('weeklyChart', @json($productWeekly), 'Weekly Sales');
+
+            // =============================
+            // MONTHLY
+            // =============================
+            renderDonut('monthlyChart', @json($productMonthly), 'Monthly Sales');
         });
+        function renderDonut(id, data, title) {
+
+            let chartData = data.map(item => ({
+                name: item.name,
+                y: parseFloat(item.amount)
+            }));
+
+            Highcharts.chart(id, {
+                chart: {
+                    type: 'pie'
+                },
+
+                title: {
+                    text: title
+                },
+
+                plotOptions: {
+                    pie: {
+                        innerSize: '65%', // makes it DONUT
+                        dataLabels: {
+                            enabled: true,
+                            format: '{point.name}: {point.percentage:.1f}%'
+                        }
+                    }
+                },
+
+                tooltip: {
+                    pointFormat: '<b>{{ __('translation.ngn') }} {point.y}</b>'
+                },
+
+                series: [{
+                    name: 'Sales',
+                    data: chartData
+                }]
+            });
+        }
     </script>
 
 @endsection
