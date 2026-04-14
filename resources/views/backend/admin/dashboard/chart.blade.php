@@ -91,9 +91,9 @@
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
                         <h5 class="mb-0">{{ __('translation.hourly_sales') }}</h5>
-                        <small class="text-muted">{{ __('translation.date') }}: {{ request('date') ? App\Helpers\Settings::formatDate(request('date'), \Config::get('constants.dateformat.slashdmyonly')) : App\Helpers\Settings::getFormattedDate(date(\Config::get('constants.dateformat.slashdmyonly')))  }}</small>
+                        <small class="text-muted">{{ __('translation.date') }}: {{ request('date') ? App\Helpers\Settings::formatDate(request('date'), \Config::get('constants.dateformat.slashdmyonly')) : App\Helpers\Settings::getFormattedDate(date('Y-m-d'))  }}</small>
                     </div>
-                    <form method="GET" action="{{ route('graph') }}" class="row g-2 align-items-center">
+                    <form method="GET" action="{{ route('dashboard') }}" class="row g-2 align-items-center">
                         <!-- Date -->
                         <div class="col-auto">
                             <x-text-input mainrows="12" :islabel="false" name="date" :label="__('translation.date')" value="{{request('date') ?? App\Helpers\Settings::getFormattedDate(date('Y-m-d'))  }}" class="flatdatepickr form-control" />

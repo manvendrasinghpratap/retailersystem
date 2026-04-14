@@ -42,19 +42,19 @@ class DashboardController extends Controller
         ];
     }
 
-    public function index(Request $request)
+    public function indexold(Request $request)
     {
         $breadcrumb = $this->breadcrumbDashboard;
         return view('backend.admin.dashboard.index', compact('breadcrumb'));
     }
 
 
-    public function graph(Request $request)
+    public function index(Request $request)
     {
         $breadcrumb = $this->breadcrumbDashboard;
         $date = $request->date ? Settings::formatDate($request->date, 'Y-m-d') : Carbon::now();
         // Hourly Sales
-        $sales = Sale::where('account_id', auth()->user()->account_id)
+        $sales = Sale::where('account_id', auth()->user()->account_id)->visibleToUser()
             ->whereDate('created_at', $date)
             ->select(
                 DB::raw('HOUR(created_at) as hour'),

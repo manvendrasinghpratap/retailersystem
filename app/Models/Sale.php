@@ -33,6 +33,10 @@ class Sale extends Model
         return $this->hasMany(SaleItem::class, 'sale_id');
     }
 
+    public function account()
+    {
+        return $this->belongsTo(Account::class, 'account_id');
+    }
     // ✅ One Sale has many payments (NEW 🔥)
     public function payments()
     {
@@ -56,5 +60,14 @@ class Sale extends Model
             ->pluck('method')
             ->map(fn($method) => ucwords($method))
             ->implode(', ');
+    }
+
+    public function scopeVisibleToUser($query)
+    {
+        if (auth()->check() && auth()->user()->designation_id != 2) {
+            $query->where('user_id', auth()->id());
+        }
+
+        return $query;
     }
 }

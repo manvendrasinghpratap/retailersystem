@@ -49,7 +49,7 @@ class SaleController extends Controller
     public function index(Request $request)
     {
         $breadcrumb = $this->breadcrumbBilling;
-        $query = Sale::with('user', 'payments');
+        $query = Sale::with('user', 'payments')->visibleToUser();
 
         // Filter by date
         $query = Settings::applyDateRange($query, $request, 'created_at', true);
@@ -57,6 +57,8 @@ class SaleController extends Controller
         if ($request->invoice_no) {
             $query->where('invoice_no', 'like', '%' . $request->invoice_no . '%');
         }
+
+
 
         $sales = $query->latest()->paginate(config('constants.pagination'));
 
