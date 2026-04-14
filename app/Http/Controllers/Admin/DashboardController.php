@@ -76,11 +76,11 @@ class DashboardController extends Controller
         }
 
         // KPI Data
-        $totalRevenue = Sale::where('account_id', auth()->user()->account_id)
+        $totalRevenue = Sale::where('account_id', auth()->user()->account_id)->visibleToUser()
             ->whereDate('created_at', $date)
             ->sum('total');
 
-        $totalOrders = Sale::where('account_id', auth()->user()->account_id)
+        $totalOrders = Sale::where('account_id', auth()->user()->account_id)->visibleToUser()
             ->whereDate('created_at', $date)
             ->count();
 

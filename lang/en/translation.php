@@ -304,4 +304,5 @@ return [
     'products' => 'Products',
     'total_revenue' => 'Total Revenue',
     'hourly_sales' => 'Hourly Sales',
+    'my_sales' => 'My Sales',
 ];
