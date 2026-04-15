@@ -79,4 +79,19 @@ class Sale extends Model
 
         return $query;
     }
+
+    public function getCashAmountAttribute()
+    {
+        return $this->payments->where('method', 'cash')->sum('amount');
+    }
+
+    public function getCardAmountAttribute()
+    {
+        return $this->payments->where('method', 'card')->sum('amount');
+    }
+
+    public function getTransferAmountAttribute()
+    {
+        return $this->payments->where('method', 'transfer')->sum('amount');
+    }
 }

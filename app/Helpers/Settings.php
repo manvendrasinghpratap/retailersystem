@@ -45,13 +45,20 @@ class Settings
 
         return $pdf;
     }
-    public static function downloadlandscapepdf($pdf)
+   public static function downloadLandscapePdf($pdf)
     {
         $pdf->setPaper('a4', 'landscape');
-        $pdf->output();
-        $domPdf = $pdf->getDomPDF();
+        $domPdf = $pdf->getDomPdf();
         $canvas = $domPdf->get_canvas();
-        $canvas->page_text(760, 10, "Page {PAGE_NUM} of {PAGE_COUNT}", 'sans-serif', 8, [90 / 255, 62 / 255, 43 / 255]);
+        $canvas->page_text(
+            700, // X position (adjust if needed)
+            570, // Y position (bottom area)
+            "Page {PAGE_NUM} of {PAGE_COUNT}",
+            null,
+            8,
+            [0.35, 0.24, 0.17] // RGB (brownish)
+        );
+
         return $pdf;
     }
 
@@ -132,7 +139,20 @@ class Settings
             return date($format, strtotime($date));
         }
 
+    } 
+
+    public static function checkAndformatDate($date, $format)
+    {   
+        if(empty($date)) return "";
+        
+        if (strpos($date, '/') !== false) {
+            return date($format, strtotime(str_replace('/', '-', $date)));
+        } else {
+            return date($format, strtotime($date));
+        }       
+
     }
+    
     public static function getEncodeCodeWithHashids($data)
     {
         return (!empty($data)) ? substr(str_shuffle("123456789"), 0, 5) . Hashids::encode($data) : '';

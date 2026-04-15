@@ -111,9 +111,11 @@ Route::middleware(['auth', 'route.permission'])->group(function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('admin/sync-routes', [\App\Http\Controllers\Administrator\AclController::class, 'syncRoutes'])->name('syncroutes');
     Route::get('/reports/daily-sales', [ReportController::class, 'dailySales'])->name('reports.daily.sales');
+    Route::get('/reports/daily-sales/pdf', [ReportController::class, 'dailySalesPdf'])->name('reports.daily.sales.pdf');
+    Route::get('/reports/daily-sales/csv', [ReportController::class, 'dailySalesCsv'])->name('reports.daily.sales.csv');
 });
 
 require __DIR__ . '/auth.php';
-require __DIR__ . '/admin.php';
+require __DIR__ . '/admin.php'; 
 require __DIR__ . '/administrator.php';
 require __DIR__ . '/acl.php';
