@@ -26,6 +26,18 @@
                     <span data-key="t-sales">@lang('translation.my_sales')</span>
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link dropdown-toggle arrow-none {{ request()->routeIs('admin.customers.index') || request()->routeIs('admin.customers.show') ? 'active' : '' }}" href="{{ route('admin.customers.index') }}" id="topnav-customers" role="button">
+                    <i data-feather="order"></i>
+                    <span data-key="t-customers">@lang('translation.customers')</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link dropdown-toggle arrow-none {{ request()->routeIs('reports.daily.sales') || request()->routeIs('reports.daily.sales') ? 'active' : '' }}" href="{{ route('reports.daily.sales') }}" id="topnav-customers" role="button">
+                    <i data-feather="order"></i>
+                    <span data-key="t-customers">@lang('translation.daily_sales')</span>
+                </a>
+            </li>
         </ul>
     </div>
 </nav>

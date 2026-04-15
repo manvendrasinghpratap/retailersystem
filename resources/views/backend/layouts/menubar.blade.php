@@ -66,10 +66,19 @@
           <span data-key="t-customers">@lang('translation.customers')</span>
         </a>
       </li>
+      @php $posRoutes = ['reports.daily.sales']; @endphp
+      <li class="nav-item dropdown {{ in_array(Route::currentRouteName(), $posRoutes) ? 'active' : '' }}">
+        <a class="nav-link dropdown-toggle arrow-none" href="javascript:void(0);" id="topnav-pos" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+          <i data-feather="settings"></i>
+          <span data-key="t-pos">@lang('translation.reports')</span>
+          <div class="arrow-down"></div>
+        </a>
+        <div class="dropdown-menu" aria-labelledby="topnav-inventory">
+          <a href="{{ route('reports.daily.sales') }}" class="dropdown-item fourth-nav-item" data-key="t-add_stock">@lang('translation.daily_sales')</a>
+        </div>
+      </li>
 
       @php $posRoutes = [App\Helpers\Settings::getUserRole() . '.pos']; @endphp
-
-
       <li class="nav-item dropdown {{ in_array(Route::currentRouteName(), $posRoutes) ? 'active' : '' }}">
         <a class="nav-link dropdown-toggle arrow-none" href="javascript:void(0);" id="topnav-pos" role="button" data-bs-toggle="dropdown" aria-expanded="false">
           <i data-feather="settings"></i>
@@ -86,13 +95,6 @@
           <a href="{{ route(App\Helpers\Settings::getUserRole() . '.deduct-barcode') }}" class="dropdown-item third-nav-item" data-key="t-deduct_stock">@lang('translation.deduct_stock')</a>
         </div>
       </li>
-
-
-
-
-
-
-
     </ul>
   </div>
 </nav>

@@ -212,4 +212,16 @@ class User extends Authenticatable
             ->where('account_id', $accountId)
             ->first();
     }
+    public function hasDesignation()
+    {
+        return in_array($this->designation_id, [1, 2]); /// 2 is the id for cashier
+    }
+
+    public function scopeVisibleToUser($query)
+    {
+        if (!Auth::user()->hasDesignation()) {
+            return $query->where('id', Auth::id());
+        }
+        return $query;
+    }
 }

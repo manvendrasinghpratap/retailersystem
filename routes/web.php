@@ -4,7 +4,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{
     ProfileController,
     BarcodeController,
-    SaleController
+    SaleController,
+    ReportController
 };
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\Admin\{
@@ -109,6 +110,7 @@ Route::middleware(['auth', 'route.permission'])->group(function () {
 });
 Route::middleware(['auth'])->group(function () {
     Route::get('admin/sync-routes', [\App\Http\Controllers\Administrator\AclController::class, 'syncRoutes'])->name('syncroutes');
+    Route::get('/reports/daily-sales', [ReportController::class, 'dailySales'])->name('reports.daily.sales');
 });
 
 require __DIR__ . '/auth.php';
