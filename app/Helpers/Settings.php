@@ -45,22 +45,34 @@ class Settings
 
         return $pdf;
     }
-   public static function downloadLandscapePdf($pdf)
-    {
-        $pdf->setPaper('a4', 'landscape');
-        $domPdf = $pdf->getDomPdf();
-        $canvas = $domPdf->get_canvas();
-        $canvas->page_text(
-            700, // X position (adjust if needed)
-            570, // Y position (bottom area)
-            "Page {PAGE_NUM} of {PAGE_COUNT}",
-            null,
-            8,
-            [0.35, 0.24, 0.17] // RGB (brownish)
-        );
 
-        return $pdf;
-    }
+
+    public static function downloadLandscapePdf($pdf)
+        {
+            // Set paper
+            $pdf->setPaper('a4', 'landscape');
+
+            // Render first (IMPORTANT)
+            $pdf->render();
+
+            $domPdf = $pdf->getDomPdf();
+            $canvas = $domPdf->get_canvas();
+
+            // Page dimensions
+            $width  = $canvas->get_width();
+
+            // ✅ Top-right position
+            $canvas->page_text(
+                $width - 120,  // right side
+                15,            // top (small value = top)
+                "Page {PAGE_NUM} of {PAGE_COUNT}",
+                null,
+                9,
+                [0, 0, 0]
+            );
+
+            return $pdf;
+        }
 
     public static function updateBreadcrumbRoute($breadcrumb, $routes, $values)
     {
@@ -374,14 +386,21 @@ class Settings
 
     public static function downloadcsvfile($data, $fileName)
     {
-        header('Content-Type: text/csv; charset=utf-8');
-        header("Content-Disposition: attachment; filename=$fileName");
+        // ✅ Proper headers
+        header('Content-Type: text/csv; charset=UTF-8');
+        header("Content-Disposition: attachment; filename=\"$fileName\"");
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
         $fp = fopen('php://output', 'w');
+
+        // ✅ IMPORTANT: Add UTF-8 BOM (fixes ₹, ₦, etc in Excel)
+        fprintf($fp, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
         foreach ($data as $row) {
             fputcsv($fp, $row);
-            ob_flush();
-            flush(); // Push output to browser
         }
+
         fclose($fp);
         exit;
     }

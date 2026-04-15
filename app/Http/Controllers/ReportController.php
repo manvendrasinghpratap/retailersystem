@@ -18,8 +18,28 @@ class ReportController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
-        $this->breadcrumbDailySales = ['title' => __('translation.daily_sales_report'),'route1' => "reports.daily.sales",'route1Title' => __('translation.daily_sales_report'), 'route2Title' => __('translation.daily_sales_report'),'route2' => 'reports.daily.sales','reset_route' => 'reports.daily.sales','reset_route_title' => __('translation.cancel')];
-        $this->breadcrumbListing = ['title' => __('translation.customers'),'route1' => "admin.customers.index",'route1Title' => __('translation.customers'),'route2Title' => __('translation.add_new_customer'),'route2' => 'admin.customers.create','route3Title' => __('translation.add_new_customer'),'route3' => 'admin.customers.edit','reset_route' => 'admin.customers.index','reset_route_title' => __('translation.cancel')];
+
+        $this->breadcrumbDailySales = [
+            'title' => __('translation.daily_sales_report'),
+            'route1' => "reports.daily.sales",
+            'route1Title' => __('translation.daily_sales_report'),
+            'route2Title' => __('translation.daily_sales_report'),
+            'route2' => 'reports.daily.sales',
+            'reset_route' => 'reports.daily.sales',
+            'reset_route_title' => __('translation.cancel')
+        ];
+
+        $this->breadcrumbListing = [
+            'title' => __('translation.customers'),
+            'route1' => "admin.customers.index",
+            'route1Title' => __('translation.customers'),
+            'route2Title' => __('translation.add_new_customer'),
+            'route2' => 'admin.customers.create',
+            'route3Title' => __('translation.add_new_customer'),
+            'route3' => 'admin.customers.edit',
+            'reset_route' => 'admin.customers.index',
+            'reset_route_title' => __('translation.cancel')
+        ];
     }
 
     public function dailySales(Request $request)
@@ -76,8 +96,8 @@ class ReportController extends Controller
             'customer:id,name',
             'user:id,name',
             'payments:id,sale_id,method,amount'
-        ]) ->latest();
-        
+        ])
+        ->latest();
 
         // =========================
         // Overall Totals
@@ -107,15 +127,81 @@ class ReportController extends Controller
             ->visibleToUser()
             ->pluck('name', 'id');
         if ($request->has('pdf')) {
-            // $pdfHeaderdata = \Config::get('constants.dailySalespdf');
-            // $pdfSales = $sales->get();
-            // $pdf = PDF::loadView('backend.pdf.reports.dailySalespdf', compact('pdfSales', 'pdfHeaderdata', 'totalSales', 'totalOrders', 'staffs', 'staffId', 'breadcrumb', 'cashTotal', 'cardTotal', 'transferTotal' ));
-            // $pdf = Settings::downloadlandscapepdf($pdf);
-            // $fileName = $pdfHeaderdata['filename'] .'-'. date('Y-m-d') . '.pdf';
-            // return $pdf->stream($fileName);
-        } else {
+            $pdfHeaderdata = \Config::get('constants.dailySalespdf');
+            $pdfSales = $sales->get();
+            $pdf = PDF::loadView('backend.pdf.reports.dailySalespdf', compact('pdfSales', 'pdfHeaderdata', 'totalSales', 'totalOrders', 'staffs', 'staffId', 'breadcrumb', 'cashTotal', 'cardTotal', 'transferTotal' ));
+            $pdf = Settings::downloadlandscapepdf($pdf);
+            $fileName = $pdfHeaderdata['filename'] .'-'. date('Y-m-d') . '.pdf';
+            return $pdf->stream($fileName);
         }
-        $sales->paginate(config('pagination'));
+        if ($request->has('csv')) {
+            $pdfHeaderdata = \Config::get('constants.dailySalespdf');
+            $salesList = $sales->get(); // full data (no pagination)
+
+            $fileName = $pdfHeaderdata['filename'] . '-' . date('Y-m-d') . '.csv';
+
+            $data = [];
+            $ii = 0;
+
+            // ✅ Header Row
+            $data[$ii++] = [
+                '#',
+                __('translation.invoice_no'),
+                __('translation.customer_name'),
+                __('translation.payment_type'),
+                __('translation.currency').'  '.__('translation.cash'),
+                __('translation.currency').'  '.__('translation.card'),
+                __('translation.currency').'  '.__('translation.transfer'),
+                __('translation.currency').'  '.__('translation.total_amount'),
+                __('translation.transaction_date'),
+            ];
+
+            if (!empty($salesList) && count($salesList) > 0) {
+
+                foreach ($salesList as $i => $sale) {
+
+                    // ✅ Payment Summary (optimized)
+                    $summary = $sale->payments
+                        ->groupBy('method')
+                        ->map(fn($items) => $items->sum('amount'));
+
+                    $data[$ii++] = [
+                        $i + 1,
+                        $sale->invoice_no ?? '-',
+                        $sale->customer->name ?? '-',
+                        $sale->payment_method == null ? 'Partial Payment' : 'Full Payment',
+
+                        $summary['cash'] ?? 0,
+                        $summary['card'] ?? 0,
+                        $summary['transfer'] ?? 0,
+
+                        $sale->total ?? 0,
+
+                        // Prevent Excel auto-format
+                        !empty($sale->created_at) ? "\t" . $sale->created_at : '-',
+                    ];
+                }
+
+                // ✅ Add Totals Row
+                $data[$ii++] = [
+                    '',
+                    '',
+                    '',
+                    'TOTAL',
+                    __('translation.currency').'  '.$cashTotal,
+                    __('translation.currency').'  '.$cardTotal,
+                    __('translation.currency').'  '.$transferTotal,
+                    __('translation.currency').'  '.$totalSales,
+                    ''
+                ];
+
+            } else {
+                $data[$ii++] = [__('translation.no_data_found')];
+            }
+
+            return Settings::downloadcsvfile($data, $fileName);
+        }
+        $sales = $sales->paginate(config('pagination'));
         return view('backend.admin.reports.daily_sales', compact(
             'sales',
             'totalSales',

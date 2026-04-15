@@ -20,7 +20,7 @@
     </thead>
 
     <tbody>
-        @forelse($sales as $sale)
+        @forelse($pdfSales as $sale)
             @php
                 $summary = $sale->payments
                     ->groupBy('method')

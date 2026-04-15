@@ -20,12 +20,13 @@
         </strong><br>
         <span style="font-size:11px;">
           {{ config('constants.address') }}<br>
-          {{ config('constants.phone_number') }}
+          {{ config('constants.phonenumber') }}<br>
+		  {{ config('constants.website') }}<br>
         </span>
       </td>
 
       <td class="text-right">
-        <div style="font-size:18px; font-weight:bold;">INVOICE</div>
+        <div style="font-size:18px; font-weight:bold;">{{ __('translation.invoice') }}</div>
         <div style="font-size:11px;">
           #INV-{{ date('Y', strtotime($sale->created_at ?? now())) }}-{{ str_pad($sale->id, 5, '0', STR_PAD_LEFT) }}<br>
           {{ \Carbon\Carbon::parse($sale->created_at ?? now())->format('d M Y h:i A') }}

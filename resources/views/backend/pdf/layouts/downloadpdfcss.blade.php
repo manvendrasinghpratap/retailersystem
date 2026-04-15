@@ -32,8 +32,8 @@
       }
 
       thead tr {
-      background-color: #5a3e2b;
-      color: #ffffff;
+      background-color: #e3ebebff;
+      color: #000000;
       }
 
       thead th {
@@ -52,7 +52,7 @@
       }
 
       tbody tr:nth-child(even) {
-      background-color: #fdf7f2;
+      background-color: #f1f5f9;
       }
 
       tbody tr:nth-child(odd) {
