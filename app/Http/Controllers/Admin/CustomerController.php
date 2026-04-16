@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Helpers\Settings;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class CustomerController extends Controller
 {
@@ -42,7 +43,7 @@ class CustomerController extends Controller
     /**
      * Customer Listing
      */
-    public function index()
+    public function index(Request $request)
     {
         $breadcrumb = $this->breadcrumbAddNew;
 
@@ -54,18 +55,67 @@ class CustomerController extends Controller
             $customers->where('name', 'LIKE', '%' . trim(request('name')) . '%');
         }
 
-        if (request('phone')) {
-            $customers->where('phone', 'LIKE', '%' . trim(request('phone')) . '%');
+        if (request('phones')) {
+            $customers->where('phone', 'LIKE', '%' . trim(request('phones')) . '%');
         }
 
         if (request('status') !== null) {
             $customers->where('status', request('status'));
         }
 
-        $customers = $customers->orderBy('id', 'desc')->paginate(config('constants.pagination'));
-        $status = config('constants.accountstatus');
+        $customers = $customers->orderBy('id', 'desc');
+        if ($request->has('pdf')) {
+            $customers = $customers->get();
+            $pdfHeaderdata = \Config::get('constants.customerListpdf');
+            $pdf = PDF::loadView('backend.pdf.customers.customerListpdf', compact('customers', 'pdfHeaderdata', 'breadcrumb'));
+            $pdf = Settings::downloadpdf($pdf);
+            $fileName = $pdfHeaderdata['filename'] . '-' . date('Y-m-d') . '.pdf';
+            return $pdf->stream($fileName);
+        } elseif ($request->has('csv')) {
+            $customers = $customers->get();
+            $csvHeaderdata = \Config::get('constants.customerListpdf');
+            $fileName = $csvHeaderdata['filename'] . '-' . date('Y-m-d') . '.csv';
+            $data = [];
+            $ii = $i = 0;
+            // ✅ Header Row
+            $data[$ii++] = [
+                '#',
+                __('translation.customer_name'),
+                __('translation.phone'),
+                __('translation.email'),
+                __('translation.wallet_balance'),
+                __('translation.status'),
+                __('translation.createdat'),
+            ];
 
+            foreach ($customers as $customer) {
+                $data[$i++] = [
+                    $i,
+                    $customer->name,
+                    $customer->phone,
+                    $customer->email,
+                    $customer->wallet_balance,
+                    $customer->status,
+                    !empty($customer->created_at) ? "\t" . Settings::getFormattedDatetime($customer->created_at) : '-',
+                ];
+            }
+            return Settings::downloadcsvfile($data, $fileName);
+        }
+        $customers = $customers->paginate(config('constants.pagination'));
+        $status = config('constants.accountstatus');
         return view('backend.admin.customers.index', compact('customers', 'breadcrumb', 'status'));
+    }
+
+
+    public function exportPdf(Request $request)
+    {
+        $request->merge(['pdf' => 1]);
+        return $this->index($request);
+    }
+    public function exportCsv(Request $request)
+    {
+        $request->merge(['csv' => 1]);
+        return $this->index($request);
     }
 
     /**

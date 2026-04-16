@@ -13,16 +13,23 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="card-title d-inline-block">{{ __('translation.filter') }}</h4>
+                     <div class="d-inline-block">
+                        @include('backend.components.exportpdfcsv', [
+                        'pdfId' =>'downloadcustomerpdf',    
+                        'pdfRoute' => route('admin.customers.exportPdf'),
+                        'pdfClass' => 'downloadcustomerpdf',
+                        'csvId' =>'downloadcustomercsv',    
+                        'csvRoute' => route('admin.customers.exportCsv'),
+                        'csvClass' => 'downloadcustomercsv',
+                        ])                 
+                    </div>      
                 </div>
-
                 <div class="card-body">
                     <form method="GET">
                         <div class="row">
-
-                            <x-text-input name="name" label="Customer Name" value="{{ request()->get('name') ?? '' }}" mainrows="3" />
-                            <x-text-input name="phone" label="Phone" value="{{ request()->get('phone') ?? '' }}" mainrows="3" />
-                            <x-select-dropdown name="status" label="{{ __('translation.status') }}" :options="$status ?? []" :selected="request()->get('status') ?? ''" class="accountstatus" mainrows="2" />
-
+                            <x-text-input name="name" label="Customer Name" value="{{ request('name') ?? '' }}" mainrows="3" />
+                            <x-text-input name="phones" id="phones" label="Phones" value="{{ request('phones') ?? '' }}" mainrows="3" class="onlyinteger" />
+                            <x-select-dropdown name="status" label="{{ __('translation.status') }}" :options="$status ?? []" :selected="request('status') ?? ''" class="accountstatus" mainrows="2" />
                             <div class="col-xl-2 col-md-2">
                                 <div class="form-group mb-3">
                                     <label class="d-inline-block w-100">&nbsp;</label>
@@ -115,4 +122,12 @@
             </div>
         </div>
     </div>
+@endsection
+@section('script')
+<script>
+    $(document).ready(function() {
+       setupPdfDownload('.downloadcustomerpdf', 'data-downloadroutepdf');
+       setupPdfDownload('.downloadcustomercsv', 'data-downloadroutepdf');
+    });
+</script>
 @endsection

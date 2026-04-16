@@ -6,7 +6,6 @@
 
 @section('content')
     @include('backend.components.breadcrumb')
-
     {{-- ================= FILTER SECTION ================= --}}
     <div class="row">
         <div class="col-12">
@@ -18,19 +17,13 @@
                 <div class="card-body">
                     <form method="GET">
                         <div class="row">
-
                             <x-text-input name="name" label="Customer Name" value="{{ request()->get('name') ?? '' }}" mainrows="3" />
-
                             <x-text-input name="phone" label="Phone" value="{{ request()->get('phone') ?? '' }}" mainrows="3" />
-
                             <x-select-dropdown name="status" label="{{ __('translation.status') }}" :options="$status ?? []" :selected="request()->get('status') ?? ''" class="accountstatus" mainrows="2" />
-
                             <div class="col-xl-2 col-md-2">
                                 <div class="form-group mb-3">
                                     <label class="d-inline-block w-100">&nbsp;</label>
-
                                     <x-filter-submit-button name="submit" label="{{ __('translation.filter') }}" />
-
                                     <x-filter-href-button name="reset" href="{!! !empty($breadcrumb['route2']) ? route($breadcrumb['route2']) : '' !!}" label="Reset" />
                                 </div>
                             </div>
@@ -46,14 +39,12 @@
     <div class="row">
         <div class="col-12">
             <div class="card">
-
                 <div class="card-header">
                     <h4 class="card-title">
                         {{ array_key_exists('title', $breadcrumb) ? $breadcrumb['title'] : '' }}
                         {{ __('translation.listing') }}
                     </h4>
                 </div>
-
                 <div class="card-body">
                     <div class="table-responsive overflowx">
                         <table class="table table-striped align-middle">

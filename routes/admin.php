@@ -85,6 +85,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('customers/find-by-phone', [CustomerController::class, 'findByPhone'])->name('customers.findByPhone');
     Route::post('customers/quick-store', [CustomerController::class, 'quickStore'])->name('customers.quickStore');
     Route::post('customers/update-by-phone', [CustomerController::class, 'updateByPhone'])->name('customers.updateByPhone');
+    Route::get('customers/export-pdf', [CustomerController::class, 'exportPdf'])->name('customers.exportPdf');
+    Route::get('customers/export-csv', [CustomerController::class, 'exportCsv'])->name('customers.exportCsv');
 });
 
 
