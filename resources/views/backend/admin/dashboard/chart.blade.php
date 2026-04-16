@@ -211,7 +211,46 @@
             // =============================
             renderDonut('monthlyChart', @json($productMonthly), 'Monthly Sales');
         });
+
         function renderDonut(id, data, title) {
+
+            let chartData = data.map(item => ({
+                name: item.name.toLowerCase().replace(/\b\w/g, c => c.toUpperCase()), // ✅ convert to uppercase
+                y: parseFloat(item.total_items_sold)
+            }));
+
+            Highcharts.chart(id, {
+                chart: {
+                    type: 'pie'
+                },
+
+                title: {
+                    text: title.toUpperCase() // optional
+                },
+
+                plotOptions: {
+                    pie: {
+                        innerSize: '65%',
+                        dataLabels: {
+                            enabled: true,
+                            format: '{point.name} # {point.y}' // ✅ your format
+                        }
+                    }
+                },
+
+                tooltip: {
+                    pointFormat: '<b>{point.name} # {point.y}</b>'
+                },
+
+                series: [{
+                    name: 'Items Sold',
+                    data: chartData
+                }]
+            });
+        }
+
+
+        function renderDonutold(id, data, title) {
 
             let chartData = data.map(item => ({
                 name: item.name,
