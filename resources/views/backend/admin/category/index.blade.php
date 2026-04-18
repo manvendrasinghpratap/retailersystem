@@ -9,16 +9,16 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="card-title d-inline-block">{{ __('translation.filter') }}</h4>
-                    {{-- <div class="d-inline-block">
+                    <div class="d-inline-block">
                         @include('backend.components.exportpdfcsv', [
-                        'pdfId' =>'categorypdf',
-                        'pdfRoute' => route('menu.category.pdf'),
-                        'pdfClass' => 'categorypdf',
-                        'csvId' =>'categorycsv',
-                        'csvRoute' => route('menu.category.csv'),
-                        'csvClass' => 'categorycsv',
-                        ])
-                    </div> --}}
+                        'pdfId' =>'downloadcategorypdf',    
+                        'pdfRoute' => route('admin.category.exportPdf'),
+                        'pdfClass' => 'downloadcategorypdf',
+                        'csvId' =>'downloadcategorycsv',    
+                        'csvRoute' => route('admin.category.exportCsv'),
+                        'csvClass' => 'downloadcategorycsv',
+                        ])                 
+                    </div>  
                 </div>
                 <div class="card-body">
                     <form name="cartlistingform" id="cartlistingform" method="GET">
@@ -85,7 +85,9 @@
                                         </tr>
                                     @endforeach
                                 @else
-                                    <option disabled>No menu types available</option>
+                                    <tr>
+                                        <td colspan="8" class="text-center">No categories available</td>
+                                    </tr>
                                 @endif
                             </tbody>
                         </table>
@@ -102,8 +104,8 @@
 @section('script')
     <script>
         $(document).ready(function () {
-            setupPdfDownload('.categorypdf', 'data-downloadroutepdf');
-            setupPdfDownload('.categorycsv', 'data-downloadroutepdf');
+            setupPdfDownload('.downloadcategorypdf', 'data-downloadroutepdf');
+            setupPdfDownload('.downloadcategorycsv', 'data-downloadroutepdf');
         });
     </script>
 @endsection

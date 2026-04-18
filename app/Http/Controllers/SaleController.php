@@ -57,15 +57,66 @@ class SaleController extends Controller
         if ($request->invoice_no) {
             $query->where('invoice_no', 'like', '%' . $request->invoice_no . '%');
         }
-
-
-
-        $sales = $query->latest()->paginate(config('constants.pagination'));
+        $sales = $query->latest();
 
         // Summary
         $totalSales = $sales->sum('total');
+        if ($request->pdf) {
+            $sales = $sales->get();
+            $pdfHeaderdata = \Config::get('constants.downloadsalespdf');
+            $pdf = Pdf::loadView('backend.pdf.sales.salesListpdf', compact('sales', 'pdfHeaderdata'));
+            $pdf = Settings::downloadLandscapepdf($pdf);
+            $fileName = $pdfHeaderdata['filename'] . '-' . date('Y-m-d') . '.pdf';
+            return $pdf->stream($fileName);
+        } elseif ($request->has('csv')) {
+            $sales = $sales->get();
+            $csvHeaderdata = \Config::get('constants.downloadsalespdf');
+            $fileName = $csvHeaderdata['filename'] . '-' . date('Y-m-d') . '.csv';
+            $data = [];
+            $ii = $i = 0;
+            // ✅ Header Row
+            $data[$ii] = [
+                '#',
+                __('translation.customer_name'),
+                __('translation.customer_phone'),
+                __('translation.customer_email'),
+                __('translation.invoice_no'),
+                __('translation.cashier'),
+                __('translation.payment_type'),
+                __('translation.payment_method'),
+                __('translation.b_ngn') . ' ' . __('translation.total_amount'),
+                __('translation.transaction_date'),
+            ];
 
-        return view('backend.sales.index', compact('sales', 'totalSales', 'breadcrumb'));
+            foreach ($sales as $sale) {
+                $data[++$ii] = [
+                    $ii,
+                    $sale->customer->name ?? '-',
+                    $sale->customer->phone ?? '-',
+                    $sale->customer->email ?? '-',
+                    $sale->invoice_no,
+                    $sale->user->name ?? '-',
+                    ($sale->payment_method == null) ? 'Partial Payment' : 'Full Payment',
+                    $sale->payment_methods,
+                    __('translation.b_ngn') . ' ' . number_format($sale->total, 2),
+                    Settings::getFormattedDatetime($sale->created_at),
+                ];
+            }
+            return Settings::downloadcsvfile($data, $fileName);
+        }
+        $sales = $sales->paginate(config('constants.pagination'));
+        return view('backend.sales.index', compact('sales', 'breadcrumb'));
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $request->merge(['pdf' => 1]);
+        return $this->index($request);
+    }
+    public function exportCsv(Request $request)
+    {
+        $request->merge(['csv' => 1]);
+        return $this->index($request);
     }
 
     public function show(Sale $sale)

@@ -9,26 +9,22 @@ use App\Models\Category;
 use Illuminate\Http\Request;
 use App\Helpers\Settings;
 use Illuminate\Support\Facades\Crypt;
-use Illuminate\Support\Collection;
-
+use Barryvdh\DomPDF\Facade\Pdf;
 class InventoryController extends Controller
 {
 
-    protected $breadcrumbAddNew;
+    protected $breadcrumbAddUpdate;
     protected $breadcrumbListing;
-    protected $breadcrumbSubscribeListing;
-    protected $breadcrumbChangePassword;
 
     public function __construct()
     {
         $this->middleware('auth');
         $this->breadcrumbAddUpdate = ['title' => __('translation.stock_management'), 'route1' => "admin.inventory.manage/291752", 'route1Title' => __('translation.add_update_stock'), 'route2' => 'admin.inventory', 'route2Title' => __('translation.stock_management'), 'reset_route' => 'admin.inventory', 'reset_route_title' => __('translation.cancel'), 'route' => 'add', 'add' => 'stock.adjust'];
-
         $this->breadcrumbListing = ['title' => __('translation.stock_management'), 'route1' => 'admin.inventory', 'route1Title' => __('translation.stock_management'), 'route2' => 'admin.inventory.manage', 'route2Title' => __('translation.add_stock'), 'reset_route' => 'admin.inventory', 'reset_route_title' => __('translation.cancel'), 'route3Title' => __('translation.update_stock'), 'route3' => 'stock.adjust'];
     }
 
 
-    public function index()
+    public function index(Request $request)
     {
         $breadcrumb = $this->breadcrumbAddUpdate;
         $categories = Category::getCategoriesPluck();
@@ -46,10 +42,60 @@ class InventoryController extends Controller
                 $query->where('category_id', request('category_id'));
             });
         }
+        if ($request->pdf) {
+            $inventory = $inventory->get();
+            $pdfHeaderdata = \Config::get('constants.downloadinventorypdf');
+            $pdf = Pdf::loadView('backend.pdf.stockManagement.stockManagementpdf', compact('inventory', 'pdfHeaderdata'));
+            $pdf = Settings::downloadLandscapepdf($pdf);
+            $fileName = $pdfHeaderdata['filename'] . '-' . date('Y-m-d') . '.pdf';
+            return $pdf->stream($fileName);
+        } elseif ($request->has('csv')) {
+            $inventory = $inventory->get();
+            $csvHeaderdata = \Config::get('constants.downloadinventorypdf');
+            $fileName = $csvHeaderdata['filename'] . '-' . date('Y-m-d') . '.csv';
+            $data = [];
+            $ii = $i = 0;
+            // ✅ Header Row
+            $data[$ii] = [
+                '#',
+                __('translation.category_name'),
+                __('translation.product_name'),
+                __('translation.sku'),
+                __('translation.barcode'),
+                __('translation.stock'),
+                __('translation.low_alert'),
+                __('translation.status'),
+            ];
+
+            foreach ($inventory as $stock) {
+                $data[++$ii] = [
+                    $ii,
+                    $stock->product->category->name ?? '',
+                    $stock->product->name ?? '',
+                    $stock->product->sku ?? '',
+                    $stock->product->barcode ?? '',
+                    $stock->stock,
+                    $stock->low_stock_alert,
+                    $stock->isLowStock() ? __('translation.low_stock') : __('translation.normal_stock'),
+                ];
+            }
+            return Settings::downloadcsvfile($data, $fileName);
+        }
 
         $inventory = $inventory->paginate(\Config::get('constants.pagination'));
 
         return view('backend.admin.inventory.index', compact('inventory', 'breadcrumb', 'categories'));
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $request->merge(['pdf' => 1]);
+        return $this->index($request);
+    }
+    public function exportCsv(Request $request)
+    {
+        $request->merge(['csv' => 1]);
+        return $this->index($request);
     }
 
     public function create(Request $request, $id = null)

@@ -9,6 +9,7 @@ use App\Helpers\Settings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use App\Models\StockAdjustment;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ProductController extends Controller
 {
@@ -47,7 +48,7 @@ class ProductController extends Controller
         ];
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $breadcrumb = $this->breadcrumbAddNew;
         $categories = Category::getCategoriesPluck();
@@ -62,8 +63,55 @@ class ProductController extends Controller
         if (request('is_active')) {
             $products->where('status', request('is_active'));
         }
+        if ($request->pdf) {
+            $products = $products->get();
+            $pdfHeaderdata = \Config::get('constants.downloadproductpdf');
+            $pdf = Pdf::loadView('backend.pdf.products.productpdf', compact('products', 'pdfHeaderdata'));
+            $pdf = Settings::downloadpdf($pdf);
+            $fileName = $pdfHeaderdata['filename'] . '-' . date('Y-m-d') . '.pdf';
+            return $pdf->stream($fileName);
+        } elseif ($request->has('csv')) {
+            $products = $products->get();
+            $csvHeaderdata = \Config::get('constants.downloadproductpdf');
+            $fileName = $csvHeaderdata['filename'] . '-' . date('Y-m-d') . '.csv';
+            $data = [];
+            $ii = $i = 0;
+            // ✅ Header Row
+            $data[$ii] = [
+                '#',
+                __('translation.category_name'),
+                __('translation.product_name'),
+                __('translation.selling_price'),
+                __('translation.barcode'),
+                __('translation.sku'),
+                __('translation.status'),
+            ];
+
+            foreach ($products as $product) {
+                $data[++$ii] = [
+                    $ii,
+                    $product->category->name ?? '-',
+                    $product->name,
+                    $product->selling_price,
+                    $product->barcode,
+                    $product->sku,
+                    $product->status == 1 ? __('translation.active') : __('translation.inactive'),
+                ];
+            }
+            return Settings::downloadcsvfile($data, $fileName);
+        }
         $products = $products->paginate(config('constants.pagination'));
         return view('backend.admin.product.index', compact('products', 'breadcrumb', 'categories'));
+    }
+    public function exportPdf(Request $request)
+    {
+        $request->merge(['pdf' => 1]);
+        return $this->index($request);
+    }
+    public function exportCsv(Request $request)
+    {
+        $request->merge(['csv' => 1]);
+        return $this->index($request);
     }
 
     public function create(Request $request, $token = null)

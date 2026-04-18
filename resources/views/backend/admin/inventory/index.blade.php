@@ -9,9 +9,16 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="card-title d-inline-block">{{ __('translation.filter') }}</h4>
-                    <div class="d-inline-block">
-
-                    </div>
+                     <div class="d-inline-block">
+                        @include('backend.components.exportpdfcsv', [
+                        'pdfId' =>'downloadinventorypdf',    
+                        'pdfRoute' => route('admin.inventory.exportPdf'),
+                        'pdfClass' => 'downloadinventorypdf',
+                        'csvId' =>'downloadinventorycsv',    
+                        'csvRoute' => route('admin.inventory.exportCsv'),
+                        'csvClass' => 'downloadinventorycsv',
+                        ])                 
+                    </div>      
                 </div>
                 <div class="card-body">
                     {{-- Filter Form --}}
@@ -56,7 +63,7 @@
                                         <td>{!! DNS1D::getBarcodeSVG($stock->product->barcode, 'C128') !!}</td>
                                         <td>{{ $stock->stock }}</td>
                                         <td>{{ $stock->low_stock_alert }}</td>
-                                        <td>{{ $stock->isLowStock() ? 'Low Stock' : 'Normal Stock' }}</td>
+                                        <td>{{ $stock->isLowStock() ? __('translation.low_stock') : __('translation.normal_stock') }}</td>
                                     </tr>
                                 @empty
                                     <tr>
@@ -77,8 +84,8 @@
 @section('script')
     <script>
         $(document).ready(function () {
-            setupPdfDownload('.downloaddailyStockPdf', 'data-downloadroutepdf');
-            setupPdfDownload('.downloaddailyStockCsv', 'data-downloadroutepdf');
+            setupPdfDownload('.downloadinventorypdf', 'data-downloadroutepdf');
+            setupPdfDownload('.downloadinventorycsv', 'data-downloadroutepdf');
         });
     </script>
 @endsection

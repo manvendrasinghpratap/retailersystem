@@ -13,21 +13,26 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="card-title d-inline-block">{{ __('translation.filter') }}</h4>
+                     <div class="d-inline-block">
+                        @include('backend.components.exportpdfcsv', [
+                        'pdfId' =>'downloadcouponpdf',    
+                        'pdfRoute' => route('admin.coupons.exportPdf'),
+                        'pdfClass' => 'downloadcouponpdf',
+                        'csvId' =>'downloadcouponcsv',    
+                        'csvRoute' => route('admin.coupons.exportCsv'),
+                        'csvClass' => 'downloadcouponcsv',
+                        ])                 
+                    </div>      
                 </div>
-
                 <div class="card-body">
                     <form method="GET">
                         <div class="row">
                             <x-text-input name="code" label="Coupon Code" value="{{ request()->get('code') ?? '' }}" mainrows="3" />
-
                             <x-select-dropdown name="status" label="{{ __('translation.status') }}" :options="config('constants.accountstatus')" :selected="request()->get('status') ?? ''" mainrows="2" class="accountstatus" />
-
                             <div class="col-xl-2 col-md-2">
                                 <div class="form-group mb-3">
                                     <label class="d-inline-block w-100">&nbsp;</label>
-
                                     <x-filter-submit-button name="submit" label="{{ __('translation.filter') }}" />
-
                                     <x-filter-href-button name="reset" href="{!! !empty($breadcrumb['route2']) ? route($breadcrumb['route2']) : '' !!}" label="Reset" />
                                 </div>
                             </div>
@@ -106,7 +111,7 @@
                                     @endforeach
                                 @else
                                     <tr>
-                                        <td colspan="10" class="text-center">No Coupons Available</td>
+                                        <td colspan="10" class="text-center">{{ __('translation.no_coupons_available') }}</td>
                                     </tr>
                                 @endif
                             </tbody>
@@ -125,4 +130,12 @@
         </div>
     </div>
 
+@endsection
+@section('script')
+<script>
+    $(document).ready(function() {
+       setupPdfDownload('.downloadcouponpdf', 'data-downloadroutepdf');
+       setupPdfDownload('.downloadcouponcsv', 'data-downloadroutepdf');
+    });
+</script>
 @endsection

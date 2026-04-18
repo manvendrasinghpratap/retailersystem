@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Coupon;
 use App\Helpers\Settings;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 class CouponController extends Controller
 {
     protected $breadcrumbAddNew;
@@ -41,7 +42,7 @@ class CouponController extends Controller
     /**
      * Coupon Listing
      */
-    public function index()
+    public function index(Request $request)
     {
         $breadcrumb = $this->breadcrumbAddNew;
 
@@ -56,10 +57,61 @@ class CouponController extends Controller
         if (request('status') !== null) {
             $coupons->where('is_active', request('status'));
         }
+        if ($request->has('pdf')) {
+            $coupons = $coupons->get();
+            $pdfHeaderdata = \Config::get('constants.couponListpdf');
+            $pdf = PDF::loadView('backend.pdf.coupons.couponListpdf', compact('coupons', 'pdfHeaderdata', 'breadcrumb'));
+            $pdf = Settings::downloadpdf($pdf);
+            $fileName = $pdfHeaderdata['filename'] . '-' . date('Y-m-d') . '.pdf';
+            return $pdf->stream($fileName);
+        } elseif ($request->has('csv')) {
+            $coupons = $coupons->get();
+            $csvHeaderdata = \Config::get('constants.couponListpdf');
+            $fileName = $csvHeaderdata['filename'] . '-' . date('Y-m-d') . '.csv';
+            $data = [];
+            $ii = $i = 0;
+            // ✅ Header Row
+            $data[$ii] = [
+                '#',
+                __('translation.couponcode'),
+                __('translation.type'),
+                __('translation.value'),
+                __('translation.minamount'),
+                __('translation.maxdiscount'),
+                __('translation.expirydate'),
+                __('translation.status'),
+                __('translation.createdat'),
+            ];
+
+            foreach ($coupons as $coupon) {
+                $data[++$ii] = [
+                    $ii,
+                    $coupon->code,
+                    $coupon->type == 'flat' ? 'Flat' : 'Percent',
+                    $coupon->type == 'percent' ? $coupon->value . '%' : __('translation.currency') . number_format($coupon->value, 2),
+                    __('translation.currency') . number_format($coupon->min_amount ?? 0, 2),
+                    __('translation.currency') . number_format($coupon->max_discount ?? 0, 2),
+                    !empty($coupon->expired_date) ? "\t" . Settings::getFormattedDatetime($coupon->expired_date) : '-',
+                    $coupon->is_active == 1 ? 'Active' : 'Inactive',
+                    !empty($coupon->created_date) ? "\t" . Settings::getFormattedDatetime($coupon->created_date) : '-',
+                ];
+            }
+            return Settings::downloadcsvfile($data, $fileName);
+        }
 
         $coupons = $coupons->paginate(config('constants.pagination'));
 
         return view('backend.admin.coupon.index', compact('coupons', 'breadcrumb'));
+    }
+    public function exportPdf(Request $request)
+    {
+        $request->merge(['pdf' => 1]);
+        return $this->index($request);
+    }
+    public function exportCsv(Request $request)
+    {
+        $request->merge(['csv' => 1]);
+        return $this->index($request);
     }
 
     /**

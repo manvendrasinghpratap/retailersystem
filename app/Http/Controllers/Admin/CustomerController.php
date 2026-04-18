@@ -78,7 +78,7 @@ class CustomerController extends Controller
             $data = [];
             $ii = $i = 0;
             // ✅ Header Row
-            $data[$ii++] = [
+            $data[$ii] = [
                 '#',
                 __('translation.customer_name'),
                 __('translation.phone'),
@@ -89,8 +89,8 @@ class CustomerController extends Controller
             ];
 
             foreach ($customers as $customer) {
-                $data[$i++] = [
-                    $i,
+                $data[++$ii] = [
+                    $ii,
                     $customer->name,
                     $customer->phone,
                     $customer->email,

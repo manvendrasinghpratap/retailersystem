@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
-use PDF;
+
 use App\Models\User;
 use App\Models\State;
 use App\Models\Countries;
@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Session;
 use App\Services\UserService;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class StaffController extends Controller
 {
@@ -42,24 +43,31 @@ class StaffController extends Controller
         $updatedAt = '';
         $staffstatus = \Config::get('constants.staffstatus');
         $userList = User::select('*')->where('is_deleted', '0')->where('is_staff', 1)->where('designation_id', '>', 1)->where('account_id', Auth::user()->account_id);
-        if (!empty(request()->get('staff_name'))) {
-            $userList = $userList->where('name', 'LIKE', '%' . trim(request()->get('staff_name')) . '%');
+        if (!empty(request('staff_name'))) {
+            $userList = $userList->where('name', 'LIKE', '%' . trim(request('staff_name')) . '%');
         }
-        if (!empty(request()->get('designation_id'))) {
-            $userList = $userList->where('designation_id', request()->get('designation_id'));
+        if (!empty(request('designation_id'))) {
+            $userList = $userList->where('designation_id', request('designation_id'));
         }
-        if (request()->get('is_active') == '0') {
-            $userList = $userList->where('is_active', request()->get('is_active'));
+        if (request('is_active') == '0') {
+            $userList = $userList->where('is_active', request('is_active'));
         }
-        if (!empty(request()->get('is_active'))) {
-            $userList = $userList->where('is_active', request()->get('is_active'));
+        if (!empty(request('is_active'))) {
+            $userList = $userList->where('is_active', request('is_active'));
         }
-        if (!empty(request()->get('hired_date'))) {
-            $updatedAt = Settings::formatDate(request()->get('hired_date'), 'Y-m-d');
+        if (!empty(request('hired_date'))) {
+            $updatedAt = Settings::formatDate(request('hired_date'), 'Y-m-d');
             $userList = $userList->whereDate('hire_date', $updatedAt);
         }
         $userList = $userList->orderBy('id', 'desc');
-        if ($request->has('csv')) {
+        if ($request->has('pdf')) {
+            $userList = $userList->get();
+            $pdfHeaderdata = \Config::get('constants.staffspdf');
+            $pdf = PDF::loadView('backend.pdf.staff.staffListpdf', compact('userList', 'pdfHeaderdata', 'breadcrumb', 'staffstatus'));
+            $pdf = Settings::downloadpdf($pdf);
+            $fileName = $pdfHeaderdata['filename'] . '-' . date('Y-m-d') . '.pdf';
+            return $pdf->stream($fileName);
+        } elseif ($request->has('csv')) {
             $userList = $userList->get();
             $pdfHeaderdata = \Config::get('constants.staffspdf');
             $fileName = $pdfHeaderdata['filename'] . '-' . date('Y-m-d') . '.csv';
@@ -69,7 +77,7 @@ class StaffController extends Controller
             // Header row
             $data[$ii++] = [
                 '#',
-                __('translation.staff'),
+                __('translation.staff_name'),
                 __('translation.email'),
                 __('translation.username'),
                 __('translation.designation'),
@@ -84,7 +92,6 @@ class StaffController extends Controller
                     if (array_key_exists($user->is_active, \Config::get('constants.staffstatus'))) {
                         $status = \Config::get('constants.staffstatus')[$user->is_active];
                     }
-
                     $data[$ii++] = [
                         $i + 1,
                         $user->name ?? '-',
@@ -108,12 +115,12 @@ class StaffController extends Controller
         return view('backend.staff.index', compact("userList", "designation", "updatedAt", 'staffstatus', 'breadcrumb'));
     }
 
-    public function staffspdf(Request $request)
+    public function exportPdf(Request $request)
     {
         $request->merge(['pdf' => 1]);
         return $this->index($request);
     }
-    public function staffscsv(Request $request)
+    public function exportCsv(Request $request)
     {
         $request->merge(['csv' => 1]);
         return $this->index($request);

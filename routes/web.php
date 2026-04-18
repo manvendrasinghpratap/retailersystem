@@ -70,7 +70,8 @@ Route::middleware(['auth', 'route.permission'])->prefix('admin/staff')->group(fu
     Route::get('/edit/{id}', [StaffController::class, 'editstaff'])->name('admin.staff.edit');
     Route::post('/update', [StaffController::class, 'update'])->name('admin.staff.update');
     Route::post('/updatepassword', [StaffController::class, 'updatepassword'])->name('admin.staff.updatepassword');
-    Route::get('/downloadstaffpdf', [StaffController::class, 'downloadstaffpdf'])->name('downloadstaffpdf');
+    Route::get('/exportpdf', [StaffController::class, 'exportPdf'])->name('staff.pdf');
+    Route::get('/exportcsv', [StaffController::class, 'exportCsv'])->name('staff.csv');
 });
 
 Route::middleware(['auth', 'route.permission'])->prefix('admin/members')->group(function () {
@@ -101,6 +102,8 @@ Route::middleware(['auth', 'route.permission'])->group(function () {
 });
 Route::middleware(['auth', 'route.permission'])->group(function () {
     Route::get('/sales', [SaleController::class, 'index'])->name('admin.sales.index');
+    Route::get('/sales/export-pdf', [SaleController::class, 'exportPdf'])->name('admin.sales.exportPdf');
+    Route::get('/sales/export-csv', [SaleController::class, 'exportCsv'])->name('admin.sales.exportCsv');
     Route::get('/sales/{sale}', [SaleController::class, 'show'])->name('admin.sales.show');
 });
 Route::middleware(['auth', 'route.permission'])->group(function () {
@@ -116,6 +119,6 @@ Route::middleware(['auth'])->group(function () {
 });
 
 require __DIR__ . '/auth.php';
-require __DIR__ . '/admin.php'; 
+require __DIR__ . '/admin.php';
 require __DIR__ . '/administrator.php';
 require __DIR__ . '/acl.php';

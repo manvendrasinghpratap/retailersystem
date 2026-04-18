@@ -10,16 +10,16 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="card-title d-inline-block">{{ __('translation.filter') }}</h4>
-                    {{-- <div class="d-inline-block">
+                    <div class="d-inline-block">
                         @include('backend.components.exportpdfcsv', [
-                        'pdfId' =>'categorypdf',
-                        'pdfRoute' => route('menu.category.pdf'),
-                        'pdfClass' => 'categorypdf',
-                        'csvId' =>'categorycsv',
-                        'csvRoute' => route('menu.category.csv'),
-                        'csvClass' => 'categorycsv',
+                        'pdfId' =>'productpdf',
+                        'pdfRoute' => route('admin.products.pdf'),
+                        'pdfClass' => 'productpdf',
+                        'csvId' =>'productcsv',
+                        'csvRoute' => route('admin.products.csv'),
+                        'csvClass' => 'productcsv',
                         ])
-                    </div> --}}
+                    </div>
                 </div>
                 <div class="card-body">
                     <form name="cartlistingform" id="cartlistingform" method="GET">
@@ -57,7 +57,7 @@
                                     <th>#</th>
                                     <th>{{ __('translation.category')}}</th>
                                     <th>{{ __('translation.product_name')}}</th>
-                                    <th>{{ __('translation.cost_price') }}</th>
+                                    <!-- <th>{{ __('translation.cost_price') }}</th> -->
                                     <th>{{ __('translation.selling_price') }}</th>
                                     <th>{{ __('translation.barcode')}}</th>
                                     <th>{{ __('translation.sku')}}</th>
@@ -72,7 +72,7 @@
                                             <td>{{ $loop->iteration }}</td>
                                             <td>{{ $p->category->name ?? '-' }}</td>
                                             <td>{{ $p->name }}</td>
-                                            <td>{{ $p->cost_price }}</td>
+                                            <!-- <td>{{ $p->cost_price }}</td> -->
                                             <td>{{ $p->selling_price }}</td>
                                             <td>{!! DNS1D::getBarcodeSVG($p->barcode, 'C128') !!}</td>
                                             <td>{{ $p->sku }}</td>
@@ -109,8 +109,8 @@
 @section('script')
     <script>
         $(document).ready(function () {
-            setupPdfDownload('.categorypdf', 'data-downloadroutepdf');
-            setupPdfDownload('.categorycsv', 'data-downloadroutepdf');
+            setupPdfDownload('.productpdf', 'data-downloadroutepdf');
+            setupPdfDownload('.productcsv', 'data-downloadroutepdf');
         });
     </script>
 @endsection

@@ -307,5 +307,8 @@ return [
     'my_sales' => 'My Sales',
     'daily_sales' => 'Daily Sales',
     'daily_sales_report' => 'Daily Sales Report',
-    'reports' => 'Reports'
+    'reports' => 'Reports',
+    'no_coupons_available' => 'No Coupons Available',
+    'low_stock' => 'Low Stock',
+    'normal_stock' => 'Normal Stock',
 ];

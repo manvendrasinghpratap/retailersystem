@@ -11,7 +11,7 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h4 class="card-title d-inline-block">{{ __('translation.filter') }}</h4>
-                {{-- <div class="d-inline-block">
+                <div class="d-inline-block">
                     @include('backend.components.exportpdfcsv', [
                     'pdfId' =>'downloadstaffpdf',
                     'pdfRoute' => route('staff.pdf'),
@@ -20,7 +20,7 @@
                     'csvRoute' => route('staff.csv'),
                     'csvClass' => 'downloadstaffcsv',
                     ])
-                </div> --}}
+                </div>
             </div>
             <div class="card-body">
                 <form name="cartlistingform" id="cartlistingform" method="GET">

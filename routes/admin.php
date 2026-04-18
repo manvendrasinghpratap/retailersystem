@@ -31,6 +31,8 @@ Route::prefix('admin')->middleware(['auth', 'route.permission'])->group(function
     Route::post('categories/delete', [CategoryController::class, 'softdelete'])->name('admin.categories.delete');
     Route::post('categories/status', [CategoryController::class, 'statusUpdate'])->name('admin.categories.statusUpdate');
     Route::post('categories/softdelete', [CategoryController::class, 'softdelete'])->name('admin.categories.softdelete');
+    Route::get('categories/export-pdf', [CategoryController::class, 'exportPdf'])->name('admin.category.exportPdf');
+    Route::get('categories/export-csv', [CategoryController::class, 'exportCsv'])->name('admin.category.exportCsv');
 });
 
 Route::prefix('admin/products')->middleware(['auth', 'route.permission'])->group(function () {
@@ -41,6 +43,8 @@ Route::prefix('admin/products')->middleware(['auth', 'route.permission'])->group
     Route::post('update', [ProductController::class, 'update'])->name('admin.products.update');
     Route::post('products/delete', [ProductController::class, 'destroy'])->name('products.delete');
     Route::post('products/softdelete', [ProductController::class, 'softdelete'])->name('admin.products.softdelete');
+    Route::get('pdf', [ProductController::class, 'exportPdf'])->name('admin.products.pdf');
+    Route::get('csv', [ProductController::class, 'exportCsv'])->name('admin.products.csv');
 });
 
 Route::prefix('admin')->middleware(['auth', 'route.permission'])->group(function () {
@@ -49,6 +53,8 @@ Route::prefix('admin')->middleware(['auth', 'route.permission'])->group(function
     Route::get('inventory/manage/{id?}', [InventoryController::class, 'create'])->name('admin.inventory.manage');
     Route::get('inventory/manage/update/{token}', [InventoryController::class, 'update'])->name('admin.inventory.update');
     Route::post('stock-adjust', [StockAdjustmentController::class, 'store'])->name('admin.stock.adjust');
+    Route::get('inventory/export-pdf', [InventoryController::class, 'exportPdf'])->name('admin.inventory.exportPdf');
+    Route::get('inventory/export-csv', [InventoryController::class, 'exportCsv'])->name('admin.inventory.exportCsv');
 });
 
 Route::prefix('admin/barcode')->middleware(['auth', 'route.permission'])->group(function () {
@@ -71,6 +77,8 @@ Route::prefix('admin')->middleware(['auth', 'route.permission'])->group(function
     Route::post('coupons/status-update', [CouponController::class, 'statusUpdate'])->name('admin.coupons.status');
     Route::post('coupons/soft-delete', [CouponController::class, 'softdelete'])->name('admin.coupons.softdelete');
     Route::post('/coupon/apply', [CouponController::class, 'apply'])->name('coupon.apply');
+    Route::get('coupons/export-pdf', [CouponController::class, 'exportPdf'])->name('admin.coupons.exportPdf');
+    Route::get('coupons/export-csv', [CouponController::class, 'exportCsv'])->name('admin.coupons.exportCsv');
 });
 
 Route::prefix('admin')->name('admin.')->group(function () {

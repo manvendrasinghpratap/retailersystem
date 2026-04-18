@@ -7,7 +7,7 @@ use App\Models\Category;
 use App\Helpers\Settings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-
+use Barryvdh\DomPDF\Facade\Pdf;
 class CategoryController extends Controller
 {
     protected $breadcrumbAddNew;
@@ -43,7 +43,7 @@ class CategoryController extends Controller
     /**
      * Category Listing
      */
-    public function index()
+    public function index(Request $request)
     {
         $breadcrumb = $this->breadcrumbAddNew;
 
@@ -59,11 +59,59 @@ class CategoryController extends Controller
         if (request('is_active') !== null) {
             $categories->where('status', request('is_active'));
         }
+        if ($request->has('pdf')) {
+            $categories = $categories->get();
+            $pdfHeaderdata = \Config::get('constants.categoryListpdf');
+            $pdf = PDF::loadView('backend.pdf.categories.categoryListpdf', compact('categories', 'pdfHeaderdata', 'breadcrumb'));
+            $pdf = Settings::downloadpdf($pdf);
+            $fileName = $pdfHeaderdata['filename'] . '-' . date('Y-m-d') . '.pdf';
+            return $pdf->stream($fileName);
+        } elseif ($request->has('csv')) {
+            $categories = $categories->get();
+            $csvHeaderdata = \Config::get('constants.categoryListpdf');
+            $fileName = $csvHeaderdata['filename'] . '-' . date('Y-m-d') . '.csv';
+            $data = [];
+            $ii = $i = 0;
+            // ✅ Header Row
+            $data[$ii] = [
+                '#',
+                __('translation.category_name'),
+                __('translation.brand_name'),
+                __('translation.slug'),
+                __('translation.image'),
+                __('translation.status'),
+                __('translation.createdat'),
+            ];
+
+            foreach ($categories as $customer) {
+                $data[++$ii] = [
+                    $ii,
+                    $customer->name,
+                    $customer->description,
+                    $customer->slug,
+                    $customer->image,
+                    $customer->status,
+                    $customer->created_at,
+                ];
+            }
+            return Settings::downloadcsvfile($data, $fileName);
+        }
+
 
         $categories = $categories->paginate(config('constants.pagination'));
         $status = config('constants.accountstatus');
 
         return view('backend.admin.category.index', compact('categories', 'breadcrumb', 'status'));
+    }
+    public function exportPdf(Request $request)
+    {
+        $request->merge(['pdf' => 1]);
+        return $this->index($request);
+    }
+    public function exportCsv(Request $request)
+    {
+        $request->merge(['csv' => 1]);
+        return $this->index($request);
     }
 
     /**

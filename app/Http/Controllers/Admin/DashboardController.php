@@ -77,7 +77,18 @@ class DashboardController extends Controller
         $totals = array_fill(0, 24, 0);
 
         for ($i = 0; $i < 24; $i++) {
-            $hours[] = str_pad($i, 2, '0', STR_PAD_LEFT) . ':00';
+
+            if ($i == 0) {
+                $label = '12 AM';
+            } elseif ($i < 12) {
+                $label = $i . ' AM';
+            } elseif ($i == 12) {
+                $label = '12 Noon';
+            } else {
+                $label = ($i - 12) . ' PM';
+            }
+
+            $hours[] = $label;
         }
 
         foreach ($sales as $sale) {

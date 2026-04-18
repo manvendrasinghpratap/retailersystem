@@ -9,6 +9,16 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="card-title d-inline-block">{{ __('translation.filter') }}</h4>
+                    <div class="d-inline-block">
+                        @include('backend.components.exportpdfcsv', [
+                        'pdfId' =>'downloadsalespdf',    
+                        'pdfRoute' => route('admin.sales.exportPdf'),
+                        'pdfClass' => 'downloadsalespdf',
+                        'csvId' =>'downloadsalescsv',    
+                        'csvRoute' => route('admin.sales.exportCsv'),
+                        'csvClass' => 'downloadsalescsv',
+                        ])                 
+                    </div>      
                 </div>
                 <div class="card-body">
                     <form name="cartlistingform" id="cartlistingform" method="GET">
@@ -51,7 +61,6 @@
                                     <th>{{ __('translation.payment_type') }}</th>
                                     <th>{{ __('translation.payment_method') }}</th>
                                     <th>{{ __('translation.b_ngn') . ' ' . __('translation.total_amount') }}</th>
-                                    <!-- <th>{{ __('translation.status') }}</th> -->
                                     <th>{{ __('translation.transaction_date') }}</th>
                                     <th width="80">{{ __('translation.action') }}</th>
                                 </tr>
@@ -67,11 +76,6 @@
                                         <td>{{ ($sale->payment_method == null) ? 'Partial Payment' : 'Full Payment' }}</td>
                                         <td>{{ $sale->payment_methods }}</td>
                                         <td>{{ __('translation.b_ngn') . ' ' . number_format($sale->total, 2) }}</td>
-                                        <!-- <td>
-                                                            <span class="badge bg-success">
-                                                                {{ ucfirst($sale->status) }}
-                                                            </span>
-                                                        </td> -->
                                         <td>{{ App\Helpers\Settings::getFormattedDatetime($sale->created_at)}}</td>
                                         <td><a href="{{ route('admin.sales.show', $sale->id) }}" class="" title="View"><i class="fas fa-eye"></i></a>
                                             <a href="{{ route('printinvoice', \App\Helpers\Settings::getEncodeCodeWithHashids($sale->id)) }}" class="" title="Receipt" target="_blank"><i class="fas fa-receipt"></i></a>
@@ -134,6 +138,11 @@
                     }
                 });
             });
+        });
+
+        $(document).ready(function() {
+            setupPdfDownload('.downloadsalespdf', 'data-downloadroutepdf');
+            setupPdfDownload('.downloadsalescsv', 'data-downloadroutepdf');
         });
     </script>
 @endsection
