@@ -13,8 +13,7 @@ Route::middleware(['auth'])->group(function () {
     // ===============================
     // Attendance Main Page
     // ===============================
-    Route::get('/attendance', [AttendanceController::class, 'index'])
-        ->name('attendance.index');
+    Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
 
     // ===============================
     // Save Manual Attendance
@@ -41,7 +40,11 @@ Route::middleware(['auth'])->group(function () {
     // ===============================
     // Delete Record
     // ===============================
-    Route::delete('/attendance/{id}', [AttendanceController::class, 'destroy'])
-        ->name('attendance.destroy');
+    Route::delete('/attendance/{id}', [AttendanceController::class, 'destroy'])->name('attendance.destroy');
 
+    // ===============================
+    // Export PDF & CSV
+    // ===============================
+    Route::get('/attendance/report/pdf', [AttendanceController::class, 'exportPdf'])->name('attendance.exportPdf');
+    Route::get('/attendance/report/csv', [AttendanceController::class, 'exportCsv'])->name('attendance.exportCsv');
 });

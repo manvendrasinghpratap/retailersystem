@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use DB;
 use App\Helpers\Settings;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class AttendanceController extends Controller
 {
@@ -80,6 +81,17 @@ class AttendanceController extends Controller
             'staffs',
             'attendance'
         ));
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $request->merge(['pdf' => 1]);
+        return $this->report($request);
+    }
+    public function exportCsv(Request $request)
+    {
+        $request->merge(['csv' => 1]);
+        return $this->report($request);
     }
 
     /**
@@ -181,39 +193,6 @@ class AttendanceController extends Controller
 
         return back()->with('success', 'Punch Out Updated Successfully');
     }
-    public function punchOutold(Request $request)
-    {
-        $staffId = auth()->user()->id;
-
-        $attendance = Attendance::where('staff_id', $staffId)
-            ->whereDate('date', date('Y-m-d'))
-            ->first();
-
-        if (!$attendance) {
-            return back()->with('error', 'Please Punch In First.');
-        }
-
-        // Already punched out and no confirmation
-        if ($attendance->check_out && !$request->confirm_update) {
-            return back()->with(
-                'warning',
-                'already_punched_out'
-            );
-        }
-
-        $checkIn = Carbon::parse($attendance->check_in);
-        $checkOut = now()->utc();
-
-        $minutes = $checkIn->diffInMinutes($checkOut);
-        $hours = round($minutes / 60, 2);
-
-        $attendance->update([
-            'check_out' => $checkOut,
-            'work_hours' => $hours
-        ]);
-
-        return back()->with('success', 'Punch Out Updated Successfully');
-    }
     /**
      * Attendance Report
      */
@@ -279,6 +258,116 @@ class AttendanceController extends Controller
 
         foreach ($records as $row) {
             $attendance[$row->staff_id][date('Y-m-d', strtotime($row->date))] = $row;
+        }
+        if ($request->has('pdf')) {
+            $pdfHeaderdata = \Config::get('constants.attendanceListpdf');
+            $pdf = PDF::loadView('backend.pdf.attendance.attendanceListpdf', compact('staffs', 'attendance', 'pdfHeaderdata', 'breadcrumb', 'year', 'monthNo', 'daysInMonth'));
+            $pdf = Settings::downloadLandscapepdf($pdf);
+            $fileName = $pdfHeaderdata['filename'] . '-' . date('Y-m-d') . '.pdf';
+            return $pdf->stream($fileName);
+        }
+        if ($request->has('csv')) {
+
+            $csvHeaderdata = \Config::get('constants.attendanceListpdf');
+            $fileName = $csvHeaderdata['filename'] . '-' . date('Y-m-d') . '.csv';
+
+            $data = [];
+
+            /*
+            |--------------------------------------------------------------------------
+            | Header Row
+            |--------------------------------------------------------------------------
+            */
+
+            $header = $head = [];
+            $monthName = date('F', mktime(0, 0, 0, $monthNo, 1, $year));
+
+            $header = $head = [];
+
+            /*
+            |--------------------------------------------------------------------------
+            | First Row
+            |--------------------------------------------------------------------------
+            */
+            $head[] = '';
+            $head[] = 'Staff';
+            $head[] = $monthName . ' / Days';
+
+            $data[] = $head;
+
+            /*
+            |--------------------------------------------------------------------------
+            | Second Row
+            |--------------------------------------------------------------------------
+            */
+            $header[] = '#';
+            $header[] = __('translation.staff_name');
+
+            for ($d = 1; $d <= $daysInMonth; $d++) {
+                $header[] = $d;
+            }
+
+            $header[] = 'P';
+            $header[] = 'A';
+            $header[] = 'H';
+            $header[] = 'L';
+
+            $data[] = $header;
+
+            /*
+            |--------------------------------------------------------------------------
+            | Staff Rows
+            |--------------------------------------------------------------------------
+            */
+            $sr = 1;
+
+            foreach ($staffs as $staff) {
+
+                $present = 0;
+                $absent = 0;
+                $half = 0;
+                $leave = 0;
+
+                $row = [];
+                $row[] = $sr++;
+                $row[] = $staff->name;
+
+                for ($d = 1; $d <= $daysInMonth; $d++) {
+
+                    $date = $year . '-' . sprintf('%02d', $monthNo) . '-' . sprintf('%02d', $d);
+
+                    $attendanceRow = $attendance[$staff->id][$date] ?? null;
+                    $status = $attendanceRow->status ?? '';
+
+                    $text = '';
+
+                    if ($status == 'Present') {
+                        $text = 'P';
+                        $present++;
+                    } elseif ($status == 'Absent') {
+                        $text = 'A';
+                        $absent++;
+                    } elseif ($status == 'Half Day') {
+                        $text = 'H';
+                        $half++;
+                    } elseif ($status == 'Leave') {
+                        $text = 'L';
+                        $leave++;
+                    }
+
+                    $row[] = $text;
+                }
+
+                // Totals
+                $row[] = $present;
+                $row[] = $absent;
+                $row[] = $half;
+                $row[] = $leave;
+
+                $data[] = $row;
+            }
+
+            return Settings::downloadcsvfile($data, $fileName);
         }
 
         return view('backend.admin.attendance.report', compact(

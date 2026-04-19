@@ -49,28 +49,28 @@ class ReportController extends Controller
         $staffId = $request->staff_id;
 
         $fromDate = Settings::checkAndformatDate($request->get('from_date'), 'Y-m-d');
-        $toDate   = Settings::checkAndformatDate($request->get('to_date'), 'Y-m-d');
+        $toDate = Settings::checkAndformatDate($request->get('to_date'), 'Y-m-d');
 
         // ✅ Smart Date Filtering
         if (!empty($fromDate) && !empty($toDate)) {
-        // Between from & to
-        $start = Carbon::parse($fromDate)->startOfDay();
-        $end   = Carbon::parse($toDate)->endOfDay();
+            // Between from & to
+            $start = Carbon::parse($fromDate)->startOfDay();
+            $end = Carbon::parse($toDate)->endOfDay();
 
         } elseif (!empty($fromDate)) {
-        // From date → today
-        $start = Carbon::parse($fromDate)->startOfDay();
-        $end   = Carbon::now()->endOfDay();
+            // From date → today
+            $start = Carbon::parse($fromDate)->startOfDay();
+            $end = Carbon::now()->endOfDay();
 
         } elseif (!empty($toDate)) {
-        // Beginning → to date
-        $start = Carbon::parse($toDate)->startOfDay(); // OR earliest date if needed
-        $end   = Carbon::parse($toDate)->endOfDay();
+            // Beginning → to date
+            $start = Carbon::parse($toDate)->startOfDay(); // OR earliest date if needed
+            $end = Carbon::parse($toDate)->endOfDay();
 
         } else {
-        // Default → today
-        $start = Carbon::today()->startOfDay();
-        $end   = Carbon::today()->endOfDay();
+            // Default → today
+            $start = Carbon::today()->startOfDay();
+            $end = Carbon::today()->endOfDay();
         }
         // =========================
         // Base Query
@@ -97,7 +97,7 @@ class ReportController extends Controller
             'user:id,name',
             'payments:id,sale_id,method,amount'
         ])
-        ->latest();
+            ->latest();
 
         // =========================
         // Overall Totals
@@ -129,9 +129,9 @@ class ReportController extends Controller
         if ($request->has('pdf')) {
             $pdfHeaderdata = \Config::get('constants.dailySalespdf');
             $pdfSales = $sales->get();
-            $pdf = PDF::loadView('backend.pdf.reports.dailySalespdf', compact('pdfSales', 'pdfHeaderdata', 'totalSales', 'totalOrders', 'staffs', 'staffId', 'breadcrumb', 'cashTotal', 'cardTotal', 'transferTotal' ));
+            $pdf = PDF::loadView('backend.pdf.reports.dailySalespdf', compact('pdfSales', 'pdfHeaderdata', 'totalSales', 'totalOrders', 'staffs', 'staffId', 'breadcrumb', 'cashTotal', 'cardTotal', 'transferTotal'));
             $pdf = Settings::downloadlandscapepdf($pdf);
-            $fileName = $pdfHeaderdata['filename'] .'-'. date('Y-m-d') . '.pdf';
+            $fileName = $pdfHeaderdata['filename'] . '-' . date('Y-m-d') . '.pdf';
             return $pdf->stream($fileName);
         }
         if ($request->has('csv')) {
@@ -149,10 +149,10 @@ class ReportController extends Controller
                 __('translation.invoice_no'),
                 __('translation.customer_name'),
                 __('translation.payment_type'),
-                __('translation.currency').'  '.__('translation.cash'),
-                __('translation.currency').'  '.__('translation.card'),
-                __('translation.currency').'  '.__('translation.transfer'),
-                __('translation.currency').'  '.__('translation.total_amount'),
+                __('translation.currency') . '  ' . __('translation.cash'),
+                __('translation.currency') . '  ' . __('translation.card'),
+                __('translation.currency') . '  ' . __('translation.transfer'),
+                __('translation.currency') . '  ' . __('translation.total_amount'),
                 __('translation.transaction_date'),
             ];
 
@@ -163,7 +163,7 @@ class ReportController extends Controller
                     // ✅ Payment Summary (optimized)
                     $summary = $sale->payments
                         ->groupBy('method')
-                        ->map(fn($items) => $items->sum('amount'));
+                        ->map(fn(\Illuminate\Support\Collection $items) => $items->sum('amount'));
 
                     $data[$ii++] = [
                         $i + 1,
@@ -188,10 +188,10 @@ class ReportController extends Controller
                     '',
                     '',
                     'TOTAL',
-                    __('translation.currency').'  '.$cashTotal,
-                    __('translation.currency').'  '.$cardTotal,
-                    __('translation.currency').'  '.$transferTotal,
-                    __('translation.currency').'  '.$totalSales,
+                    __('translation.currency') . '  ' . $cashTotal,
+                    __('translation.currency') . '  ' . $cardTotal,
+                    __('translation.currency') . '  ' . $transferTotal,
+                    __('translation.currency') . '  ' . $totalSales,
                     ''
                 ];
 
@@ -215,11 +215,13 @@ class ReportController extends Controller
         ));
     }
 
-    public function dailySalesPdf(Request $request){
+    public function dailySalesPdf(Request $request)
+    {
         $request->merge(['pdf' => 1]);
         return $this->dailySales($request);
     }
-    public function dailySalesCsv(Request $request){
+    public function dailySalesCsv(Request $request)
+    {
         $request->merge(['csv' => 1]);
         return $this->dailySales($request);
     }
