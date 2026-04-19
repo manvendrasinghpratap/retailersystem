@@ -1029,3 +1029,32 @@ body::before {
     transform: translateY(-4px);
     transition: 0.3s;
 }
+
+.attendance-btn {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: #fff !important;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: all .3s ease;
+}
+
+.attendance-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.20);
+    color: #fff !important;
+}
+
+.attendance-btn:focus {
+    color: #fff !important;
+}
+
+.attendance-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

@@ -224,4 +224,12 @@ class User extends Authenticatable
         }
         return $query;
     }
+    public function isAdmin()
+    {
+        return $this->designation_id == 2;
+    }
+    public function isStaff()
+    {
+        return $this->designation_id == 1;
+    }
 }

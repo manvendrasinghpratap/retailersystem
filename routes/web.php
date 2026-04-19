@@ -13,7 +13,6 @@ use App\Http\Controllers\Admin\{
     StaffController
 };
 
-
 Route::get('/updateapp', function () {
     \Artisan::call('key:generate');
     \Artisan::call('config:cache');
@@ -122,3 +121,4 @@ require __DIR__ . '/auth.php';
 require __DIR__ . '/admin.php';
 require __DIR__ . '/administrator.php';
 require __DIR__ . '/acl.php';
+require __DIR__ . '/attendance.php';

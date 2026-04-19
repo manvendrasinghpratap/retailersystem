@@ -126,7 +126,7 @@ $(document).ready(function () {
         allowClear: true
     });
     $(".staff").select2({
-        placeholder: "Select Staff",
+        placeholder: "Select Staff Name",
         allowClear: true
     });
     $(".sales_executive").select2({
@@ -351,5 +351,61 @@ function showAlert(type = 'info', title = '', message = '', options = {}) {
         ...options
     });
 }
+
+function confirmPunchOut() {
+    var punchoutroute = $("#punchoutroute").attr("data-punchoutroute");
+    Swal.fire({
+        title: 'Punch Out?',
+        text: 'Do you want to Punch Out / Update Punch Out Time?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+
+        if (result.isConfirmed) {
+            // Close Bootstrap Modal
+            let modalEl = document.getElementById('attendanceModal');
+            let modal = bootstrap.Modal.getInstance(modalEl);
+
+            if (modal) {
+                modal.hide();
+            }
+            $.ajax({
+                url: punchoutroute,
+                type: "POST",
+                data: {
+                    _token: $('input[name="_token"]').val(),
+                    confirm_update: true
+                },
+                success: function (response) {
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'Punch Out Successful'
+                    });
+
+                },
+
+                error: function () {
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Something went wrong'
+                    });
+
+                }
+
+            });
+
+        }
+
+    });
+}
+
 
 

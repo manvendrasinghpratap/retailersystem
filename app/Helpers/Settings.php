@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Crypt;
 use Hashids;
-
+use Carbon\Carbon;
 class Settings
 {
 
@@ -468,8 +468,36 @@ class Settings
     {
         return Route::has($name);
     }
+    public static function isAdmin()
+    {
+        return auth()->check() && auth()->user()->designation_id == 2;
+    }
+
+    public static function userScope($query, $column = 'id')
+    {
+        if (!self::isAdmin()) {
+            $query->where($column, auth()->id());
+        }
+
+        return $query;
+    }
+
+    public static function userdatetime($datetime, $format = 'h:i A')
+    {
+        if (!$datetime) {
+            return null;
+        }
+
+        $timezone = auth()->user()->timezone ?? config('app.timezone');
+
+        return Carbon::parse($datetime)
+            ->timezone($timezone)
+            ->format($format);
+    }
 
 
 }
 
 //Settings::sendSms('+2348012345678', 'Hello! Your order has been confirmed.');
+
+
