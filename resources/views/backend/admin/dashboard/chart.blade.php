@@ -1,197 +1,203 @@
 @extends('backend.layouts.master-horizontal')
 
 @section('title')
-    {{ Config::get('constants.admin') || $breadcrumb['title'] ?? __('translation.dashboard') }}
+    {{ $breadcrumb['title'] ?? __('translation.dashboard') }}
 @endsection
 
 @section('content')
+
     @include('backend.components.breadcrumb')
 
+    {{-- ========================================================= --}}
+    {{-- SUMMARY CARDS --}}
+    {{-- ========================================================= --}}
     <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body">
 
-                    <div class="row g-4">
-
-                        <!-- Revenue -->
-                        <div class="col-md-3">
-                            <div class="card text-white shadow border-0 gradient1 h-100">
-                                <div class="card-body d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <small>{{ __('translation.total_revenue') }}</small>
-                                        <h4 class="mb-0">{{ __('translation.ngn') }} {{ number_format($totalRevenue, 2) }}</h4>
-                                    </div>
-                                    <div class="icon naira-icon">{{ __('translation.ngn') }}</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Orders -->
-                        <div class="col-md-3">
-                            <div class="card text-white shadow border-0 gradient2 h-100">
-                                <div class="card-body d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <small>{{ __('translation.sales_orders') }}</small>
-                                        <h4 class="mb-0">{{ $totalOrders }}</h4>
-                                    </div>
-                                    <div class="icon">🧾</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Customers -->
-                        <div class="col-md-3">
-                            <div class="card text-white shadow border-0 gradient3 h-100">
-                                <div class="card-body d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <small>{{ __('translation.customers') }}</small>
-                                        <h4 class="mb-0">{{ $totalCustomers }}</h4>
-                                    </div>
-                                    <div class="icon">👥</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Products -->
-                        <div class="col-md-3">
-                            <div class="card text-white shadow border-0 gradient4 h-100">
-                                <div class="card-body d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <small>{{ __('translation.products') }}</small>
-                                        <h4 class="mb-0">{{ $totalProducts }}</h4>
-                                    </div>
-                                    <div class="icon">📦</div>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="container-fluid mt-3">
-
-        <div class="card shadow border-0">
-            <div class="card-body">
-
-                <!-- FILTER -->
-                <div class="d-flex justify-content-between align-items-center mb-3">
+        {{-- Revenue --}}
+        <div class="col-md-3 mb-3">
+            <div class="card text-white border-0 shadow gradient1 h-100">
+                <div class="card-body d-flex justify-content-between align-items-center">
                     <div>
-                        <h5 class="mb-0">Sales Dashboard</h5>
-                        <small class="text-muted">
-                            {{ __('translation.date') }}:
-                            {{ request('date') ? App\Helpers\Settings::formatDate(request('date'), \Config::get('constants.dateformat.slashdmyonly')) : App\Helpers\Settings::getFormattedDate(date('Y-m-d')) }}
-                        </small>
+                        <h3 class="text-white">@lang('translation.total_revenue')</h3>
+                        <h4>
+                            @lang('translation.ngn') {{ number_format($totalRevenue, 2) }}
+                        </h4>
                     </div>
-
-                    <form method="GET" action="{{ route('dashboard') }}" class="row g-2 align-items-center">
-
-                        <div class="col-auto">
-                            <x-text-input mainrows="12" :islabel="false" name="date" :label="__('translation.date')" value="{{ request('date') ?? App\Helpers\Settings::getFormattedDate(date('Y-m-d')) }}" class="flatdatepickr form-control" />
-                        </div>
-
-                        <div class="col-auto top">
-                            <x-filter-submit-button name="submit" label="Filter" value="Filter" class="btn btn-primary" />
-                        </div>
-
-                        <div class="col-auto top">
-                            <x-filter-href-button name="reset" href="{!! !empty($breadcrumb['route2']) ? route($breadcrumb['route2']) : '' !!}" label="Reset" class="btn btn-secondary" />
-                        </div>
-
-                    </form>
+                    <div class="icon naira-icon">@lang('translation.ngn')</div>
                 </div>
-                <!-- PRODUCT CHARTS -->
-                <div class="row">
-                    <!-- DAILY GRAPH -->
-                    <!--  -->
-                    <div class="col-12 mb-3 text-center border border-secondary rounded py-2 card text-white shadow border-0 gradient{{ rand(1, 4) }} h-100">
-                        <label class="fw-bold text-white fs-2 mb-0">
-                            {{ __('translation.daily_sales_report') }}
-                        </label>
-                    </div>
-                    <div class="col-md-7">
-                        <div class="card shadow border-0 mb-3">
-                            <div class="card-body">
-                                <!-- <h6 class="mb-3">{{ __('translation.daily_sales') }} {{ __('translation.graph') }}</h6> -->
-                                <div id="chart" style="height:400px;"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-5">
-                        <div class="card shadow border-0 mb-3">
-                            <div class="card-body">
-                                <!-- <h6 class="mb-3 text-center">{{ __('translation.product_sales') }}</h6> -->
-                                <div id="dailyChart" style="height:400px;"></div>
-                            </div>
-                        </div>
-                    </div>
+            </div>
+        </div>
 
-
-                    <!-- WEEKLY GRAPH -->
-                    <div class="col-12 mb-3 text-center border border-secondary rounded py-2 card text-white shadow border-0 gradient{{ rand(1, 4) }} h-100">
-                        <label class="fw-bold text-white fs-2 mb-0">
-                            {{ __('translation.weekly_sales_report') }}
-                        </label>
+        {{-- Orders --}}
+        <div class="col-md-3 mb-3">
+            <div class="card text-white border-0 shadow gradient2 h-100">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="text-white">@lang('translation.total_orders')</h3>
+                        <h4 class="mb-0">{{ $totalOrders }}</h4>
                     </div>
-                    <div class="col-md-7">
-                        <div class="card shadow-sm border-0 mb-4">
-                            <div class="card-body">
-                                <!-- <h5 class="mb-3">Weekly Sales Graph</h5> -->
-                                <div id="weeklySalesChart" style="height:400px;"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-5">
-                        <div class="card shadow border-0 mb-3">
-                            <div class="card-body">
-                                <!-- <h6 class="mb-3">Product Sales (Weekly)</h6> -->
-                                <div id="weeklyChart" style="height:400px;"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- MONTHLY GRAPH -->
-                    <div class="col-12 mb-3 text-center border border-secondary rounded py-2 card text-white shadow border-0 gradient{{ rand(1, 4) }} h-100">
-                        <label class="fw-bold text-white fs-2 mb-0">
-                            {{ __('translation.monthly_sales_report') }}
-                        </label>
-                    </div>
-                    <div class="col-md-7">
-                        <div class="card shadow-sm border-0 mb-4">
-                            <div class="card-body">
-                                <!-- <h5 class="mb-3">Monthly Sales Graph</h5> -->
-                                <div id="monthlySalesChart" style="height:400px;"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-5">
-                        <div class="card shadow border-0">
-                            <div class="card-body">
-                                <!-- <h6 class="mb-3">Product Sales (Monthly)</h6> -->
-                                <div id="monthlyChart" style="height:400px;"></div>
-                            </div>
-                        </div>
-                    </div>
-
+                    <div class="icon">🧾</div>
                 </div>
+            </div>
+        </div>
 
+        {{-- Customers --}}
+        <div class="col-md-3 mb-3">
+            <div class="card text-white border-0 shadow gradient3 h-100">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="text-white">@lang('translation.total_customers')</h3>
+                        <h4 class="mb-0">{{ $totalCustomers }}</h4>
+                    </div>
+                    <div class="icon">👥</div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Products --}}
+        <div class="col-md-3 mb-3">
+            <div class="card text-white border-0 shadow gradient4 h-100">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="text-white">@lang('translation.total_products')</h3>
+                        <h4 class="mb-0">{{ $totalProducts }}</h4>
+                    </div>
+                    <div class="icon">📦</div>
+                </div>
             </div>
         </div>
 
     </div>
 
-    <!-- HIGHCHARTS -->
+    {{-- ========================================================= --}}
+    {{-- SALES ANALYTICS --}}
+    {{-- ========================================================= --}}
+    <div class="card shadow border-0">
+        <div class="card-body">
+
+            {{-- FILTER BAR --}}
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+
+                <div>
+                    <h5 class="mb-1">@lang('translation.sales_dashboard')</h5>
+                    <small class="text-muted">
+                        @lang('translation.date') :
+                        {{ request('date') ? App\Helpers\Settings::formatDate(request('date'), Config::get('constants.dateformat.slashdmyonly')) : App\Helpers\Settings::getFormattedDate(date('Y-m-d')) }}
+                    </small>
+                </div>
+
+                <form method="GET" action="{{ route('dashboard') }}" class="d-flex gap-2 flex-wrap">
+
+                    <x-text-input :islabel="false" name="date" value="{{ request('date') ?? App\Helpers\Settings::getFormattedDate(date('Y-m-d')) }}" class="flatdatepickr form-control ml-5" mainrows="5" />
+                    <x-filter-submit-button name="submit" label="{{ __('translation.filter') }}" class="btn btn-primary height-30" />
+                    <x-filter-href-button name="reset" href="{{ route($breadcrumb['route2']) }}" label="{{ __('translation.reset') }}" class="btn btn-secondary height-30" />
+
+                </form>
+
+            </div>
+
+            {{-- ========================================================= --}}
+            {{-- DAILY REPORT --}}
+            {{-- ========================================================= --}}
+            <div class="row">
+
+                <div class="col-12 mb-3">
+                    <div class="report-title gradient1">
+                        @lang('translation.daily_sales_report')
+                    </div>
+                </div>
+
+                <div class="col-md-7 mb-3">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body">
+                            <div id="chart" style="height:400px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-5 mb-3">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body">
+                            <div id="dailyChart" style="height:400px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- WEEKLY --}}
+                <div class="col-12 mb-3">
+                    <div class="report-title gradient2">
+                        @lang('translation.weekly_sales_report')
+                    </div>
+                </div>
+
+                <div class="col-md-7 mb-3">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body">
+                            <div id="weeklySalesChart" style="height:400px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-5 mb-3">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body">
+                            <div id="weeklyChart" style="height:400px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- MONTHLY --}}
+                <div class="col-12 mb-3">
+                    <div class="report-title gradient3">
+                        @lang('translation.monthly_sales_report')
+                    </div>
+                </div>
+
+                <div class="col-md-7 mb-3">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body">
+                            <div id="monthlySalesChart" style="height:400px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-5 mb-3">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body">
+                            <div id="monthlyChart" style="height:400px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    {{-- ========================================================= --}}
+    {{-- STYLES --}}
+    {{-- ========================================================= --}}
+    <style>
+        .report-title {
+            padding: 12px;
+            border-radius: 8px;
+            color: #fff;
+            text-align: center;
+            font-size: 22px;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, .08);
+        }
+    </style>
+
+    {{-- ========================================================= --}}
+    {{-- CHARTS --}}
+    {{-- ========================================================= --}}
     <script src="https://code.highcharts.com/highcharts.js"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
 
-            // ==================================================
-            // DAILY SALES GRAPH (EXISTING)
-            // ==================================================
+            // DAILY
             let hours = @json($hours);
             let totals = @json($totals);
 
@@ -204,20 +210,12 @@
             }));
 
             Highcharts.chart('chart', {
-                chart: {
-                    type: 'column'
-                },
+                chart: { type: 'column' },
                 title: { text: '' },
-                xAxis: {
-                    categories: hours
-                },
-                yAxis: {
-                    title: { text: 'Sales' }
-                },
-                tooltip: {
-                    pointFormat: '<b>{{ __("translation.ngn") }} {point.y}</b>'
-                },
+                xAxis: { categories: hours },
+                yAxis: { title: { text: 'Sales' } },
                 legend: { enabled: false },
+                tooltip: { pointFormat: '<b>₦ {point.y}</b>' },
                 series: [{
                     name: 'Sales',
                     data: coloredData,
@@ -229,82 +227,57 @@
                 }]
             });
 
-            // ==================================================
-            // WEEKLY SALES GRAPH
-            // ==================================================
+            // WEEKLY
             Highcharts.chart('weeklySalesChart', {
                 chart: { type: 'line' },
                 title: { text: '' },
-                xAxis: {
-                    categories: @json($weekLabels)
-                },
-                yAxis: {
-                    title: { text: 'Sales' }
-                },
-                tooltip: {
-                    pointFormat: '<b>{{ __("translation.ngn") }} {point.y}</b>'
-                },
+                xAxis: { categories: @json($weekLabels) },
+                yAxis: { title: { text: 'Sales' } },
                 series: [{
                     name: 'Weekly Sales',
                     data: @json($weeklyTotals)
                 }]
             });
 
-            // ==================================================
-            // MONTHLY SALES GRAPH
-            // ==================================================
+            // MONTHLY
             Highcharts.chart('monthlySalesChart', {
                 chart: { type: 'area' },
                 title: { text: '' },
-                xAxis: {
-                    categories: @json($monthLabels)
-                },
-                yAxis: {
-                    title: { text: 'Sales' }
-                },
-                tooltip: {
-                    pointFormat: '<b>{{ __("translation.ngn") }} {point.y}</b>'
-                },
+                xAxis: { categories: @json($monthLabels) },
+                yAxis: { title: { text: 'Sales' } },
                 series: [{
                     name: 'Monthly Sales',
                     data: @json($monthlyTotals)
                 }]
             });
 
-            // PRODUCT DONUTS
-            renderDonut('dailyChart', @json($productDaily), "{{ __('translation.daily_sales_report') }}");
-            renderDonut('weeklyChart', @json($productWeekly), "{{ __('translation.weekly_sales_report') }}");
-            renderDonut('monthlyChart', @json($productMonthly), "{{ __('translation.monthly_sales_report') }}");
+            // DONUTS
+            renderDonut('dailyChart', @json($productDaily), 'DAILY REPORT');
+            renderDonut('weeklyChart', @json($productWeekly), 'WEEKLY REPORT');
+            renderDonut('monthlyChart', @json($productMonthly), 'MONTHLY REPORT');
 
         });
 
         function renderDonut(id, data, title) {
             let chartData = data.map(item => ({
-                name: item.name.toLowerCase().replace(/\b\w/g, c => c.toUpperCase()),
+                name: item.name,
                 y: parseFloat(item.total_items_sold)
             }));
 
             Highcharts.chart(id, {
-                chart: {
-                    type: 'pie'
-                },
-                title: {
-                    text: title.toUpperCase()
-                },
+                chart: { type: 'pie' },
+                title: { text: title },
                 plotOptions: {
                     pie: {
                         innerSize: '65%',
                         dataLabels: {
                             enabled: true,
-                            format: '{point.name} # {point.y}'
+                            format: '{point.name}: {point.y}'
                         }
                     }
                 },
-                tooltip: {
-                    pointFormat: '<b>{point.name} # {point.y}</b>'
-                },
                 series: [{
-                    name: 'Items Sold',
+                    name: 'Items',
                     data: chartData
                 }]
             });

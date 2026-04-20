@@ -345,4 +345,12 @@ return [
     'no_staff_available' => 'No Staff Available',
     'update_save' => 'Update Or Save Attendance',
     'brands' => 'Brands',
+    'total_sales' => 'Total Sales',
+    'total_orders' => 'Total Orders',
+    'total_customers' => 'Total Customers',
+    'total_coupons' => 'Total Coupons',
+    'total_attendance' => 'Total Attendance',
+    'total_brands' => 'Total Brands',
+    'total_sales_amount' => 'Total Sales Amount',
+    'sales_dashboard' => 'Sales Dashboard',
 ];

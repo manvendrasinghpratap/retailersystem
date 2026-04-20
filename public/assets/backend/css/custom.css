@@ -1058,3 +1058,7 @@ body::before {
     align-items: center;
     justify-content: center;
 }
+
+.height-30 {
+    height: 30px !important;
+}
