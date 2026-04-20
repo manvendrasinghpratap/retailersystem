@@ -14,7 +14,10 @@
                     @php
                         $currentRoute = request()->route()->getName();
 
-                        $routeAliases = ['admin.no-barcode' => ['admin.products.create']];
+                        $routeAliases = [
+                            'admin.no-barcode' => ['admin.products.create'],
+                            'admin.dashboard' => ['dashboard'],
+                        ];
                     @endphp
 
                     <ol class="breadcrumb m-0">

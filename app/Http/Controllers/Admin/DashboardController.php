@@ -28,6 +28,16 @@ class DashboardController extends Controller
         $this->middleware('auth');
         $this->breadcrumbDashboard = [
             'title' => __('translation.dashboard'),
+            'breadcrumb' => [
+                [
+                    'route' => 'admin.dashboard',
+                    'title' => __('translation.dashboard')
+                ],
+                [
+                    'route' => 'billing.index',
+                    'title' => __('translation.billing')
+                ]
+            ],
             'route1' => "admin.dashboard",
             'route1Title' => __('translation.dashboard'),
             'route2Title' => __('translation.dashboard'),
