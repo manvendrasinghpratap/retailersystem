@@ -230,6 +230,10 @@ class User extends Authenticatable
     }
     public function isStaff()
     {
-        return $this->designation_id == 1;
+        return $this->designation_id == 2;
+    }
+    public function scopeOfAccount($query)
+    {
+        return $query->where('account_id', auth()->user()->account_id);
     }
 }

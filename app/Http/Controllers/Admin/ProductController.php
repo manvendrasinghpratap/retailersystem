@@ -20,32 +20,77 @@ class ProductController extends Controller
     {
         $this->middleware('auth');
 
-        $this->breadcrumbAddNew = [
-            'title' => __('translation.product'),
-            'route1' => "admin.barcode",
-            'route1Title' => __('translation.add_edit_product'),
-            'route2Title' => __('translation.add_edit_product'),
-            'route2' => 'admin.products',
-            'reset_route' => 'admin.products',
-            'reset_route_title' => __('translation.cancel'),
-            'route4Title' => __('translation.add_product_without_barcode'),
-            'route4' => 'admin.no-barcode',
-        ];
+        $this->middleware(function ($request, $next) {
 
-        $this->breadcrumbListing = [
-            'title' => __('translation.product'),
-            'route1' => "admin.products",
-            'route1Title' => __('translation.product_listing'),
-            'route2Title' => __('translation.add_edit_product'),
-            'route2' => 'admin.products.create',
-            'route3Title' => __('translation.add_edit_product'),
-            'route3' => 'admin.products.edit',
-            'reset_route' => 'admin.products',
-            'reset_route_title' => __('translation.cancel'),
-            'route4Title' => __('translation.add_edit_product'),
-            'route4' => 'admin.barcode',
+            $role = Settings::getUserRole(); // admin / staff / etc.
 
-        ];
+            $this->breadcrumbAddNew = [
+                'title' => __('translation.product'),
+
+                'breadcrumb' => [
+                    [
+                        'route' => 'admin.dashboard',
+                        'title' => __('translation.dashboard')
+                    ],
+                    [
+                        'route' => 'admin.products',
+                        'title' => __('translation.brands')
+                    ],
+                    // use route NAME only (not route())
+                    [
+                        'route' => $role . '.no-barcode',
+                        'title' => __('translation.add_product_without_barcode')
+                    ],
+                    [
+                        'route' => $role . '.barcode',
+                        'title' => __('translation.add_edit_product')
+                    ],
+                ],
+
+                'route1' => "admin.barcode",
+                'route1Title' => __('translation.add_edit_product'),
+                'route2Title' => __('translation.add_edit_product'),
+                'route2' => 'admin.products',
+                'reset_route' => 'admin.products',
+                'reset_route_title' => __('translation.cancel'),
+                'route4Title' => __('translation.add_product_without_barcode'),
+                'route4' => 'admin.no-barcode',
+            ];
+
+            $this->breadcrumbListing = [
+                'title' => __('translation.product'),
+
+                'breadcrumb' => [
+                    [
+                        'route' => 'admin.dashboard',
+                        'title' => __('translation.dashboard')
+                    ],
+                    // use route NAME only (not route())
+                    [
+                        'route' => $role . '.no-barcode',
+                        'title' => __('translation.add_product_without_barcode')
+                    ],
+                    [
+                        'route' => $role . '.barcode',
+                        'title' => __('translation.add_edit_product')
+                    ],
+
+                ],
+
+                'route1' => "admin.products",
+                'route1Title' => __('translation.product_listing'),
+                'route2Title' => __('translation.add_edit_product'),
+                'route2' => 'admin.products.create',
+                'route3Title' => __('translation.add_edit_product'),
+                'route3' => 'admin.products.edit',
+                'reset_route' => 'admin.products',
+                'reset_route_title' => __('translation.cancel'),
+                'route4Title' => __('translation.add_edit_product'),
+                'route4' => 'admin.barcode',
+            ];
+
+            return $next($request);
+        });
     }
 
     public function index(Request $request)
@@ -204,7 +249,7 @@ class ProductController extends Controller
             $request->validate([
                 'name' => 'required|string|max:255',
                 'selling_price' => 'required|numeric|min:0',
-                'cost_price' => 'required|numeric|min:0',
+                // 'cost_price' => 'required|numeric|min:0',
                 'status' => 'nullable|in:0,1',
                 'description' => 'nullable|string',
                 'category_id' => 'nullable|exists:categories,id',

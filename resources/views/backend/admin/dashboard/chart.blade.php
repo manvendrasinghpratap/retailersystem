@@ -272,9 +272,9 @@
             });
 
             // PRODUCT DONUTS
-            renderDonut('dailyChart', @json($productDaily), 'Daily Sales');
-            renderDonut('weeklyChart', @json($productWeekly), 'Weekly Sales');
-            renderDonut('monthlyChart', @json($productMonthly), 'Monthly Sales');
+            renderDonut('dailyChart', @json($productDaily), "{{ __('translation.daily_sales_report') }}");
+            renderDonut('weeklyChart', @json($productWeekly), "{{ __('translation.weekly_sales_report') }}");
+            renderDonut('monthlyChart', @json($productMonthly), "{{ __('translation.monthly_sales_report') }}");
 
         });
 

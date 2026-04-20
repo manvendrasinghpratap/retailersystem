@@ -27,6 +27,20 @@ class BillingController extends Controller
 
         $this->breadcrumbBarcodeReader = [
             'title' => __('translation.billing'),
+            'breadcrumb' => [
+                [
+                    'route' => 'admin.dashboard',
+                    'title' => __('translation.dashboard')
+                ],
+                [
+                    'route' => 'billing.index',
+                    'title' => __('translation.billing')
+                ],
+                [
+                    'route' => 'admin.sales.index',
+                    'title' => __('translation.sales_list')
+                ]
+            ],
             'route1' => "admin.barcode", // ✅ fixed
             'route1Title' => __('translation.add_stock'),
             'route2Title' => __('translation.add_stock'),

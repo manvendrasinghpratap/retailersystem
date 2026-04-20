@@ -25,6 +25,20 @@ class AttendanceController extends Controller
 
         $this->breadcrumbAttendance = [
             'title' => __('translation.attendance'),
+            'breadcrumb' => [
+                [
+                    'route' => 'admin.dashboard',
+                    'title' => __('translation.dashboard')
+                ],
+                [
+                    'route' => 'attendance.report',
+                    'title' => __('translation.monthly_report')
+                ],
+                [
+                    'route' => 'attendance.index',
+                    'title' => __('translation.attendance')
+                ]
+            ],
             'route1' => "attendance.report",
             'route1Title' => __('translation.monthly_report'),
 
@@ -40,6 +54,20 @@ class AttendanceController extends Controller
 
         $this->breadcrumbAttendanceReport = [
             'title' => __('translation.attendance'),
+            'breadcrumb' => [
+                [
+                    'route' => 'admin.dashboard',
+                    'title' => __('translation.dashboard')
+                ],
+                [
+                    'route' => 'attendance.index',
+                    'title' => __('translation.attendance')
+                ],
+                [
+                    'route' => 'attendance.report',
+                    'title' => __('translation.monthly_report')
+                ]
+            ],
             'route1' => "attendance.index",
             'route1Title' => __('translation.attendance'),
 
@@ -66,7 +94,7 @@ class AttendanceController extends Controller
             : date('Y-m-d');
 
         $staffs = Settings::userScope(
-            User::where('status', 1),
+            User::where('status', 1)->ofAccount(),
             'id'
         )->orderBy('name')->get();
 
@@ -225,11 +253,11 @@ class AttendanceController extends Controller
                 if ($user->designation_id == 2) {
                     $q->where('id', $staffId);
                 }
-            })
+            })->ofAccount()
             ->orderBy('name')
             ->get();
         $staffdropdown = User::where('status', 1)
-            ->visibleToUser()
+            ->visibleToUser()->ofAccount()
             ->orderBy('name')
             ->pluck('name', 'id');
 

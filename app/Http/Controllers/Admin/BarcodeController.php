@@ -16,21 +16,62 @@ class BarcodeController extends Controller
      */
     protected array $breadcrumbBarcodeReader;
 
+
     public function __construct()
     {
         $this->middleware('auth');
 
-        $this->breadcrumbBarcodeReader = [
-            'title' => __('translation.stock_management'),
-            'route1' => "admin.no-barcode", // ✅ fixed typo
-            'route1Title' => __('translation.add_product_without_barcode'),
-            'route2Title' => __('translation.add_edit_stock'),
-            'route2' => 'admin.products',
-            'route3Title' => __('translation.add_update_stock'),
-            'route3' => 'admin.products.edit',
-            'reset_route' => 'admin.products',
-            'reset_route_title' => __('translation.cancel')
-        ];
+        $this->middleware(function ($request, $next) {
+
+            $role = Settings::getUserRole(); // admin / staff / etc.
+
+            $this->breadcrumbBarcodeReader = [
+                'title' => __('translation.stock_management'),
+
+                'breadcrumb' => [
+                    [
+                        'route' => 'admin.dashboard',
+                        'title' => __('translation.dashboard')
+                    ],
+                    // use route NAME only (not route())
+                    [
+                        'route' => $role . '.no-barcode',
+                        'title' => __('translation.add_product_without_barcode')
+                    ],
+                    [
+                        'route' => $role . '.barcode',
+                        'title' => __('translation.add_stock')
+                    ],
+                    [
+                        'route' => $role . '.sales-barcode',
+                        'title' => __('translation.sale_stock')
+                    ],
+                    [
+                        'route' => $role . '.return-barcode',
+                        'title' => __('translation.return_stock')
+                    ],
+                    [
+                        'route' => $role . '.damage-barcode',
+                        'title' => __('translation.damage_stock')
+                    ],
+                    [
+                        'route' => $role . '.deduct-barcode',
+                        'title' => __('translation.deduct_stock')
+                    ],
+                ],
+
+                'route1' => "admin.no-barcode", // ✅ fixed typo
+                'route1Title' => __('translation.add_product_without_barcode'),
+                'route2Title' => __('translation.add_edit_stock'),
+                'route2' => 'admin.products',
+                'route3Title' => __('translation.add_update_stock'),
+                'route3' => 'admin.products.edit',
+                'reset_route' => 'admin.products',
+                'reset_route_title' => __('translation.cancel')
+            ];
+
+            return $next($request);
+        });
     }
 
     /**

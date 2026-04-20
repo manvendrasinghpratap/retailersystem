@@ -6,7 +6,7 @@
             <tr>
                 <th>#</th>
                 <th>{{__('translation.category_name')}}</th>
-                <th>{{__('translation.brand_name')}}</th>
+                <th>{{__('translation.description')}}</th>
                 <th>{{__('translation.slug')}}</th>
                 <th>{{__('translation.image')}}</th>
                 <th>{{__('translation.status')}}</th>

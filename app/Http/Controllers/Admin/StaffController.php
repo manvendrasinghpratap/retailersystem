@@ -30,8 +30,52 @@ class StaffController extends Controller
     {
         $this->middleware('auth');
         $this->userService = $userService;
-        $this->breadcrumbAddStaff = ['title' => __('translation.staff'), 'route1' => 'admin.staff.index', 'route1Title' => __('translation.staff') . ' ' . __('translation.listing'), 'route2' => 'admin.staff.store', 'route2Title' => __('translation.addstaff'), 'reset_route' => 'admin.staff.index', 'reset_route_title' => __('translation.reset')];
-        $this->breadcrumbStaffListing = ['title' => __('translation.staff'), 'route1' => 'admin.staff.add', 'route1Title' => __('translation.addstaff'), 'route2' => 'admin.staff.store', 'route2Title' => __('translation.addstaff'), 'reset_route' => 'admin.staff.index', 'reset_route_title' => __('translation.cancel')];
+        $this->breadcrumbAddStaff = [
+            'title' => __('translation.staff'),
+            'breadcrumb' => [
+                [
+                    'route' => 'admin.dashboard',
+                    'title' => __('translation.dashboard')
+                ],
+                [
+                    'route' => 'admin.staff.index',
+                    'title' => __('translation.staff')
+                ],
+                [
+                    'route' => 'admin.staff.add',
+                    'title' => __('translation.addstaff')
+                ],
+            ],
+            'route1' => 'admin.staff.index',
+            'route1Title' => __('translation.staff') . ' ' . __('translation.listing'),
+            'route2' => 'admin.staff.store',
+            'route2Title' => __('translation.addstaff'),
+            'reset_route' => 'admin.staff.index',
+            'reset_route_title' => __('translation.reset')
+        ];
+        $this->breadcrumbStaffListing = [
+            'title' => __('translation.staff'),
+            'breadcrumb' => [
+                [
+                    'route' => 'admin.dashboard',
+                    'title' => __('translation.dashboard')
+                ],
+                [
+                    'route' => 'admin.staff.index',
+                    'title' => __('translation.staff')
+                ],
+                [
+                    'route' => 'admin.staff.add',
+                    'title' => __('translation.addstaff')
+                ],
+            ],
+            'route1' => 'admin.staff.add',
+            'route1Title' => __('translation.addstaff'),
+            'route2' => 'admin.staff.store',
+            'route2Title' => __('translation.addstaff'),
+            'reset_route' => 'admin.staff.index',
+            'reset_route_title' => __('translation.cancel')
+        ];
     }
 
 

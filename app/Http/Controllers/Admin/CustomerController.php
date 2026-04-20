@@ -19,6 +19,20 @@ class CustomerController extends Controller
 
         $this->breadcrumbAddNew = [
             'title' => __('translation.customers'),
+            'breadcrumb' => [
+                [
+                    'route' => 'admin.dashboard',
+                    'title' => __('translation.dashboard')
+                ],
+                [
+                    'route' => 'admin.customers.index',
+                    'title' => __('translation.customers')
+                ],
+                [
+                    'route' => 'admin.customers.create',
+                    'title' => __('translation.add_new_customer')
+                ]
+            ],
             'route1' => "admin.customers.create",
             'route1Title' => __('translation.add_new_customer'),
             'route2Title' => __('translation.add_new_customer'),
@@ -29,6 +43,20 @@ class CustomerController extends Controller
 
         $this->breadcrumbListing = [
             'title' => __('translation.customers'),
+            'breadcrumb' => [
+                [
+                    'route' => 'admin.dashboard',
+                    'title' => __('translation.dashboard')
+                ],
+                [
+                    'route' => 'admin.customers.index',
+                    'title' => __('translation.customers')
+                ],
+                [
+                    'route' => 'admin.customers.create',
+                    'title' => __('translation.add_new_customer')
+                ]
+            ],
             'route1' => "admin.customers.index",
             'route1Title' => __('translation.customers'),
             'route2Title' => __('translation.add_new_customer'),

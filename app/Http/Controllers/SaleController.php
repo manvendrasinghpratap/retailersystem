@@ -21,6 +21,20 @@ class SaleController extends Controller
 
         $this->breadcrumbBilling = [
             'title' => __('translation.sales'),
+            'breadcrumb' => [
+                [
+                    'route' => 'admin.dashboard',
+                    'title' => __('translation.dashboard')
+                ],
+                [
+                    'route' => 'billing.index',
+                    'title' => __('translation.billing')
+                ],
+                [
+                    'route' => 'admin.sales.index',
+                    'title' => __('translation.sales_list')
+                ]
+            ],
             'route1' => "billing.index",
             'route1Title' => __('translation.billing'),
             'route2Title' => __('translation.sales_list'),
@@ -31,6 +45,28 @@ class SaleController extends Controller
 
         $this->breadcrumShow = [
             'title' => __('translation.invoice'),
+            'breadcrumb' => [
+                [
+                    'route' => 'admin.dashboard',
+                    'title' => __('translation.dashboard')
+                ],
+                [
+                    'route' => 'billing.index',
+                    'title' => __('translation.billing')
+                ],
+                [
+                    'route' => 'admin.sales.index',
+                    'title' => __('translation.sales_list')
+                ],
+                [
+                    'route' => 'admin.sales.show',
+                    'title' => __('translation.invoice')
+                ],
+                [
+                    'route' => 'admin.sales.payment',
+                    'title' => __('translation.payment_details')
+                ]
+            ],
             'route1' => "admin.sales.index",
             'route1Title' => __('translation.sales_list'),
             'route2Title' => __('translation.invoice'),

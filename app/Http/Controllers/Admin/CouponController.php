@@ -18,6 +18,20 @@ class CouponController extends Controller
 
         $this->breadcrumbAddNew = [
             'title' => __('translation.coupons'),
+            'breadcrumb' => [
+                [
+                    'route' => 'admin.dashboard',
+                    'title' => __('translation.dashboard')
+                ],
+                [
+                    'route' => 'admin.coupons.index',
+                    'title' => __('translation.coupons')
+                ],
+                [
+                    'route' => 'admin.coupons.create',
+                    'title' => __('translation.add_new_coupon')
+                ]
+            ],
             'route1' => "admin.coupons.create",
             'route1Title' => __('translation.add_new_coupon'),
             'route2Title' => __('translation.add_new_coupon'),
@@ -28,6 +42,20 @@ class CouponController extends Controller
 
         $this->breadcrumbListing = [
             'title' => __('translation.coupons'),
+            'breadcrumb' => [
+                [
+                    'route' => 'admin.dashboard',
+                    'title' => __('translation.dashboard')
+                ],
+                [
+                    'route' => 'admin.coupons.index',
+                    'title' => __('translation.coupons')
+                ],
+                [
+                    'route' => 'admin.coupons.create',
+                    'title' => __('translation.add_new_coupon')
+                ]
+            ],
             'route1' => "admin.coupons.index",
             'route1Title' => __('translation.coupons'),
             'route2Title' => __('translation.add_new_coupon'),

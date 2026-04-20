@@ -21,6 +21,16 @@ class ReportController extends Controller
 
         $this->breadcrumbDailySales = [
             'title' => __('translation.daily_sales_report'),
+            'breadcrumb' => [
+                [
+                    'route' => 'admin.dashboard',
+                    'title' => __('translation.dashboard')
+                ],
+                [
+                    'route' => 'reports.daily.sales',
+                    'title' => __('translation.daily_sales_report')
+                ]
+            ],
             'route1' => "reports.daily.sales",
             'route1Title' => __('translation.daily_sales_report'),
             'route2Title' => __('translation.daily_sales_report'),
@@ -31,6 +41,16 @@ class ReportController extends Controller
 
         $this->breadcrumbListing = [
             'title' => __('translation.customers'),
+            'breadcrumb' => [
+                [
+                    'route' => 'admin.dashboard',
+                    'title' => __('translation.dashboard')
+                ],
+                [
+                    'route' => 'admin.customers.index',
+                    'title' => __('translation.customers')
+                ]
+            ],
             'route1' => "admin.customers.index",
             'route1Title' => __('translation.customers'),
             'route2Title' => __('translation.add_new_customer'),

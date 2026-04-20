@@ -19,6 +19,20 @@ class CategoryController extends Controller
 
         $this->breadcrumbAddNew = [
             'title' => __('translation.categories'),
+            'breadcrumb' => [
+                [
+                    'route' => 'admin.dashboard',
+                    'title' => __('translation.dashboard')
+                ],
+                [
+                    'route' => 'admin.categories.index',
+                    'title' => __('translation.categories')
+                ],
+                [
+                    'route' => 'admin.categories.create',
+                    'title' => __('translation.add_new_category')
+                ],
+            ],
             'route1' => "admin.categories.create",
             'route1Title' => __('translation.add_new_category'),
             'route2Title' => __('translation.add_new_category'),
@@ -29,6 +43,20 @@ class CategoryController extends Controller
 
         $this->breadcrumbListing = [
             'title' => __('translation.categories'),
+            'breadcrumb' => [
+                [
+                    'route' => 'admin.dashboard',
+                    'title' => __('translation.dashboard')
+                ],
+                [
+                    'route' => 'admin.categories.index',
+                    'title' => __('translation.categories')
+                ],
+                [
+                    'route' => 'admin.categories.create',
+                    'title' => __('translation.add_new_category')
+                ],
+            ],
             'route1' => "admin.categories.index",
             'route1Title' => __('translation.categories'),
             'route2Title' => __('translation.add_new_category'),
@@ -76,7 +104,7 @@ class CategoryController extends Controller
             $data[$ii] = [
                 '#',
                 __('translation.category_name'),
-                __('translation.brand_name'),
+                __('translation.description'),
                 __('translation.slug'),
                 __('translation.image'),
                 __('translation.status'),
