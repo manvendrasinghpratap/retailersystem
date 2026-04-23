@@ -103,7 +103,7 @@
 
                 <div class="col-12 mb-3">
                     <div class="report-title gradient1">
-                        @lang('translation.daily_sales_report')
+                        @lang('translation.daily_sales_report') ( {{ request('date') ? App\Helpers\Settings::formatDate(request('date'), Config::get('constants.dateformat.slashdmyonly')) : App\Helpers\Settings::getFormattedDate(date('Y-m-d')) }} )
                     </div>
                 </div>
 
@@ -126,7 +126,7 @@
                 {{-- WEEKLY --}}
                 <div class="col-12 mb-3">
                     <div class="report-title gradient2">
-                        @lang('translation.weekly_sales_report')
+                        @lang('translation.weekly_sales_report') ( {{ request('date') ? App\Helpers\Settings::formatDate(request('date'), Config::get('constants.dateformat.slashdmyonly')) : App\Helpers\Settings::getFormattedDate(date('Y-m-d')) }} )
                     </div>
                 </div>
 
@@ -149,7 +149,7 @@
                 {{-- MONTHLY --}}
                 <div class="col-12 mb-3">
                     <div class="report-title gradient3">
-                        @lang('translation.monthly_sales_report')
+                        @lang('translation.monthly_sales_report') ( {{ request('date') ? App\Helpers\Settings::formatDate(request('date'), Config::get('constants.dateformat.slashdmyonly')) : App\Helpers\Settings::getFormattedDate(date('Y-m-d')) }} )
                     </div>
                 </div>
 
@@ -211,7 +211,7 @@
 
             Highcharts.chart('chart', {
                 chart: { type: 'column' },
-                title: { text: '' },
+                title: { text: 'Daily Sales' },
                 xAxis: { categories: hours },
                 yAxis: { title: { text: 'Sales' } },
                 legend: { enabled: false },
@@ -230,7 +230,7 @@
             // WEEKLY
             Highcharts.chart('weeklySalesChart', {
                 chart: { type: 'line' },
-                title: { text: '' },
+                title: { text: 'Weekly Sales' },
                 xAxis: { categories: @json($weekLabels) },
                 yAxis: { title: { text: 'Sales' } },
                 series: [{
@@ -242,7 +242,7 @@
             // MONTHLY
             Highcharts.chart('monthlySalesChart', {
                 chart: { type: 'area' },
-                title: { text: '' },
+                title: { text: 'Monthly Sales' },
                 xAxis: { categories: @json($monthLabels) },
                 yAxis: { title: { text: 'Sales' } },
                 series: [{
@@ -252,9 +252,9 @@
             });
 
             // DONUTS
-            renderDonut('dailyChart', @json($productDaily), 'DAILY REPORT');
-            renderDonut('weeklyChart', @json($productWeekly), 'WEEKLY REPORT');
-            renderDonut('monthlyChart', @json($productMonthly), 'MONTHLY REPORT');
+            renderDonut('dailyChart', @json($productDaily), 'Breakdown of Daily Products Sales');
+            renderDonut('weeklyChart', @json($productWeekly), 'Breakdown of Weekly Products Sales');
+            renderDonut('monthlyChart', @json($productMonthly), 'Breakdown of Monthly Products Sales');
 
         });
 
