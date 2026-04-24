@@ -211,7 +211,7 @@
 
             Highcharts.chart('chart', {
                 chart: { type: 'column' },
-                title: { text: 'Daily Sales' },
+                title: { text: 'Hourly Sales' },
                 xAxis: { categories: hours },
                 yAxis: { title: { text: 'Sales' } },
                 legend: { enabled: false },
