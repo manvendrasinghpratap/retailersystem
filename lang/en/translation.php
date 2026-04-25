@@ -353,4 +353,8 @@ return [
     'total_brands' => 'Total Brands',
     'total_sales_amount' => 'Total Sales Amount',
     'sales_dashboard' => 'Sales Dashboard',
+    'staff_attendance' => 'Staff Attendance',
+    'punch_in' => 'Punch In',
+    'punch_out' => 'Punch Out',
+    'print_barcode' => 'Print Barcode',
 ];

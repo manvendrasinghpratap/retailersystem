@@ -43,10 +43,6 @@ class InventoryController extends Controller
                         'title' => __('translation.add_stock')
                     ],
                     [
-                        'route' => $role . '.sales-barcode',
-                        'title' => __('translation.sale_stock')
-                    ],
-                    [
                         'route' => $role . '.return-barcode',
                         'title' => __('translation.return_stock')
                     ],
@@ -86,10 +82,6 @@ class InventoryController extends Controller
                     [
                         'route' => $role . '.barcode',
                         'title' => __('translation.add_stock')
-                    ],
-                    [
-                        'route' => $role . '.sales-barcode',
-                        'title' => __('translation.sale_stock')
                     ],
                     [
                         'route' => $role . '.return-barcode',
@@ -241,5 +233,7 @@ class InventoryController extends Controller
             'productId'       // ✅ Pass product_id
         ));
     }
+
+
 
 }

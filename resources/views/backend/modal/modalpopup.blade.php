@@ -230,7 +230,7 @@
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title text-white">
-                    Staff Attendance
+                    {{ __('translation.staff_attendance') }}
                 </h5>
 
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -239,15 +239,15 @@
             <div class="modal-body text-center">
 
                 <h4 class="mb-4">
-                    {{ date('d M Y') }}
+                    {{ \App\Helpers\Settings::getFormattedDate(date('Y-m-d')) }}
                 </h4>
 
                 <a href="{{ route('attendance.punch.in') }}" class="btn btn-success btn-lg px-4 me-2">
-                    Punch In
+                    {{ __('translation.punch_in') }}
                 </a>
 
                 <a href="javascript:void(0)" onclick="confirmPunchOut()" class="btn btn-danger" id="punchoutroute" data-punchoutroute="{{ route('attendance.punch.out') }}">
-                    Punch Out
+                    {{ __('translation.punch_out') }}
                 </a>
 
             </div>
@@ -256,3 +256,26 @@
     </div>
 </div>
 <!---- Attendance Modal End ---->
+
+<!---- Barcode Modal Begin ---->
+<div class="modal fade" id="barcodeModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title text-white">
+                    {{ __('translation.print_barcode') }}
+                </h5>
+
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body" id="barcodeModalBody">
+
+                Loading...
+
+            </div>
+
+        </div>
+    </div>
+</div>
+<!---- Barcode Modal End ---->

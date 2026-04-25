@@ -87,8 +87,9 @@ Route::middleware(['route.permission', 'auth'])->group(function () {
 });
 
 Route::middleware(['auth', 'route.permission'])->group(function () {
-    Route::get('/barcode-scan-product', [BarcodeController::class, 'index'])->name('barcode.scan.product');
-    Route::post('/barcode-scan-inventory', [BarcodeController::class, 'scan'])->name('barcode.scan.inventory');
+    Route::get('barcode/scan-product', [BarcodeController::class, 'index'])->name('barcode.scan.product');
+    Route::get('barcode/{id}', [BarcodeController::class, 'barcodeForm'])->name('barcode.form');
+    Route::post('barcode/print', [BarcodeController::class, 'barcodePrint'])->name('barcode.print');
 });
 
 //  Route::get('/profile', [App\Http\Controllers\Auth\PasswordController::class, 'edit'])->name('profile');

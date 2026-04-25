@@ -36,6 +36,9 @@
         @case('label')
              @if(!empty($label) && $label !='' && $label != null){{ $label }}@endif          
         @break
+        @case('print_barcode')
+             <i class="fas action-btn fa-print" title="Print Barcode"></i>
+        @break
         @default
             <i class="fas action-btn text-success" title="View">{{ $label }}</i>
     @endswitch
