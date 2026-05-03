@@ -36,7 +36,7 @@
                             <li class="breadcrumb-item {{ $isActive ? 'active-route' : '' }}">
 
                                 @if(!empty($routeName))
-                                    <a href="{{ route($routeName) }}" class="{{ $isActive ? 'text-white fw-bold' : '' }}">
+                                    <a href="{{ route($routeName, $breadcrumbItem['params'] ?? []) }}" target="{{ $breadcrumbItem['target'] ?? '_self' }}" class="{{ $isActive ? 'text-white fw-bold' : '' }}">
                                         {{ $breadcrumbItem['title'] }}
                                     </a>
                                 @else
@@ -72,28 +72,3 @@
     </div>
 </div>
 <!-- end page title -->
-
-<style>
-    .breadcrumb-item a {
-        color: #6c757d;
-        text-decoration: none;
-        padding: 6px 8px;
-        border-radius: 6px;
-        transition: all 0.3s ease;
-    }
-
-    .breadcrumb-item a:hover {
-        background: #b8e7f9;
-        color: #556ee6;
-    }
-
-    .active-route a {
-        background: linear-gradient(45deg, #556ee6, #34c38f);
-        color: #fff !important;
-        box-shadow: 0 3px 10px rgba(85, 110, 230, 0.25);
-    }
-
-    .breadcrumb-item+.breadcrumb-item::before {
-        color: #adb5bd;
-    }
-</style>

@@ -10,7 +10,9 @@ use App\Http\Controllers\{
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\Admin\{
     DashboardController,
-    StaffController
+    StaffController,
+    VendorController,
+    PurchaseController
 };
 
 Route::get('/updateapp', function () {
@@ -118,8 +120,78 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/reports/daily-sales/csv', [ReportController::class, 'dailySalesCsv'])->name('reports.daily.sales.csv');
 });
 
+
+Route::middleware(['auth', 'route.permission'])->prefix('admin')->group(function () {
+    Route::get('/vendors', [VendorController::class, 'index'])->name('admin.vendors.index');
+    Route::get('/vendors/create', [VendorController::class, 'create'])->name('admin.vendors.create');
+    Route::post('/vendors/store', [VendorController::class, 'store'])->name('admin.vendors.store');
+    Route::get('/vendors/edit/{id}', [VendorController::class, 'edit'])->name('admin.vendors.edit');
+    Route::post('/vendors/update', [VendorController::class, 'update'])->name('admin.vendors.update');
+    Route::post('/vendors/delete', [VendorController::class, 'softdelete'])->name('admin.vendors.delete');
+    Route::post('/vendors/status-update', [VendorController::class, 'statusUpdate'])->name('admin.vendors.statusUpdate');
+    Route::get('/vendors/export-pdf', [VendorController::class, 'exportPdf'])->name('admin.vendors.exportPdf');
+    Route::get('/vendors/export-csv', [VendorController::class, 'exportExcel'])->name('admin.vendors.exportCsv');
+    /*
+        |--------------------------------------------------------------------------
+        | Vendor Payment Routes
+        |--------------------------------------------------------------------------
+        */
+
+        // Payment form
+        Route::get('/vendors/payment/{id}', [VendorController::class, 'paymentForm'])
+            ->name('admin.vendors.paymentForm');
+
+        // Save payment
+        Route::post('/vendors/payment/store', [VendorController::class, 'paymentStore'])
+            ->name('admin.vendors.paymentStore');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Vendor Ledger / Statement
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get('/vendors/ledger/{id}', [VendorController::class, 'ledger'])
+            ->name('admin.vendors.ledger');
+});
+
+
+Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
+    Route::prefix('purchases')->name('purchases.')->group(function () {
+     // List all purchases
+        Route::get('/', [PurchaseController::class, 'index'])->name('index');
+        // Create purchase form
+        Route::get('/create', [PurchaseController::class, 'create'])->name('create');
+        // Store purchase
+        Route::post('/store', [PurchaseController::class, 'store'])->name('store');
+        // View purchase
+        Route::get('/view/{purchase}', [PurchaseController::class, 'show'])->name('view');
+        // Cancel purchase
+        Route::post('/cancel/{purchase}', [PurchaseController::class, 'destroy'])->name('cancel');
+        // Soft delete purchase
+        Route::post('/softdelete/{purchase}', [PurchaseController::class, 'softDelete'])->name('softdelete');
+        // Update status
+        Route::post('/status-update/{purchase}', [PurchaseController::class, 'statusUpdate'])->name('status.update');
+        // Export PDF
+        Route::get('/exportpdf', [PurchaseController::class, 'exportPdf'])->name('exportPdf');
+        // Export CSV
+        Route::get('/exportcsv', [PurchaseController::class, 'exportCsv'])->name('exportCsv');
+        // Ajax view
+        Route::get('/view/ajax/{purchase}', [PurchaseController::class, 'viewAjax'])->name('view.ajax');
+    });
+
+    // Purchase Return
+    Route::prefix('purchase-returns')->name('admin.purchase_returns.')->group(function () {
+        Route::get('/create/{purchase}', [PurchaseReturnController::class, 'create'])->name('create');
+        Route::post('/store', [PurchaseReturnController::class, 'store'])->name('store');
+    });
+});
+
 require __DIR__ . '/auth.php';
 require __DIR__ . '/admin.php';
 require __DIR__ . '/administrator.php';
 require __DIR__ . '/acl.php';
 require __DIR__ . '/attendance.php';
+require __DIR__ . '/warehouse.php';
+
+

@@ -39,6 +39,21 @@
         @case('print_barcode')
              <i class="fas action-btn fa-print" title="Print Barcode"></i>
         @break
+        @case('payment')
+             <i class="fas action-btn mdi mdi-cash-multiple" title="Payment"></i>
+        @break
+        @case('ledger')
+             <i class="fas action-btn mdi mdi-book-open-page-variant" title="Ledger"></i>
+        @break
+        @case('delete')
+             <i class="fas fa-trash action-btn text-danger" title="Delete"></i>
+        @break
+        @case('cancel')
+             <i class="fas fa-times action-btn text-danger" title="Cancel"></i>
+        @break
+        @case('products')
+             <i class="fas fa-box action-btn text-success" title="{{ __('translation.product') }}"></i>
+        @break
         @default
             <i class="fas action-btn text-success" title="View">{{ $label }}</i>
     @endswitch

@@ -113,4 +113,14 @@ class Product extends Model
     {
         return Product::ofAccount()->notDeleted()->active()->pluck('name', 'id');
     }
+	
+    public function stocks()
+    {
+        return $this->hasMany(ProductStock::class);
+    }
+
+    public function movements()
+    {
+        return $this->hasMany(StockMovement::class);
+    }
 }

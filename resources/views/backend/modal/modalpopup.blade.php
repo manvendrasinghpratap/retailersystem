@@ -279,3 +279,22 @@
     </div>
 </div>
 <!---- Barcode Modal End ---->
+
+<!---- Purchase Modal Begin ---->
+<div class="modal fade" id="purchaseModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h4 class="modal-title">Purchase Details</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body" id="purchaseDetails">
+                <div class="text-center">Loading...</div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!---- Purchase Modal End ---->

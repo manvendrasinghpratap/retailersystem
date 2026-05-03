@@ -86,7 +86,7 @@
                                     @endforeach
                                 @else
                                     <tr>
-                                        <td colspan="8" class="text-center">No categories available</td>
+                                        <td colspan="8" class="text-center">{{ __('translation.no_categories_available') }}</td>
                                     </tr>
                                 @endif
                             </tbody>

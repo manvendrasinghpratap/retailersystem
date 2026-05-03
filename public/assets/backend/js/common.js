@@ -89,6 +89,18 @@ $(document).ready(function () {
         placeholder: "Select Title",
         allowClear: true
     });
+    $(".vendor").select2({
+        placeholder: "Select Vendor",
+        allowClear: true
+    });
+    $(".warehouse").select2({
+        placeholder: "Select Warehouse",
+        allowClear: true
+    });
+    $(".payment_method").select2({
+        placeholder: "Select Payment Method",
+        allowClear: true
+    });
     $(".state").select2({
         placeholder: "Select State",
         allowClear: true
@@ -405,6 +417,72 @@ function confirmPunchOut() {
         }
 
     });
+}
+/*
+|--------------------------------------------------------------------------
+| Global Select2 Validation Function
+|--------------------------------------------------------------------------
+| Usage:
+| validateSelect2Form('formId', ['field_id_1', 'field_id_2']);
+|
+| Example:
+| validateSelect2Form('vendorPaymentForm', ['payment_method']);
+|
+*/
+
+
+function validateSelect2Form(formId, fields = []) {
+
+    const form = document.getElementById(formId);
+
+    if (!form) return;
+
+    form.addEventListener('submit', function (e) {
+
+        let hasError = false;
+
+        fields.forEach(function (fieldId, index) {
+
+            let field = $('#' + fieldId);
+
+            if (!field.length) return;
+
+            let val = field.val();
+
+            field.next('.select2').removeClass('select2-error');
+
+            if (!val || val === '') {
+
+                hasError = true;
+
+                field.next('.select2').addClass('select2-error');
+
+                if (index === 0) {
+                    field.select2('open');
+                }
+            }
+
+        });
+
+        if (hasError) {
+            e.preventDefault();
+            return false;
+        }
+
+    });
+
+    fields.forEach(function (fieldId) {
+
+        let field = $('#' + fieldId);
+
+        field.on('change', function () {
+            if ($(this).val() !== '') {
+                $(this).next('.select2').removeClass('select2-error');
+            }
+        });
+
+    });
+
 }
 
 

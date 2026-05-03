@@ -1062,3 +1062,57 @@ body::before {
 .height-30 {
     height: 30px !important;
 }
+
+.navbar-header {
+    padding: 0px 0px 0px 0px !important;
+}
+
+select:invalid {
+    border: 1px solid #dc3545 !important;
+    box-shadow: none !important;
+}
+
+select.is-invalid {
+    border: 1px solid #dc3545 !important;
+}
+
+select:focus:invalid {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, .25) !important;
+}
+
+.was-validated .form-control:invalid,
+.form-control.is-invalid {
+    border-color: #dc3545 !important;
+}
+
+#payment_method.is-invalid {
+    border: 2px solid #dc3545 !important;
+}
+
+.select2-error .select2-selection {
+    border: 1px solid #dc3545 !important;
+}
+
+.breadcrumb-item a {
+    color: #6c757d;
+    text-decoration: none;
+    padding: 6px 8px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.breadcrumb-item a:hover {
+    background: #b8e7f9;
+    color: #556ee6;
+}
+
+.active-route a {
+    background: linear-gradient(45deg, #556ee6, #34c38f);
+    color: #fff !important;
+    box-shadow: 0 3px 10px rgba(85, 110, 230, 0.25);
+}
+
+.breadcrumb-item+.breadcrumb-item::before {
+    color: #adb5bd;
+}

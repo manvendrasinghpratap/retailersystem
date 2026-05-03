@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Crypt;
 use Hashids;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Lang;
 class Settings
 {
 
@@ -383,6 +384,7 @@ class Settings
     public static function getcustomnumberformat($amount)
     {
         return number_format($amount, 2);
+        $amount  =  number_format($amount, 2);
         $parts = explode('.', number_format($amount, 2, '.', ''));
         $intPart = $parts[0];
 

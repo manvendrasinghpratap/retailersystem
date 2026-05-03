@@ -1,0 +1,111 @@
+@extends('backend.layouts.master-horizontal')
+
+@section('title')
+    {{ array_key_exists('title', $breadcrumb) ? $breadcrumb['title'] : '' }}
+@endsection
+
+@section('content')
+
+@include('backend.components.breadcrumb')
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card">
+
+            <div class="card-header">
+                <h4 class="card-title">
+                    {{ request()->route()->getName() == 'admin.vendors.create'
+                        ? $breadcrumb['route2Title']
+                        : $breadcrumb['route3Title'] }}
+                </h4>
+            </div>
+
+            <div class="card-body">
+
+                <form autocomplete="off"
+                      method="POST"
+                      id="vendorform"
+                      name="vendorform"
+                      action="{{ isset($vendor)
+                            ? route('admin.vendors.update')
+                            : route('admin.vendors.store') }}"
+                      class="needs-validation"
+                      novalidate>
+
+                    @csrf
+
+                    <input type="hidden"
+                           name="vendor_id"
+                           id="vendor_id"
+                           value="{{ isset($vendor) ? \App\Helpers\Settings::getEncodeCode($vendor->id) : '' }}">
+
+                    <div class="row">
+
+                        {{-- Vendor Name --}}
+                        <x-text-input
+                            name="name"
+                            label="{{ __('translation.vendor_name') }}"
+                            value="{{ $vendor->name ?? '' }}"
+                            required />
+
+                        {{-- Company Name --}}
+                        <x-text-input
+                            name="company_name"
+                            label="{{ __('translation.company_name') }}"
+                            value="{{ $vendor->company_name ?? '' }}" />
+
+                        {{-- Phone --}}
+                        <x-text-input
+                            name="phone"
+                            label="{{ __('translation.phone') }}"
+                            value="{{ $vendor->phone ?? '' }}" required />
+
+                        {{-- Email --}}
+                        <x-text-input
+                            name="email"
+                            type="email"
+                            label="{{ __('translation.email') }}"
+                            value="{{ $vendor->email ?? '' }}" />
+
+                        {{-- Address --}}
+                        <x-text-input
+                            name="address"
+                            label="{{ __('translation.address') }}"
+                            value="{{ $vendor->address ?? '' }}"
+                            mainrows="6" />
+
+                        {{-- Opening Balance --}}
+                        <x-text-input
+                            name="opening_balance"
+                            type="number"
+                            step="0.01"
+                            label="{{ __('translation.opening_balance') }} {{ __('translation.b_ngn') }}"
+                            value="{{ $vendor->opening_balance ?? 0 }}" />
+
+                        {{-- Status --}}
+                        <x-select-dropdown
+                            name="status"
+                            label="{{ __('translation.status') }}"
+                            :options="config('constants.accountstatus')"
+                            :selected="isset($vendor) && $vendor->status == 0 ? 0 : 1"
+                            required
+                            class="accountstatus" />
+
+                    </div>
+
+                    {{-- Buttons --}}
+                    <div class="row">
+                        <x-form-buttons
+                            submitText="{{ isset($vendor) ? 'Update' : 'Save' }}"
+                            resetText="{{ $breadcrumb['reset_route_title'] }}"
+                            url="{{ route($breadcrumb['reset_route']) }}" />
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@endsection

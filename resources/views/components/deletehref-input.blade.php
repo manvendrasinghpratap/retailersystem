@@ -2,6 +2,7 @@
     'name',
     'label' => null,
     'href' => 'javascript:void(0)',
+    'action' => 'edit',
 ])
 
 <a 
@@ -9,9 +10,5 @@
     id="{{ $name }}" 
     {{ $attributes->class(['']) }}
 >
-    @if($attributes->has('required'))
-        <i class="fas fa-trash action-btn darkred"></i>
-    @else
-        {{ $label }}
-    @endif
+    <i class="fas fa-trash action-btn text-danger" title="Delete"></i>
 </a>
