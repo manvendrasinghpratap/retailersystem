@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Vendor;
 use App\Models\VendorPayment;
 use App\Models\VendorLedger;
+use App\Models\Type;
 use App\Helpers\Settings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -308,14 +309,15 @@ class VendorController extends Controller
         $vendor = Vendor::where('account_id', auth()->user()->account_id)
             ->findOrFail($id);
 
+        $types = Type::active()->pluck('name', 'id')->toArray();
         $ledgers = VendorLedger::where('vendor_id', $vendor->id)
             ->latest()
             ->paginate(config('constants.pagination'));
-
         return view('backend.admin.vendor.ledger', compact(
             'vendor',
             'ledgers',
-            'breadcrumb'
+            'breadcrumb',
+            'types'
         ));
     }
 

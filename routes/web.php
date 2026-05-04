@@ -12,7 +12,8 @@ use App\Http\Controllers\Admin\{
     DashboardController,
     StaffController,
     VendorController,
-    PurchaseController
+    PurchaseController,
+    StockReturnController,
 };
 
 Route::get('/updateapp', function () {
@@ -156,7 +157,7 @@ Route::middleware(['auth', 'route.permission'])->prefix('admin')->group(function
 });
 
 
-Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth','route.permission'])->group(function () {
     Route::prefix('purchases')->name('purchases.')->group(function () {
      // List all purchases
         Route::get('/', [PurchaseController::class, 'index'])->name('index');
@@ -165,25 +166,36 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
         // Store purchase
         Route::post('/store', [PurchaseController::class, 'store'])->name('store');
         // View purchase
-        Route::get('/view/{purchase}', [PurchaseController::class, 'show'])->name('view');
+        Route::get('/view/{id}', [PurchaseController::class, 'show'])->name('view');
         // Cancel purchase
-        Route::post('/cancel/{purchase}', [PurchaseController::class, 'destroy'])->name('cancel');
+        Route::post('/cancel', [PurchaseController::class, 'destroy'])->name('cancel');
         // Soft delete purchase
-        Route::post('/softdelete/{purchase}', [PurchaseController::class, 'softDelete'])->name('softdelete');
+        Route::post('/softdelete', [PurchaseController::class, 'softdelete'])->name('softdelete');
         // Update status
-        Route::post('/status-update/{purchase}', [PurchaseController::class, 'statusUpdate'])->name('status.update');
+        Route::post('/status-update', [PurchaseController::class, 'statusUpdate'])->name('status.update');
         // Export PDF
         Route::get('/exportpdf', [PurchaseController::class, 'exportPdf'])->name('exportPdf');
         // Export CSV
         Route::get('/exportcsv', [PurchaseController::class, 'exportCsv'])->name('exportCsv');
         // Ajax view
-        Route::get('/view/ajax/{purchase}', [PurchaseController::class, 'viewAjax'])->name('view.ajax');
+        Route::get('/view/ajax/{id}', [PurchaseController::class, 'viewAjax'])->name('view.ajax');
     });
 
     // Purchase Return
     Route::prefix('purchase-returns')->name('admin.purchase_returns.')->group(function () {
-        Route::get('/create/{purchase}', [PurchaseReturnController::class, 'create'])->name('create');
+        Route::get('/create/{id}', [PurchaseReturnController::class, 'create'])->name('create');
         Route::post('/store', [PurchaseReturnController::class, 'store'])->name('store');
+    });
+
+
+    Route::prefix('stock-returns')->name('stock_returns.')->group(function () {
+        Route::get('/', [StockReturnController::class, 'index'])->name('index');
+        Route::get('/create', [StockReturnController::class, 'create'])->name('create');
+        Route::post('/store', [StockReturnController::class, 'store'])->name('store');
+        Route::get('/view/ajax/{id}', [StockReturnController::class, 'viewAjax'])->name('view.ajax');
+        Route::get('/show/{id}', [StockReturnController::class, 'show'])->name('show');
+        Route::get('/stock-check', [StockReturnController::class, 'getStock'])->name('stock.check');
+        Route::post('/cancel', [StockReturnController::class, 'cancel'])->name('cancel');
     });
 });
 

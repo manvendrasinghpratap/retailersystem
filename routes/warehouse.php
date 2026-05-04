@@ -16,4 +16,5 @@ Route::middleware(['auth', 'route.permission'])->prefix('admin/warehouses')->nam
     Route::get('/stock-transfer/export-pdf', [WarehouseController::class, 'exportPdf'])->name('exportPdf');
     Route::get('/stock-transfer/export-csv', [WarehouseController::class, 'exportCsv'])->name('exportCsv');
     Route::get('/{id}/products', [WarehouseController::class, 'getWarehouseProducts'])->name('products');
+    Route::get('/warehouse-product-stock', [WarehouseController::class, 'getProductStock'])->name('warehouse.product.stock');
 });

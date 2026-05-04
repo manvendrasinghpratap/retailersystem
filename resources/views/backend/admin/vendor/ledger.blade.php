@@ -55,7 +55,8 @@
                             <tr>
                                 <th>#</th>
                                 <th>{{ __('translation.date') }}</th>
-                                <th>{{ __('translation.payment_method') }}</th>
+                                <!-- <th>{{ __('translation.payment_method') }}</th> -->
+                                <th>{{ __('translation.type') }}</th>
                                 <th>{{ __('translation.debit') }}</th>
                                 <th>{{ __('translation.credit') }}</th>
                                 <th>{{ __('translation.balance') }}</th>
@@ -66,8 +67,9 @@
                         @forelse($ledgers as $row) 
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
-                                <td>{{ \App\Helpers\Settings::getFormattedDatetime($row->created_at) }}</td>
-                                <td>{{ (!in_array($row->type,[2,3]) ) ? ucfirst($row->vendorPayment->payment_method) : '---' }}</td>
+                                <td>{{ \App\Helpers\Settings::getFormattedDatetime($row->created_at) }}</td> 
+                                {{-- <td>{{ (!in_array($row->type,[2,3,5]) ) ? ucfirst($row->vendorPayment->payment_method) : '---' }}</td> --}} 
+                                <td>{{ array_key_exists($row->type,$types) ? ucfirst($types[$row->type]) : '---'}}</td>
                                 <td>  {{ __('translation.currency')}} {{ \App\Helpers\Settings::getcustomnumberformat($row->debit) }}</td>
                                 <td>  {{ __('translation.currency')}} {{ \App\Helpers\Settings::getcustomnumberformat($row->credit) }}</td>
                                 <td> {{ __('translation.currency')}} {{ \App\Helpers\Settings::getcustomnumberformat($row->balance) }}</td>

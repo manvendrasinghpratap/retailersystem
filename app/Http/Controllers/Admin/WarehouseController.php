@@ -343,4 +343,16 @@ class WarehouseController extends Controller
 
             return view('backend.admin.warehouses.products', compact('breadcrumb', 'warehouse', 'products'));
     }
+
+    public function getProductStock(Request $request)
+    {
+        $stock = ProductStock::ofAccount()
+            ->where('warehouse_id', $request->warehouse_id)
+            ->where('product_id', $request->product_id)
+            ->first();
+
+        return response()->json([
+            'stock' => $stock->stock ?? 0
+        ]);
+    }
 }

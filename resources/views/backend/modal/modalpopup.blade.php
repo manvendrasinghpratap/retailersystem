@@ -286,7 +286,7 @@
         <div class="modal-content">
 
             <div class="modal-header">
-                <h4 class="modal-title">Purchase Details</h4>
+                <h4 class="modal-title">{{__('translation.purchase_details')}}</h4>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
@@ -298,3 +298,22 @@
     </div>
 </div>
 <!---- Purchase Modal End ---->
+
+<!---- Stock Return Modal Begin ---->
+<div class="modal fade" id="stockReturnModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">{{__('translation.stock_return_details')}}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body" id="stockReturnDetails">
+                <div class="text-center">Loading...</div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!---- Stock Return Modal End ---->

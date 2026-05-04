@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use App\Models\StockAdjustment;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\PurchaseItem;
 
 class ProductController extends Controller
 {
@@ -297,5 +298,37 @@ class ProductController extends Controller
                 'message' => 'Something went wrong'
             ], 500);
         }
+    }
+
+    public function getLastPrice(Request $request)
+    {
+        $productId = $request->product_id;
+        $last = PurchaseItem::where('product_id', $productId)->latest()->first();
+
+        return response()->json([
+            'price' => $last ? $last->cost_price : 0
+        ]);
+    }
+
+    public function search(Request $request)
+    {
+        $query = $request->q;
+
+        $products = Product::where('account_id', auth()->user()->account_id)
+            ->where(function ($q2) use ($query) {
+                $q2->where('name', 'LIKE', "%$query%")
+                ->orWhere('barcode', 'LIKE', "%$query%");
+            })
+            ->limit(20)
+            ->get();
+
+        return response()->json(
+            $products->map(function ($p) {
+                return [
+                    'id' => $p->id,
+                    'text' => $p->name . ' (' . $p->barcode . ')'
+                ];
+            })
+        );
     }
 }
