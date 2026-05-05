@@ -302,15 +302,59 @@ class ProductController extends Controller
 
     public function getLastPrice(Request $request)
     {
-        $productId = $request->product_id;
-        $last = PurchaseItem::where('product_id', $productId)->latest()->first();
+        $productId   = $request->product_id;
+        $vendorId    = $request->vendor_id;
+        $warehouseId = $request->warehouse_id;
+        $accountId   = auth()->user()->account_id;
+
+        // 1️⃣ Same Product + Vendor + Warehouse
+        $last = PurchaseItem::where('product_id', $productId)
+            ->whereHas('purchase', function ($q) use ($vendorId, $warehouseId, $accountId) {
+                $q->where('account_id', $accountId)
+                ->where('vendor_id', $vendorId)
+                ->where('warehouse_id', $warehouseId);
+            })
+            ->latest()
+            ->first();
+
+        // 2️⃣ Same Product + Vendor
+        if (!$last && $vendorId) {
+            $last = PurchaseItem::where('product_id', $productId)
+                ->whereHas('purchase', function ($q) use ($vendorId, $accountId) {
+                    $q->where('account_id', $accountId)
+                    ->where('vendor_id', $vendorId);
+                })
+                ->latest()
+                ->first();
+        }
+
+        // 3️⃣ Same Product + Warehouse
+        if (!$last && $warehouseId) {
+            $last = PurchaseItem::where('product_id', $productId)
+                ->whereHas('purchase', function ($q) use ($warehouseId, $accountId) {
+                    $q->where('account_id', $accountId)
+                    ->where('warehouse_id', $warehouseId);
+                })
+                ->latest()
+                ->first();
+        }
+
+        // 4️⃣ Fallback → Only Product
+        if (!$last) {
+            $last = PurchaseItem::where('product_id', $productId)
+                ->whereHas('purchase', function ($q) use ($accountId) {
+                    $q->where('account_id', $accountId);
+                })
+                ->latest()
+                ->first();
+        }
 
         return response()->json([
             'price' => $last ? $last->cost_price : 0
         ]);
     }
 
-    public function search(Request $request)
+    public function search_delete(Request $request)
     {
         $query = $request->q;
 
@@ -327,6 +371,30 @@ class ProductController extends Controller
                 return [
                     'id' => $p->id,
                     'text' => $p->name . ' (' . $p->barcode . ')'
+                ];
+            })
+        );
+    }
+
+    public function search(Request $request)
+    {
+        $warehouseId = $request->warehouse_id;
+
+        $products = Product::query()->ofAccount()
+            ->when($warehouseId, function($q) use ($warehouseId) {
+                $q->whereHas('stocks', function($sq) use ($warehouseId) {
+                    $sq->where('warehouse_id', $warehouseId)
+                    ->where('stock', '>', 0);
+                });
+            })
+            ->limit(20)
+            ->get();
+
+        return response()->json(
+            $products->map(function ($p) {
+                return [
+                    'id' => $p->id,
+                    'text' => $p->name
                 ];
             })
         );

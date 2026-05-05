@@ -1,88 +1,100 @@
 @extends('backend.layouts.master-horizontal')
-
+@section('title')
+    {{array_key_exists('title', $breadcrumb) ? $breadcrumb['title'] : ''}}
+@endsection
 @section('content')
-@include('backend.components.breadcrumb')
+    @include('backend.components.breadcrumb')
+<div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">
+                        {{ $breadcrumb['route1Title'] }}
+                    </h4>
+                </div>
 
-<!-- SELECT2 -->
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/css/select2.min.css" rel="stylesheet" />
+                <div class="card-body">
 
-<div class="card">
+                    <form method="POST" action="{{ route('admin.stock_returns.store') }}" id="returnForm" novalidate>
+                        @csrf
 
-    <div class="card-header">
-        <h4>Create Stock Return</h4>
-    </div>
+                        <div class="row">
+                            <x-select-dropdown name="vendor_id" label="{{ __('translation.vendor') }}" :options="$vendors"  id='vendor_id' mainrows='4' class="vendor" required /> 
+                            <x-select-dropdown name="warehouse_id" label="{{ __('translation.warehouse') }}" :options="$warehouses"  id='warehouse_id' mainrows='4' class="warehouse" required />
 
-    <div class="card-body">
+                            <x-text-input 
+                                name="return_date" 
+                                label="{{ __('translation.return_date') }}" 
+                                type="text" 
+                                required 
+                                class="flatdatepickr" 
+                                value="{{ \App\Helpers\Settings::getFormattedDate(date('Y-m-d')) }}" 
+                            />
+                        </div>
 
-        <form method="POST" action="{{ route('admin.stock_returns.store') }}" id="returnForm">
-            @csrf
-
-            <div class="row">
-                <x-select-dropdown name="vendor_id" label="Vendor" :options="$vendors" required />
-                <x-select-dropdown name="warehouse_id" label="Warehouse" :options="$warehouses" required />
-
-                <x-text-input 
-                    name="return_date" 
-                    label="Return Date" 
-                    type="text" 
-                    required 
-                    class="flatdatepickr" 
-                    value="{{ \App\Helpers\Settings::getFormattedDate(date('Y-m-d')) }}" 
-                />
+                        <table class="table table-bordered mt-3" id="itemsTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="30%">{{ __('translation.product') }}</th>
+                                    <th class="text-center">{{ __('translation.stock') }}</th>
+                                    <th>{{ __('translation.quantity') }}</th>
+                                    <th>@lang('translation.currency') {{ __('translation.price') }}</th>
+                                    <th>@lang('translation.currency') {{ __('translation.total') }}</th>
+                                    <th width="5%">{{ __('translation.action') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                        <!-- ADD ROW BUTTON -->
+                        <div class="text-center mt-2">
+                            <button type="button" class="btn btn-success px-4" id="addRow">
+                                <i class="mdi mdi-plus"></i> {{ __('translation.add_item') }}
+                            </button>
+                        </div>
+                        <div class="text-end">
+                            <h4>@lang('translation.currency') <span id="grandTotal">0.00</span></h4>
+                            <input type="hidden" name="total" id="totalInput">
+                        </div>
+                        <div class="card-footer form-group center">
+                            <div class="d-flex gap-2 dflex">
+                                <button type="submit" class="btn btn-primary">{{ __('translation.save_return') }}</button>
+                                <a href="{{ route('admin.stock_returns.index') }}" class="btn btn-secondary">{{ __('translation.cancel') }}</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
             </div>
-
-            <table class="table table-bordered mt-3" id="itemsTable">
-                <thead class="table-light">
-                    <tr>
-                        <th width="30%">Product</th>
-                        <th class="text-center">Stock</th>
-                        <th>Qty</th>
-                        <th>Price</th>
-                        <th>Total</th>
-                        <th width="5%">
-                            <button type="button" class="btn btn-success btn-sm" id="addRow">+</button>
-                        </th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-
-            <div class="text-end">
-                <h4>Total: <span id="grandTotal">0</span></h4>
-                <input type="hidden" name="total" id="totalInput">
-            </div>
-
-            <div class="card-footer text-end">
-                <a href="{{ route('admin.stock_returns.index') }}" class="btn btn-secondary">Cancel</a>
-                <button class="btn btn-primary">Submit Return</button>
-            </div>
-
-        </form>
-    </div>
+        </div>
 </div>
 @endsection
 
 @section('script')
-
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/js/select2.min.js"></script>
-
 <script>
-
+validateSelect2Form('returnForm', ['vendor_id','warehouse_id']);
 let rowIndex = 0;
 
 // ========================
 // INIT SELECT2
 // ========================
 function initSelect2(element) {
+
     element.select2({
-        placeholder: 'Search Product',
+        placeholder: 'Select Product',
         width: '100%',
         ajax: {
             url: "{{ route('admin.products.search') }}",
             dataType: 'json',
             delay: 250,
             data: function (params) {
-                return { q: params.term };
+
+                let warehouse_id = $('select[name="warehouse_id"]').val();
+
+                if (!warehouse_id) return false;
+
+                return {
+                    q: params.term,
+                    warehouse_id: warehouse_id
+                };
             },
             processResults: function (data) {
                 return { results: data };
@@ -92,9 +104,25 @@ function initSelect2(element) {
 }
 
 // ========================
+// RESET ITEMS
+// ========================
+function resetFormItems() {
+    $('#itemsTable tbody').empty();
+    rowIndex = 0;
+    addRow();
+}
+
+// ========================
 // ADD ROW
 // ========================
 function addRow() {
+
+    let warehouse_id = $('select[name="warehouse_id"]').val();
+
+    if (!warehouse_id) {
+        Swal.fire('Select Warehouse First');
+        return;
+    }
 
     let row = `
     <tr>
@@ -105,14 +133,14 @@ function addRow() {
         <td class="stock text-center text-primary fw-bold">0</td>
 
         <td>
-            <input type="number" name="items[${rowIndex}][qty]" class="form-control qty onlydecimal" min="1" step="1" disabled>
+            <input type="number" name="items[${rowIndex}][qty]" class="form-control qty" min="1" step="1" disabled>
         </td>
 
         <td>
-            <input type="number" name="items[${rowIndex}][price]" class="form-control price onlydecimal" min="0.01" step="0.01">
+            <input type="number" name="items[${rowIndex}][price]" class="form-control price" min="0.01" step="0.01">
         </td>
 
-        <td class="rowTotal text-end">0</td>
+        <td class="rowTotal text-end">0.00</td>
 
         <td>
             <button type="button" class="btn btn-danger removeRow">x</button>
@@ -122,7 +150,6 @@ function addRow() {
     $('#itemsTable tbody').append(row);
 
     let newRow = $('#itemsTable tbody tr:last');
-
     initSelect2(newRow.find('.selectProduct'));
 
     rowIndex++;
@@ -140,11 +167,8 @@ function calculateTotal() {
 
     $('#itemsTable tbody tr').each(function () {
 
-        let qty = parseFloat($(this).find('.qty').val());
-        let price = parseFloat($(this).find('.price').val());
-
-        qty = isNaN(qty) ? 0 : qty;
-        price = isNaN(price) ? 0 : price;
+        let qty = parseFloat($(this).find('.qty').val()) || 0;
+        let price = parseFloat($(this).find('.price').val()) || 0;
 
         let rowTotal = qty * price;
 
@@ -156,9 +180,7 @@ function calculateTotal() {
     $('#totalInput').val(total);
 }
 
-$(document).on('input', '.qty, .price', function () {
-    calculateTotal();
-});
+$(document).on('input', '.qty, .price', calculateTotal);
 
 // ========================
 // REMOVE ROW
@@ -178,29 +200,23 @@ function fetchStock(row) {
 
     if (!product_id || !warehouse_id) return;
 
-    $.ajax({
-        url: "{{ route('admin.stock_returns.stock.check') }}",
-        type: "GET",
-        data: { product_id, warehouse_id },
-        success: function (res) {
+    $.get("{{ route('admin.stock_returns.stock.check') }}", {
+        product_id, warehouse_id
+    }, function (res) {
 
-            let stock = parseFloat(res.stock) || 0;
+        let stock = parseFloat(res.stock) || 0;
 
-            row.find('.stock').text(stock);
+        row.find('.stock').text(stock);
 
-            let qtyInput = row.find('.qty');
+        let qtyInput = row.find('.qty');
 
-            if (stock <= 0) {
-                qtyInput.val('').prop('disabled', true);
-                Swal.fire('No Stock', 'No stock available', 'warning');
-            } else {
-                qtyInput.prop('disabled', false);
-                qtyInput.attr('max', stock);
-                qtyInput.val(1); // ✅ default qty
-                qtyInput.trigger('input');
-            }
-
-            calculateTotal();
+        if (stock <= 0) {
+            qtyInput.val('').prop('disabled', true);
+            Swal.fire('No Stock Available');
+        } else {
+            qtyInput.prop('disabled', false);
+            qtyInput.attr('max', stock);
+            qtyInput.val(1).trigger('input');
         }
     });
 }
@@ -213,7 +229,7 @@ $(document).on('change', '.selectProduct', function () {
     let row = $(this).closest('tr');
     let product_id = $(this).val();
 
-    // prevent duplicate
+    // Prevent duplicate
     let duplicate = false;
     $('.selectProduct').not(this).each(function () {
         if ($(this).val() == product_id && product_id != '') {
@@ -222,44 +238,29 @@ $(document).on('change', '.selectProduct', function () {
     });
 
     if (duplicate) {
-        Swal.fire('Duplicate', 'Product already added', 'warning');
+        Swal.fire('Duplicate Product');
         $(this).val(null).trigger('change');
         return;
     }
 
     fetchStock(row);
 
-    // fetch last price
-    $.ajax({
-        url: "{{ route('admin.products.lastPrice') }}",
-        type: "GET",
-        data: { product_id },
-        success: function (res) {
-
-            let priceInput = row.find('.price');
-
-            priceInput.val(res.price);
-
-            // 🔥 trigger calculation
-            priceInput.trigger('input');
-
-            calculateTotal();
-        }
+    // Fetch price
+    $.get("{{ route('admin.products.lastPrice') }}", {
+        product_id: product_id,
+        vendor_id: $('select[name="vendor_id"]').val(),
+        warehouse_id: $('select[name="warehouse_id"]').val()
+    }, function (res) {
+        row.find('.price').val(res.price).trigger('input');
     });
 
-    // focus qty
-    setTimeout(() => {
-        row.find('.qty').focus().select();
-    }, 200);
 });
 
 // ========================
-// WAREHOUSE CHANGE
+// WAREHOUSE / VENDOR CHANGE
 // ========================
-$('select[name="warehouse_id"]').on('change', function () {
-    $('#itemsTable tbody tr').each(function () {
-        fetchStock($(this));
-    });
+$('select[name="warehouse_id"], select[name="vendor_id"]').on('change', function () {
+    resetFormItems();
 });
 
 // ========================
@@ -270,19 +271,9 @@ $(document).on('input', '.qty', function () {
     let qty = parseFloat($(this).val()) || 0;
     let max = parseFloat($(this).attr('max')) || 0;
 
-    if (!max || max == 0) {
-        $(this).val('');
-        return;
-    }
-
     if (qty > max) {
         $(this).val(max);
-
-        Swal.fire({
-            icon: 'warning',
-            title: 'Stock limit exceeded',
-            text: 'Max available stock is ' + max
-        });
+        Swal.fire('Max stock: ' + max);
     }
 
     if (qty <= 0) {
@@ -298,6 +289,19 @@ $(document).on('input', '.qty', function () {
 $('#returnForm').on('submit', function(e){
 
     e.preventDefault();
+
+    let vendor = $('select[name="vendor_id"]').val();
+    let warehouse = $('select[name="warehouse_id"]').val();
+
+    if (!vendor) {
+        Swal.fire('Error', 'Please select vendor', 'error');
+        return;
+    }
+
+    if (!warehouse) {
+        Swal.fire('Error', 'Please select warehouse', 'error');
+        return;
+    }
 
     let valid = true;
 
@@ -317,11 +321,15 @@ $('#returnForm').on('submit', function(e){
         return;
     }
 
+    if ($('#itemsTable tbody tr').length === 0) {
+        Swal.fire('Error','Add at least one item','error');
+        return;
+    }
+
     Swal.fire({
         title: 'Confirm Return?',
         icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Yes, Submit'
+        showCancelButton: true
     }).then((res)=>{
         if(res.isConfirmed){
             this.submit();

@@ -57,6 +57,7 @@
                     <a class="dropdown-item {{ request()->routeIs('admin.vendors.index') ? 'active' : '' }}" href="{{ route('admin.vendors.index') }}"><i class="mdi mdi-truck-delivery-outline font-size-16 align-middle me-1"></i>@lang('translation.vendors')</a>
                     <a class="dropdown-item {{ request()->routeIs('admin.purchases.index') ? 'active' : '' }}" href="{{ route('admin.purchases.index') }}"><i class="mdi mdi-cart-outline font-size-16 align-middle me-1"></i>@lang('translation.purchases')</a>
                     <a class="dropdown-item {{ request()->routeIs('admin.stock_returns.index') ? 'active' : '' }}" href="{{ route('admin.stock_returns.index') }}"><i class="mdi mdi-reorder-horizontal font-size-16 align-middle me-1"></i>@lang('translation.stock_returns')</a>
+                    <a class="dropdown-item {{ request()->routeIs('admin.requisitions.index') ? 'active' : '' }}" href="{{ route('admin.requisitions.index') }}"><i class="mdi mdi-cart-arrow-up font-size-16 align-middle me-1"></i>@lang('translation.requisitions')</a>
                     <div class="dropdown-divider"></div>
                     <a class="dropdown-item" href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
 

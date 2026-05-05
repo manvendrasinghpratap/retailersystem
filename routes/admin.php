@@ -44,7 +44,7 @@ Route::prefix('admin/products')->middleware(['auth', 'route.permission'])->group
     Route::post('products/delete', [ProductController::class, 'destroy'])->name('products.delete');
     Route::post('products/softdelete', [ProductController::class, 'softdelete'])->name('admin.products.softdelete');
     Route::get('pdf', [ProductController::class, 'exportPdf'])->name('admin.products.pdf');
-    Route::get('csv', [ProductController::class, 'exportCsv'])->name('admin.products.csv');
+    Route::get('csv', [ProductController::class, 'exportCsv'])->name('admin.products.csv'); 
     Route::get('last-price', [ProductController::class, 'getLastPrice'])->name('admin.products.lastPrice');
     Route::get('search', [ProductController::class, 'search'])->name('admin.products.search');
 });

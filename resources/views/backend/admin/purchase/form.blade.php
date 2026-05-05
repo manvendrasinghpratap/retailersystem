@@ -62,154 +62,209 @@
 @endsection
 
 @section('script')
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/js/select2.min.js"></script>
+
 <script>
-    let products = @json($products);
+
 let rowIndex = 0;
 
-    function addRow() {
-        let row = `
-                <tr>
-                    <td>
-                        <select name="items[${rowIndex}][product_id]" class="form-control product">
-                            ${Object.entries(products).map(([id,name]) => `<option value="${id}">${name}</option>`).join('')}
-                        </select>
-                    </td>
-                    <td>
-                        <input type="number" name="items[${rowIndex}][qty]" class="form-control qty" value="1" min="1" step="1">
-                    </td>
-                    <td>
-                        <input type="number" name="items[${rowIndex}][price]" class="form-control price" value="0" min="0">
-                    </td>
-                    <td class="rowTotal">0</td>
-                    <td>
-                        <button type="button" class="btn btn-danger removeRow">x</button>
-                    </td>
-                </tr>`;
-        $('#itemsTable tbody').append(row);
-        rowIndex++;
-    }
-
-    function calculateTotal() {
-        let total = 0;
-
-        $('#itemsTable tbody tr').each(function () {
-            let qty = parseFloat($(this).find('.qty').val()) || 0;
-            let price = parseFloat($(this).find('.price').val()) || 0;
-
-            let rowTotal = qty * price;
-
-            $(this).find('.rowTotal').text(rowTotal.toFixed(2));
-            total += rowTotal;
-        });
-
-        $('#grandTotal').text(total.toFixed(2));
-        $('#totalInput').val(total);
-    }
-
-    $(document).on('keyup change', '.qty, .price', calculateTotal);
-
-    $(document).on('click', '.removeRow', function () {
-        $(this).closest('tr').remove();
-        calculateTotal();
-    });
-
-    $('#addRow').click(addRow);
-
-    // default row
-    addRow();
-    /////Multiple select2 fields in one form
-    validateSelect2Form('purchaseForm', ['vendor_id','warehouse_id']);
-
-    $('#cancelBtn').on('click', function (e) {
-        e.preventDefault();
-
-        let url = $(this).attr('href');
-
-        Swal.fire({
-            title: 'Are you sure?',
-            text: "Unsaved data will be lost!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#6c757d',
-            confirmButtonText: 'Yes, leave page',
-            cancelButtonText: 'Stay here'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                window.location.href = url;
+// ========================
+// INIT SELECT2 PRODUCT
+// ========================
+function initSelect2(element) {
+    element.select2({
+        placeholder: 'Search Product',
+        width: '100%',
+        ajax: {
+            url: "{{ route('admin.products.search') }}",
+            dataType: 'json',
+            delay: 250,
+            data: function (params) {
+                return {
+                    q: params.term
+                };
+            },
+            processResults: function (data) {
+                return { results: data };
             }
-        });
+        }
     });
-    $('#purchaseForm').on('submit', function (e) {
+}
+
+// ========================
+// ADD ROW
+// ========================
+function addRow() {
+
+    let row = `
+    <tr>
+        <td>
+            <select name="items[${rowIndex}][product_id]" class="form-control selectProduct"></select>
+        </td>
+
+        <td>
+            <input type="number" name="items[${rowIndex}][qty]" class="form-control qty" value="1" min="1">
+        </td>
+
+        <td>
+            <input type="number" name="items[${rowIndex}][price]" class="form-control price" value="0" min="0.01" step="0.01">
+        </td>
+
+        <td class="rowTotal">0.00</td>
+
+        <td>
+            <button type="button" class="btn btn-danger removeRow">x</button>
+        </td>
+    </tr>`;
+
+    $('#itemsTable tbody').append(row);
+
+    let newRow = $('#itemsTable tbody tr:last');
+
+    initSelect2(newRow.find('.selectProduct'));
+
+    rowIndex++;
+}
+
+$('#addRow').click(addRow);
+addRow();
+
+// ========================
+// PREVENT DUPLICATE PRODUCT
+// ========================
+$(document).on('change', '.selectProduct', function () {
+
+    let selected = $(this).val();
+
+    let duplicate = false;
+
+    $('.selectProduct').not(this).each(function () {
+        if ($(this).val() == selected && selected != '') {
+            duplicate = true;
+        }
+    });
+
+    if (duplicate) {
+        Swal.fire('Duplicate', 'Product already selected', 'warning');
+        $(this).val(null).trigger('change');
+    }
+});
+
+// ========================
+// CALCULATE TOTAL
+// ========================
+function calculateTotal() {
+
+    let total = 0;
+
+    $('#itemsTable tbody tr').each(function () {
+
+        let qty = parseFloat($(this).find('.qty').val()) || 0;
+        let price = parseFloat($(this).find('.price').val()) || 0;
+
+        let rowTotal = qty * price;
+
+        $(this).find('.rowTotal').text(rowTotal.toFixed(2));
+
+        total += rowTotal;
+    });
+
+    $('#grandTotal').text(total.toFixed(2));
+    $('#totalInput').val(total);
+}
+
+$(document).on('input', '.qty, .price', calculateTotal);
+
+// ========================
+// REMOVE ROW
+// ========================
+$(document).on('click', '.removeRow', function () {
+    $(this).closest('tr').remove();
+    calculateTotal();
+});
+
+// ========================
+// FORM VALIDATION
+// ========================
+$('#purchaseForm').on('submit', function (e) {
+
     e.preventDefault();
 
     let form = this;
 
-    // ✅ HTML validation
-    if (!form.checkValidity()) {
-        form.reportValidity();
+    let vendor = $('select[name="vendor_id"]').val();
+    let warehouse = $('select[name="warehouse_id"]').val();
+
+    if (!vendor) {
+        Swal.fire('Error', 'Select vendor', 'error');
         return;
     }
 
-    let hasItems = $('#itemsTable tbody tr').length > 0;
-
-    if (!hasItems) {
-        Swal.fire({
-            icon: 'warning',
-            title: 'No Items',
-            text: 'Please add at least one product'
-        });
+    if (!warehouse) {
+        Swal.fire('Error', 'Select warehouse', 'error');
         return;
     }
 
-    // ✅ NEW: Price validation (IMPORTANT)
-    let invalidPrice = false;
+    if ($('#itemsTable tbody tr').length === 0) {
+        Swal.fire('Error', 'Add at least one product', 'error');
+        return;
+    }
+
+    let valid = true;
 
     $('#itemsTable tbody tr').each(function () {
+
+        let product = $(this).find('.selectProduct').val();
+        let qty = parseFloat($(this).find('.qty').val()) || 0;
         let price = parseFloat($(this).find('.price').val()) || 0;
 
-        if (price <= 0) {
-            invalidPrice = true;
-            $(this).find('.price').addClass('is-invalid'); // highlight
-        } else {
-            $(this).find('.price').removeClass('is-invalid');
+        if (!product || qty <= 0 || price <= 0) {
+            valid = false;
         }
     });
 
-    if (invalidPrice) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Invalid Price',
-            text: 'Price must be greater than 0'
-        });
+    if (!valid) {
+        Swal.fire('Error', 'Fill all fields correctly', 'error');
         return;
     }
 
-    // ✅ SweetAlert confirm
     Swal.fire({
         title: 'Save Purchase?',
-        text: "Please confirm before saving",
         icon: 'question',
         showCancelButton: true,
-        confirmButtonColor: '#0d6efd',
-        confirmButtonText: 'Yes, save it',
-        cancelButtonText: 'Review again'
-    }).then((result) => {
-
-        if (result.isConfirmed) {
-
-            Swal.fire({
-                title: 'Saving...',
-                text: 'Please wait',
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
-
+        confirmButtonText: 'Yes'
+    }).then((res) => {
+        if (res.isConfirmed) {
             form.submit();
         }
     });
 });
+
+// ========================
+// CANCEL CONFIRM
+// ========================
+$('#cancelBtn').on('click', function (e) {
+
+    e.preventDefault();
+
+    let url = $(this).attr('href');
+
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "Unsaved data will be lost!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = url;
+        }
+    });
+});
+
+// ========================
+// INPUT UX FIXES
+// ========================
 document.addEventListener('focus', function (e) {
     if (e.target.classList.contains('price') && e.target.value == 0) {
         e.target.value = '';
@@ -229,5 +284,6 @@ document.addEventListener('input', function (e) {
         }
     }
 });
+
 </script>
 @endsection

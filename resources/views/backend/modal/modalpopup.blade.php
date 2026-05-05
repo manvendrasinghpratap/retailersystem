@@ -317,3 +317,21 @@
     </div>
 </div>
 <!---- Stock Return Modal End ---->
+
+<div class="modal fade" id="requisitionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="requisitionModalTitle">{{ __('translation.requisition_details') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body" id="requisitionModalBody">
+                Loading...
+            </div>
+
+        </div>
+    </div>
+</div>
+

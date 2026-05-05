@@ -18,14 +18,14 @@ use Illuminate\Support\Facades\DB;
 
 class StockReturnController extends Controller
 {
-    protected $breadcrumbAddNew;
+    protected $breadcrumb;
     protected $breadcrumbListing;
 
     public function __construct()
     {
         $this->middleware('auth');
 
-        $this->breadcrumbAddNew = [
+        $this->breadcrumb = [
             'title' => __('translation.stock_returns'),
             'breadcrumb' => [
                 ['route' => 'admin.dashboard', 'title' => __('translation.dashboard')],
@@ -58,7 +58,7 @@ class StockReturnController extends Controller
     */
     public function index(Request $request)
     {
-        $breadcrumb = $this->breadcrumbAddNew;
+        $breadcrumb = $this->breadcrumb;
         $date = date('Y-m-d');
         $vendors = Vendor::ofAccount()->active()->pluck('name', 'id');
         $warehouses = Warehouse::ofAccount()->active()->pluck('name', 'id');
@@ -89,12 +89,14 @@ class StockReturnController extends Controller
     */
     public function create()
     {
-        $vendors = Vendor::where('account_id', auth()->user()->account_id)->pluck('name', 'id');
-        $products = Product::where('account_id', auth()->user()->account_id)->pluck('name', 'id');
-        $warehouses = Warehouse::where('account_id', auth()->user()->account_id)->pluck('name', 'id');
+        $this->breadcrumb['route1Title'] = 'Create Stock Return';
+        
+        $vendors = Vendor::ofAccount()->active()->pluck('name', 'id');
+        $products = Product::ofAccount()->active()->pluck('name', 'id');
+        $warehouses = Warehouse::ofAccount()->active()->pluck('name', 'id');
 
         return view('backend.admin.stock_return.form', [
-            'breadcrumb' => $this->breadcrumbListing,
+            'breadcrumb' => $this->breadcrumb,
             'vendors' => $vendors,
             'products' => $products,
             'warehouses' => $warehouses
@@ -287,7 +289,7 @@ class StockReturnController extends Controller
 | CANCEL RETURN
 |--------------------------------------------------------------------------
 */
-    public function cancel(Request $request)
+    public function cancel_delete(Request $request)
     {
         try {
 
@@ -340,6 +342,96 @@ class StockReturnController extends Controller
                     'type'         => 6, // cancel return type (define constant if needed)
                     'reference_id' => $return->id,
                     'debit'        => $return->total,
+                    'credit'       => 0,
+                    'balance'      => $newBalance,
+                    'remarks'      => 'Cancel Stock Return #' . $return->return_no
+                ]);
+
+                // Update vendor balance
+                $vendor->update([
+                    'current_balance' => $newBalance
+                ]);
+
+                // ============================
+                // 🔁 UPDATE STATUS
+                // ============================
+                $return->update([
+                    'status' => 0
+                ]);
+
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Stock Return Cancelled Successfully'
+            ]);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function cancel(Request $request)
+    {
+        try {
+
+            $id = \App\Helpers\Settings::getDecodeCode($request->id);
+
+            DB::transaction(function () use ($id) {
+
+                $accountId = auth()->user()->account_id;
+
+                $return = StockReturn::with('items')
+                    ->where('account_id', $accountId)
+                    ->lockForUpdate()
+                    ->findOrFail($id);
+
+                // ❌ Already cancelled
+                if ((int)$return->status === 0) {
+                    throw new \Exception('Return already cancelled');
+                }
+
+                $stockService = app(\App\Services\StockService::class);
+
+                // ============================
+                // 🔁 REVERSE STOCK
+                // ============================
+                foreach ($return->items as $item) {
+
+                    $stockService->moveStock([
+                        'account_id'   => $accountId,
+                        'warehouse_id' => $return->warehouse_id,
+                        'product_id'   => $item->product_id,
+                        'type'         => 'adjustment_add', // reverse stock
+                        'qty'          => (float) $item->qty,
+                        'reference_id' => $return->id,
+                        'remarks'      => 'Cancel Stock Return #' . $return->return_no
+                    ]);
+                }
+
+                // ============================
+                // 🔁 REVERSE VENDOR BALANCE
+                // ============================
+                $vendor = Vendor::lockForUpdate()->findOrFail($return->vendor_id);
+
+                $oldBalance = (float) ($vendor->current_balance ?? 0);
+
+                // Clean + safe numeric conversion
+                $returnTotal = (float) str_replace(',', '', $return->total);
+
+                $newBalance = $oldBalance + $returnTotal;
+
+                // Ledger reverse entry
+                VendorLedger::create([
+                    'account_id'   => $accountId,
+                    'vendor_id'    => $vendor->id,
+                    'type'         => 6, // cancel return type
+                    'reference_id' => $return->id,
+                    'debit'        => $returnTotal,
                     'credit'       => 0,
                     'balance'      => $newBalance,
                     'remarks'      => 'Cancel Stock Return #' . $return->return_no

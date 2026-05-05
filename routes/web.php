@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\{
     VendorController,
     PurchaseController,
     StockReturnController,
+    RequisitionController
 };
 
 Route::get('/updateapp', function () {
@@ -196,6 +197,21 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','route.permission'])-
         Route::get('/show/{id}', [StockReturnController::class, 'show'])->name('show');
         Route::get('/stock-check', [StockReturnController::class, 'getStock'])->name('stock.check');
         Route::post('/cancel', [StockReturnController::class, 'cancel'])->name('cancel');
+    });
+
+    Route::prefix('requisitions')->name('requisitions.')->group(function () {
+        Route::get('/', [RequisitionController::class, 'index'])->name('index');
+        Route::get('/create', [RequisitionController::class, 'create'])->name('create');
+        Route::post('/store', [RequisitionController::class, 'store'])->name('store');
+        Route::get('/view/{id}', [RequisitionController::class, 'show'])->name('view');
+        Route::post('/cancel', [RequisitionController::class, 'cancel'])->name('cancel');
+        Route::get('/requisition-products', [RequisitionController::class, 'requisitionProducts'])->name('requisition.products');
+        Route::post('/complete', [RequisitionController::class, 'complete'])->name('complete');
+        Route::get('/exportpdf', [RequisitionController::class, 'exportPdf'])->name('exportPdf');
+        Route::get('/exportcsv', [RequisitionController::class, 'exportCsv'])->name('exportCsv');
+        Route::get('/pdf/{id}', [RequisitionController::class, 'pdf'])->name('pdf');
+        Route::get('/csv/{id}', [RequisitionController::class, 'csv'])->name('csv');
+        Route::get('/view/ajax/{id}', [RequisitionController::class, 'viewAjax'])->name('view.ajax');
     });
 });
 
