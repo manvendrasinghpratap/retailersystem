@@ -20,7 +20,9 @@
 		@foreach($return->items as $item)
 		<tr>
 			<td>{{ $loop->iteration }}</td>
-			<td>{{ $item->product->name }}</td>
+			<td>
+                    {{ $item->masterItem->name ?? 'N/A' }}
+                </td>
 			<td>{{ $item->qty }}</td>
 			<td> {{ __('translation.currency')}} {{ \App\Helpers\Settings::getcustomnumberformat($item->price) }}</td>
             <td> {{ __('translation.currency')}} {{ \App\Helpers\Settings::getcustomnumberformat($item->total) }}</td>

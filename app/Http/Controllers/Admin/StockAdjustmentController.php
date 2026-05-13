@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use App\Helpers\Settings;
 use Illuminate\Support\Facades\Config;
 use App\Models\Inventory;
+use App\Models\RequisitionItem;
+use App\Models\Requisition;
 class StockAdjustmentController extends Controller
 {
     public function store(Request $request)
@@ -19,6 +21,31 @@ class StockAdjustmentController extends Controller
                 'quantity'   => 'required|integer|min:1',
                 'note'       => 'nullable|string',
             ]);
+
+            if($request->route == 'Add'){
+                $id = Settings::getDecodeCode($request->requisition_item_id);
+
+                $requisitionItem = RequisitionItem::with('masterItem')
+                    ->lockForUpdate()
+                    ->find($id);
+
+                if (!$requisitionItem) {
+                    throw new \Exception('Invalid requisition item');
+                }
+
+                if (!empty($requisitionItem->accepted_by)) {
+
+                    throw new \Exception(
+                        'This requisition item is already accepted by another user.'
+                    );
+                }
+                
+                $requisition = Requisition::find($requisitionItem->requisition_id);
+                $requisition->updateStatusByItems();
+                
+                $requisitionItem->update(['accepted_by' => auth()->id()]); 
+            }
+
             if (in_array($request->type, Config::get('constants.subtractfrominventory'))) {
                 $inventory = Inventory::where('product_id', $request->product_id)->first();
 
@@ -32,9 +59,9 @@ class StockAdjustmentController extends Controller
                 'quantity' => $request->quantity,
                 'reference_id' => $request->reference_id,
                 'note' => $request->note,
-            ]); 
+            ]);   
             if($request->route == 'Add'){
-                return Settings::roleRedirect('barcode','Stock Adjusted Successfully.');
+                return redirect()->route('admin.requisitions.pending.posting')->with('success', __('translation.product_added_successfully'));             
             }
             return Settings::roleRedirect('inventory','Stock Adjusted Successfully.');
         } catch (\Exception $e) {

@@ -6,17 +6,18 @@ use App\Http\Controllers\Controller;
 use App\Models\Requisition;
 use App\Models\RequisitionItem;
 use App\Models\Warehouse;
-use App\Models\Product;
+use App\Models\MasterItem;
 use App\Models\ProductStock;
 use App\Services\StockService;
 use App\Helpers\Settings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\Store;
 
 class RequisitionController extends Controller
 {
     protected $breadcrumb;
-    protected $breadcrumbListing;
+    protected $breadcrumbPendingPosting;
 
     public function __construct()
     {
@@ -25,25 +26,44 @@ class RequisitionController extends Controller
         $this->breadcrumb = [
             'title' => 'Requisitions',
             'breadcrumb' => [
-                ['route' => 'admin.dashboard', 'title' => 'Dashboard'],
-                ['route' => 'admin.requisitions.index', 'title' => 'Requisitions'],
-                ['route' => 'admin.requisitions.create', 'title' => 'Create Requisition'],
+                [
+                    'route' => 'admin.dashboard',
+                    'title' => 'Dashboard'
+                ],
+                [
+                    'route' => 'admin.requisitions.index',
+                    'title' => 'Requisitions'
+                ],
+                [
+                    'route' => 'admin.requisitions.create',
+                    'title' => trans('translation.create_requisition')
+                ],
             ],
             'route1' => 'admin.requisitions.create',
-            'route1Title' => 'Add Requisition',
+            'route1Title' => trans('translation.add_requisition'),
             'route2' => 'admin.requisitions.index',
-            'route2Title' => 'Requisition List',
+            'route2Title' => trans('translation.requisitions'),
         ];
 
-        $this->breadcrumbListing = [
-            'title' => 'Requisitions',
-            'breadcrumb' => [
-                ['route' => 'admin.dashboard', 'title' => 'Dashboard'],
-                ['route' => 'admin.requisitions.index', 'title' => 'Requisitions'],
+    $this->breadcrumbPendingPosting = [
+        'title' => trans('translation.pending_posting'),
+        'breadcrumb' => [
+            [
+                'route' => 'admin.dashboard',
+                'title' => trans('translation.dashboard')
             ],
-            'route1' => 'admin.requisitions.create',
-            'route1Title' => 'Add Requisition',
-        ];
+            [
+                'route' => 'admin.requisitions.pending.posting',
+                'title' => trans('translation.pending_posting')
+            ],
+        ],
+
+        'route1' => 'admin.requisitions.index',
+        'route1Title' => trans('translation.requisition_list'),
+
+        'route2' => 'admin.requisitions.pending.posting',
+        'route2Title' => trans('translation.pending_posting'),
+    ];
     }
 
     /*
@@ -51,53 +71,79 @@ class RequisitionController extends Controller
     | LIST
     |--------------------------------------------------------------------------
     */
+
     public function index(Request $request)
     {
         $breadcrumb = $this->breadcrumb;
-        $warehouses = Warehouse::ofAccount()->active()->pluck('name', 'id');
 
-        $requisitions = Requisition::with(['fromWarehouse','toWarehouse'])
-            ->where('account_id', auth()->user()->account_id)
-            ->latest();
+        $warehouses = Warehouse::ofAccount()->active()->orderBy('name','asc')->pluck('name', 'id');
+        $stores = Store::ofAccount()->active()->orderBy('name','asc')->pluck('name', 'id');
 
-        // 🔍 Filters
-        if ($request->filled('requisition_no')) {
-            $requisitions->where('requisition_no', 'LIKE', '%' . trim($request->requisition_no) . '%');
+        $requisitions = Requisition::with([
+                'fromWarehouse',
+                'toWarehouse'
+                ])
+                ->where('account_id', auth()->user()->account_id)
+                ->latest();
+
+            // =========================
+            // FILTERS
+            // =========================
+
+            if ($request->filled('requisition_no')) {
+
+                $requisitions->where(
+                    'requisition_no',
+                    'LIKE',
+                    '%' . trim($request->requisition_no) . '%'
+                );
+            }
+
+            if ($request->filled('from_warehouse_id')) {
+
+                $requisitions->where(
+                    'from_warehouse_id',
+                    $request->from_warehouse_id
+                );
+            }
+
+            if ($request->filled('for_store_id')) {
+                $requisitions->where('for_store_id', $request->for_store_id); 
+            }
+            if ($request->filled('status')) {
+                $requisitions->where('status', $request->status); 
+            }
+            $requisitions = Settings::applyDateRange($requisitions,$request,'created_at',true); 
+
+            $requisitions = $requisitions
+                ->paginate(config('constants.pagination'))
+                ->withQueryString();
+
+            return view(
+                'backend.admin.requisition.index',
+                compact(
+                    'requisitions',
+                    'breadcrumb',
+                    'warehouses',
+                    'stores'
+                )
+            );
         }
-
-        if ($request->filled('from_warehouse_id')) {
-            $requisitions->where('from_warehouse_id', $request->from_warehouse_id);
-        }
-
-        if ($request->filled('to_warehouse_id')) {
-            $requisitions->where('to_warehouse_id', $request->to_warehouse_id);
-        }
-
-        if ($request->filled('from_date') && $request->filled('to_date')) {
-            $from = date('Y-m-d', strtotime($request->from_date));
-            $to   = date('Y-m-d', strtotime($request->to_date));
-
-            $requisitions->whereBetween('date', [$from, $to]);
-        }
-
-        $requisitions = $requisitions->paginate(config('constants.pagination'));
-
-        return view('backend.admin.requisition.index', compact('requisitions', 'breadcrumb', 'warehouses'));
-    }
 
     /*
     |--------------------------------------------------------------------------
     | CREATE
     |--------------------------------------------------------------------------
     */
+
     public function create()
     {
-        $warehouses = Warehouse::where('account_id', auth()->user()->account_id)
-            ->pluck('name','id');
-
+        $warehouses = Warehouse::ofAccount()->active()->orderBy('name','asc')->pluck('name', 'id');
+        $stores = Store::ofAccount()->active()->orderBy('name','asc')->pluck('name', 'id');
         return view('backend.admin.requisition.form', [
             'breadcrumb' => $this->breadcrumb,
-            'warehouses' => $warehouses
+            'warehouses' => $warehouses,
+            'stores' => $stores,
         ]);
     }
 
@@ -108,102 +154,151 @@ class RequisitionController extends Controller
     */
     public function store(Request $request)
     {
-        $request->validate([
-            'from_warehouse_id' => 'required|different:to_warehouse_id',
-            'to_warehouse_id'   => 'required',
-            'items'             => 'required|array|min:1',
-            'items.*.product_id'=> 'required',
-            'items.*.qty'       => 'required|numeric|min:1',
-        ]);
+        try {
+
+            $validated = $request->validate([
+                'from_warehouse_id'      => 'required|exists:warehouses,id',
+                'for_store_id'           => 'required|exists:stores,id',
+                'date'                   => 'required',
+                'items'                  => 'required|array|min:1',
+                'items.*.master_item_id' => 'required|exists:master_items,id',
+                'items.*.qty'            => 'required|numeric|min:1',
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+
+            return Settings::roleRedirect(
+                'requisitions.index',
+                $e->validator->errors()->first(),
+                'error'
+            );
+        }
 
         try {
 
-            DB::transaction(function () use ($request) {
+            DB::transaction(function () use ($validated) {
 
                 $accountId = auth()->user()->account_id;
 
-                $requisitionNo = 'REQ-' . date('Ymd') . '-' . rand(1000,9999);
+                $requisitionNo = 'REQ-' . date('Ymd') . '-' . rand(1000, 9999);
 
-                $totalQty = collect($request->items)->sum('qty');
+                $totalQty = collect($validated['items'])->sum(function ($item) {
+                    return (float) $item['qty'];
+                });
 
-                // ✅ Create requisition
+                // =========================
+                // CREATE REQUISITION
+                // =========================
+
                 $req = Requisition::create([
-                    'account_id'         => $accountId,
-                    'from_warehouse_id' => $request->from_warehouse_id,
-                    'to_warehouse_id'   => $request->to_warehouse_id,
+                    'account_id'        => $accountId,
+                    'from_warehouse_id' => $validated['from_warehouse_id'],
+                    'for_store_id'      => $validated['for_store_id'],
                     'requisition_no'    => $requisitionNo,
-                    'date'              => now(),
+                    'date'              => Settings::formatDate(
+                        $validated['date'],
+                        'Y-m-d'
+                    ),
                     'total_qty'         => $totalQty,
+                    'status'            => 1,
                     'created_by'        => auth()->id(),
                 ]);
 
                 $stockService = app(StockService::class);
 
-                foreach ($request->items as $item) {
+                // =========================
+                // VALIDATE STOCK
+                // =========================
 
-                    // 🔒 lock stock
+                foreach ($validated['items'] as $item) {
+
                     $stock = ProductStock::where([
-                        'account_id'   => $accountId,
-                        'warehouse_id' => $request->from_warehouse_id,
-                        'product_id'   => $item['product_id']
-                    ])->lockForUpdate()->first();
+                            'account_id'     => $accountId,
+                            'warehouse_id'   => $validated['from_warehouse_id'],
+                            'master_item_id' => $item['master_item_id']
+                        ])
+                        ->lockForUpdate()
+                        ->first();
 
-                    if (!$stock || $stock->stock < $item['qty']) {
-                        throw new \Exception('Insufficient stock');
+                    if (!$stock) {
+                        throw new \Exception('Item stock not found');
                     }
 
-                    // Save item
+                    if ((float) $stock->stock < (float) $item['qty']) {
+                        throw new \Exception(
+                            'Insufficient stock for selected item'
+                        );
+                    }
+                }
+
+                // =========================
+                // PROCESS ITEMS
+                // =========================
+
+                foreach ($validated['items'] as $item) {
+
+                    $qty = (float) $item['qty'];
+
+                    // SAVE ITEM
                     RequisitionItem::create([
                         'requisition_id' => $req->id,
-                        'product_id'     => $item['product_id'],
-                        'qty'            => $item['qty']
+                        'master_item_id' => $item['master_item_id'],
+                        'qty'            => $qty
                     ]);
 
-                    // ➖ Deduct from source warehouse
-                    $stockService->moveStock([
-                        'account_id'   => $accountId,
-                        'warehouse_id' => $request->from_warehouse_id,
-                        'product_id'   => $item['product_id'],
-                        'type'         => 'transfer_out',
-                        'qty'          => $item['qty'],
-                        'reference_id' => $req->id,
-                        'remarks'      => 'Requisition OUT #' . $requisitionNo
-                    ]);
+                    // =========================
+                    // STOCK OUT FROM WAREHOUSE
+                    // =========================
 
-                    // ➕ Add to destination warehouse
                     $stockService->moveStock([
-                        'account_id'   => $accountId,
-                        'warehouse_id' => $request->to_warehouse_id,
-                        'product_id'   => $item['product_id'],
-                        'type'         => 'transfer_in',
-                        'qty'          => $item['qty'],
-                        'reference_id' => $req->id,
-                        'remarks'      => 'Requisition IN #' . $requisitionNo
+                        'account_id'     => $accountId,
+                        'warehouse_id'   => $validated['from_warehouse_id'],
+                        'master_item_id' => $item['master_item_id'],
+                        'type'           => 'transfer_out',
+                        'qty'            => $qty,
+                        'reference_id'   => $req->id,
+                        'remarks'        => 'Requisition OUT #' . $requisitionNo
                     ]);
                 }
             });
 
-            return Settings::roleRedirect('requisitions.index', 'Requisition Created Successfully');
+            return Settings::roleRedirect(
+                'requisitions.index',
+                'Requisition Created Successfully'
+            );
 
         } catch (\Exception $e) {
-            return Settings::roleRedirect('requisitions.index', $e->getMessage(), 'error');
+
+            return Settings::roleRedirect(
+                'requisitions.index',
+                $e->getMessage(),
+                'error'
+            );
         }
     }
 
     /*
     |--------------------------------------------------------------------------
-    | VIEW
+    | SHOW
     |--------------------------------------------------------------------------
     */
+
     public function show($id)
     {
         $id = Settings::getDecodeCode($id);
 
-        $requisition = Requisition::with(['items.product','fromWarehouse','toWarehouse'])
+        $requisition = Requisition::with([
+                'items.masterItem',
+                'fromWarehouse',
+                'toWarehouse'
+            ])
             ->where('account_id', auth()->user()->account_id)
             ->findOrFail($id);
 
-        return view('backend.admin.requisition.view', compact('requisition'));
+        return view(
+            'backend.admin.requisition.view',
+            compact('requisition')
+        );
     }
 
     /*
@@ -211,6 +306,7 @@ class RequisitionController extends Controller
     | CANCEL
     |--------------------------------------------------------------------------
     */
+
     public function cancel(Request $request)
     {
         try {
@@ -226,45 +322,47 @@ class RequisitionController extends Controller
                     ->lockForUpdate()
                     ->findOrFail($id);
 
-                if ($req->status == 0) {
-                    throw new \Exception('Already cancelled');
+                // =========================
+                // ALREADY CANCELLED
+                // =========================
+
+                if ((int) $req->status === 0) {
+                    throw new \Exception('Requisition already cancelled');
                 }
 
                 $stockService = app(StockService::class);
 
+                // =========================
+                // REVERSE STOCK
+                // =========================
+
                 foreach ($req->items as $item) {
 
-                    // 🔁 reverse stock
-
-                    // add back to source
                     $stockService->moveStock([
-                        'account_id'   => $accountId,
-                        'warehouse_id' => $req->from_warehouse_id,
-                        'product_id'   => $item->product_id,
-                        'type'         => 'transfer_in',
-                        'qty'          => $item->qty,
-                        'reference_id' => $req->id,
-                        'remarks'      => 'Cancel Requisition'
-                    ]);
-
-                    // remove from destination
-                    $stockService->moveStock([
-                        'account_id'   => $accountId,
-                        'warehouse_id' => $req->to_warehouse_id,
-                        'product_id'   => $item->product_id,
-                        'type'         => 'transfer_out',
-                        'qty'          => $item->qty,
-                        'reference_id' => $req->id,
-                        'remarks'      => 'Cancel Requisition'
+                        'account_id'     => $accountId,
+                        'warehouse_id'   => $req->from_warehouse_id,
+                        'master_item_id' => $item->master_item_id,
+                        'type'           => 'transfer_in',
+                        'qty'            => (float) $item->qty,
+                        'reference_id'   => $req->id,
+                        'remarks'        => 'Cancel Requisition #' . $req->requisition_no
                     ]);
                 }
 
-                $req->update(['status' => 0]);
+                // =========================
+                // UPDATE STATUS
+                // =========================
+
+                $req->update([
+                    'status'       => 0,
+                    'cancelled_by' => auth()->id(),
+                    'cancelled_at' => now(),
+                ]);
             });
 
             return response()->json([
                 'success' => true,
-                'message' => 'Requisition cancelled'
+                'message' => 'Requisition cancelled successfully'
             ]);
 
         } catch (\Exception $e) {
@@ -272,22 +370,227 @@ class RequisitionController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
-            ]);
+            ], 500);
         }
     }
+    /*
+    |--------------------------------------------------------------------------
+    | AJAX VIEW
+    |--------------------------------------------------------------------------
+    */
 
     public function viewAjax($id)
     {
         $id = Settings::getDecodeCode($id);
 
         $requisition = Requisition::with([
-            'items.product',
-            'fromWarehouse',
-            'toWarehouse'
-        ])
-        ->where('account_id', auth()->user()->account_id)
-        ->findOrFail($id);
+                'items.masterItem',
+                'fromWarehouse',
+                'store'
+            ])
+            ->where('account_id', auth()->user()->account_id)
+            ->findOrFail($id);
 
-        return view('backend.admin.requisition._view', compact('requisition'));
+        return view(
+            'backend.admin.requisition._view',
+            compact('requisition')
+        );
+    }
+
+    public function pendingPosting(Request $request)
+    {
+        $breadcrumb = $this->breadcrumbPendingPosting;
+        $warehouses = Warehouse::ofAccount()->active()->orderBy('name','asc')->pluck('name', 'id');
+        $stores = Store::ofAccount()->active()->orderBy('name','asc')->pluck('name', 'id');
+
+        $items = RequisitionItem::with([
+                'requisition',
+                'masterItem',
+                'requisition.store',
+                'requisition.fromWarehouse',
+                'requisition.creator'
+            ])
+
+            // =========================
+            // ONLY PENDING ITEMS
+            // =========================
+            ->whereNull('accepted_by')
+
+            // =========================
+            // ONLY ACTIVE REQUISITIONS
+            // =========================
+            ->whereHas('requisition', function ($q) use ($request) {
+
+                // default active requisition
+                $q->whereIn('status', [1,2]);
+
+                // =========================
+                // FILTER : REQUISITION NO
+                // =========================
+                $q->when($request->requisition_no, function ($qq) use ($request) {
+                    $qq->where(
+                        'requisition_no',
+                        'like',
+                        '%' . $request->requisition_no . '%'
+                    );
+                });
+
+                // =========================
+                // FILTER : WAREHOUSE
+                // =========================
+                $q->when($request->from_warehouse_id, function ($qq) use ($request) {
+                    $qq->where(
+                        'from_warehouse_id',
+                        $request->from_warehouse_id
+                    );
+                });
+
+                // =========================
+                // FILTER : STORE
+                // =========================
+                $q->when($request->for_store_id, function ($qq) use ($request) {
+                    $qq->where(
+                        'for_store_id',
+                        $request->for_store_id
+                    );
+                });
+
+                // =========================
+                // FILTER : STATUS
+                // =========================
+                if ($request->filled('status')) {
+
+                    $q->where('status', $request->status);
+
+                }
+
+                // =========================
+                // FILTER : FROM DATE
+                // =========================
+                $q->when($request->from_date, function ($qq) use ($request) {
+
+                    $qq->whereDate(
+                        'date',
+                        '>=',
+                        Settings::formatDate(
+                            $request->from_date,
+                            'Y-m-d'
+                        )
+                    );
+                });
+
+                // =========================
+                // FILTER : TO DATE
+                // =========================
+                $q->when($request->to_date, function ($qq) use ($request) {
+
+                    $qq->whereDate(
+                        'date',
+                        '<=',
+                        Settings::formatDate(
+                            $request->to_date,
+                            'Y-m-d'
+                        )
+                    );
+                });
+            })
+            ->latest()
+            ->paginate(config('constants.pagination'));
+
+        return view(
+            'backend.admin.requisition.pending-posting',
+            compact(
+                'items',
+                'warehouses',
+                'stores',
+                'breadcrumb'
+            )
+        );
+    }
+
+    public function cancelItem(Request $request)
+    {
+        try {
+
+            $itemId = Settings::getDecodeCode($request->id);
+
+            DB::transaction(function () use ($itemId) {
+
+                $accountId = auth()->user()->account_id;
+
+                // =========================
+                // GET ITEM
+                // =========================
+                $item = RequisitionItem::with('requisition')
+                    ->whereHas('requisition', function ($q) use ($accountId) {
+                        $q->where('account_id', $accountId);
+                    })
+                    ->lockForUpdate()
+                    ->findOrFail($itemId);
+
+                $requisition = $item->requisition;
+
+                // =========================
+                // VALIDATIONS
+                // =========================
+
+                // Already cancelled
+                if ((int) $item->status === 0) {
+                    throw new \Exception('Item already cancelled');
+                }
+
+                // Already accepted
+                if (!empty($item->accepted_by)) {
+                    throw new \Exception('Accepted item cannot be cancelled');
+                }
+
+                // Requisition already cancelled
+                if ((int) $requisition->status === 0) {
+                    throw new \Exception('Requisition already cancelled');
+                }
+
+                // =========================
+                // REVERSE STOCK
+                // =========================
+                $stockService = app(StockService::class);
+
+                $stockService->moveStock([
+                    'account_id'     => $accountId,
+                    'warehouse_id'   => $requisition->from_warehouse_id,
+                    'master_item_id' => $item->master_item_id,
+                    'type'           => 'transfer_in',
+                    'qty'            => (float) $item->qty,
+                    'reference_id'   => $requisition->id,
+                    'remarks'        => 'Cancel Requisition Item #' . $requisition->requisition_no
+                ]);
+
+                // =========================
+                // CANCEL ITEM
+                // =========================
+                $item->update([
+                    'status'        => 0,
+                    'cancelled_by'  => auth()->id(),
+                    'cancelled_at'  => now(),
+                ]);
+
+                // =========================
+                // REFRESH REQUISITION STATUS
+                // =========================
+                $requisition->refreshStatus();
+
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Item cancelled successfully'
+            ]);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 }

@@ -8,7 +8,9 @@ use Illuminate\Support\Facades\DB;
 
 class StockService
 {
-    // ✅ Optional constants (recommended)
+    // ============================
+    // TYPES
+    // ============================
     const TYPE_SALE = 'sale';
     const TYPE_PURCHASE = 'purchase';
     const TYPE_TRANSFER_IN = 'transfer_in';
@@ -23,7 +25,7 @@ class StockService
         Required:
         account_id
         warehouse_id
-        product_id
+        master_item_id (NEW)
         type
         qty
         reference_id
@@ -31,19 +33,30 @@ class StockService
 
         return DB::transaction(function () use ($data) {
 
-            // 🔒 Lock row for safe concurrent updates
+            // ============================
+            // ✅ SUPPORT OLD + NEW KEY
+            // ============================
+            $itemId = $data['master_item_id'] ?? $data['product_id'] ?? null;
+
+            if (!$itemId) {
+                throw new \Exception('Item ID is required for stock movement');
+            }
+
+            // ============================
+            // 🔒 LOCK STOCK ROW
+            // ============================
             $stock = ProductStock::where([
-                'account_id' => $data['account_id'],
+                'account_id'   => $data['account_id'],
                 'warehouse_id' => $data['warehouse_id'],
-                'product_id' => $data['product_id'],
+                'master_item_id' => $itemId, // ✅ changed
             ])->lockForUpdate()->first();
 
             if (!$stock) {
                 $stock = ProductStock::create([
-                    'account_id' => $data['account_id'],
+                    'account_id'   => $data['account_id'],
                     'warehouse_id' => $data['warehouse_id'],
-                    'product_id' => $data['product_id'],
-                    'stock' => 0,
+                    'master_item_id' => $itemId, // ✅ changed
+                    'stock'        => 0,
                     'reserved_stock' => 0
                 ]);
             }
@@ -51,7 +64,9 @@ class StockService
             $qtyIn = 0;
             $qtyOut = 0;
 
-            // ✅ Normalize type (support int + string)
+            // ============================
+            // ✅ NORMALIZE TYPE
+            // ============================
             $type = $this->normalizeType($data['type']);
 
             switch ($type) {
@@ -62,7 +77,7 @@ class StockService
                 case self::TYPE_PURCHASE:
                 case self::TYPE_TRANSFER_IN:
                 case self::TYPE_ADJUSTMENT_ADD:
-                    $qtyIn = $data['qty'];
+                    $qtyIn = (float) $data['qty'];
                     break;
 
                 // =====================
@@ -72,10 +87,12 @@ class StockService
                 case self::TYPE_TRANSFER_OUT:
                 case self::TYPE_ADJUSTMENT_SUB:
                 case self::TYPE_PURCHASE_CANCEL:
-                    $qtyOut = $data['qty'];
+                    $qtyOut = (float) $data['qty'];
 
-                    if ($stock->stock < $qtyOut) {
-                        throw new \Exception('Insufficient stock for product ID: ' . $data['product_id']);
+                    if ((float)$stock->stock < $qtyOut) {
+                        throw new \Exception(
+                            'Insufficient stock for Item ID: ' . $itemId
+                        );
                     }
                     break;
 
@@ -83,29 +100,35 @@ class StockService
                     throw new \Exception('Invalid stock movement type');
             }
 
-            // ✅ Update stock
-            $stock->stock = $stock->stock + $qtyIn - $qtyOut;
+            // ============================
+            // ✅ UPDATE STOCK
+            // ============================
+            $stock->stock = (float)$stock->stock + $qtyIn - $qtyOut;
             $stock->save();
 
-            // ✅ Insert movement log
+            // ============================
+            // ✅ STOCK MOVEMENT LOG
+            // ============================
             StockMovement::create([
-                'account_id'   => $data['account_id'],
-                'warehouse_id' => $data['warehouse_id'],
-                'product_id'   => $data['product_id'],
-                'type'         => $type,
-                'reference_id' => $data['reference_id'] ?? null,
-                'qty_in'       => $qtyIn,
-                'qty_out'      => $qtyOut,
-                'balance'      => $stock->stock,
-                'remarks'      => $data['remarks'] ?? null,
-                'created_by'   => auth()->id()
+                'account_id'     => $data['account_id'],
+                'warehouse_id'   => $data['warehouse_id'],
+                'master_item_id'=> $itemId, // ✅ changed
+                'type'           => $type,
+                'reference_id'   => $data['reference_id'] ?? null,
+                'qty_in'         => $qtyIn,
+                'qty_out'        => $qtyOut,
+                'balance'        => $stock->stock,
+                'remarks'        => $data['remarks'] ?? null,
+                'created_by'     => auth()->id()
             ]);
 
             return $stock;
         });
     }
 
-    // ✅ Convert numeric types → string types
+    // ============================
+    // TYPE NORMALIZER
+    // ============================
     private function normalizeType($type)
     {
         if (is_numeric($type)) {
@@ -122,4 +145,4 @@ class StockService
 
         return $type;
     }
-}   
+}

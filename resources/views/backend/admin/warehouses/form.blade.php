@@ -21,8 +21,8 @@
                     <div class="row">
                         {{-- Warehouse Name --}}
                         <x-text-input name="name" label="{{ __('translation.warehouse_name') }}" value="{{ $warehouse->name ?? '' }}" required/>
-                        {{-- Manager Name --}}
-                        <x-text-input name="manager_name" label="{{ __('translation.manager') }}" value="{{ $warehouse->manager_name ?? '' }}" required/>
+                        {{-- Staff --}}
+                        <x-select-dropdown name="staff_id" label="{{ __('translation.staff') }} ({{ __('translation.manager') }})" :options="$staffs" :selected="isset($warehouse) && $warehouse->staff_id ? $warehouse->staff_id : ''" required class="staff"/>
                         {{-- Phone --}}
                         <x-text-input name="phone" label="{{ __('translation.phone') }}" value="{{ $warehouse->phone ?? '' }}" required class="onlyinteger"/>
                         {{-- Email --}}
@@ -55,4 +55,12 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('script')
+<script>
+
+    validateSelect2Form('warehouseform', ['staff_id']);
+
+</script>
 @endsection

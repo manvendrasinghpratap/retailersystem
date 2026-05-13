@@ -49,27 +49,41 @@
                     <i class="mdi mdi-chevron-down d-none d-xl-inline-block"></i>
                 </button>
                 <div class="dropdown-menu dropdown-menu-end">
-                    <a class="dropdown-item {{ request()->routeIs(App\Helpers\Settings::getUserRole().'.profile') ? 'active' : '' }}" href="{{ route(App\Helpers\Settings::getUserRole().'.profile') }}"><i class="mdi mdi-face-profile font-size-16 align-middle me-1"></i>@lang('translation.profile')</a>
-                    <a class="dropdown-item {{ request()->routeIs(App\Helpers\Settings::getUserRole().'.change-password') ? 'active' : '' }}" href="{{ route(App\Helpers\Settings::getUserRole().'.change-password') }}"><i class="mdi mdi-lock font-size-16 align-middle me-1"></i>@lang('translation.change_password')</a>
-                    <a class="dropdown-item {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ url('/') }}"><i class="mdi mdi-web font-size-16 align-middle me-1"></i>@lang('translation.frontend')</a>
-                    <a class="dropdown-item {{ request()->routeIs('attendance.report') ? 'active' : '' }}" href="{{ route('attendance.report') }}"><i class="mdi mdi-clock-check-outline font-size-16 align-middle me-1"></i>@lang('translation.attendance_report')</a>
-                    <a class="dropdown-item {{ request()->routeIs('admin.warehouses.index') ? 'active' : '' }}" href="{{ route('admin.warehouses.index') }}"><i class="mdi mdi-warehouse font-size-16 align-middle me-1"></i>@lang('translation.warehouses')</a>
-                    <a class="dropdown-item {{ request()->routeIs('admin.vendors.index') ? 'active' : '' }}" href="{{ route('admin.vendors.index') }}"><i class="mdi mdi-truck-delivery-outline font-size-16 align-middle me-1"></i>@lang('translation.vendors')</a>
-                    <a class="dropdown-item {{ request()->routeIs('admin.purchases.index') ? 'active' : '' }}" href="{{ route('admin.purchases.index') }}"><i class="mdi mdi-cart-outline font-size-16 align-middle me-1"></i>@lang('translation.purchases')</a>
-                    <a class="dropdown-item {{ request()->routeIs('admin.stock_returns.index') ? 'active' : '' }}" href="{{ route('admin.stock_returns.index') }}"><i class="mdi mdi-reorder-horizontal font-size-16 align-middle me-1"></i>@lang('translation.stock_returns')</a>
-                    <a class="dropdown-item {{ request()->routeIs('admin.requisitions.index') ? 'active' : '' }}" href="{{ route('admin.requisitions.index') }}"><i class="mdi mdi-cart-arrow-up font-size-16 align-middle me-1"></i>@lang('translation.requisitions')</a>
-                    <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-
-                        <i class="bx bx-power-off font-size-16 align-middle me-1"></i>
-                        <span>@lang('translation.Logout')</span>
+                    <a class="dropdown-item"
+                    href="{{ route(App\Helpers\Settings::getUserRole().'.profile') }}">
+                        <i class="mdi mdi-face-profile font-size-16 align-middle me-1"></i>
+                        @lang('translation.profile')
                     </a>
 
-                    <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display:none;">
-                        @csrf
-                    </form>
+                    <a class="dropdown-item"
+                    href="{{ route(App\Helpers\Settings::getUserRole().'.change-password') }}">
+                        <i class="mdi mdi-lock font-size-16 align-middle me-1"></i>
+                        @lang('translation.change_password')
+                    </a>
 
-                </div>
+                    <a class="dropdown-item"
+                    href="{{ route('attendance.report') }}">
+                        <i class="mdi mdi-clock-check-outline font-size-16 align-middle me-1"></i>
+                        @lang('translation.attendance_report')
+                    </a>
+
+                    <a class="dropdown-item"
+                    href="{{ url('/') }}">
+                        <i class="mdi mdi-web font-size-16 align-middle me-1"></i>
+                        @lang('translation.frontend')
+                    </a>
+
+                    <div class="dropdown-divider"></div>    
+
+                    <a class="dropdown-item"
+                    href="#"
+                    onclick="event.preventDefault(); 
+                    document.getElementById('logout-form').submit();">
+                        <i class="bx bx-power-off font-size-16 align-middle me-1"></i>
+                        @lang('translation.logout')
+                    </a>
+
+</div>
             </div>
         </div>
     </div>

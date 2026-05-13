@@ -18,11 +18,12 @@
                             <input type="hidden" name="type" value="{{ $adjustment ?? 'IN' }}">
                             <input type="hidden" name="barcode" value="{{ $barcode ?? '' }}">
                             <input type="hidden" name="route" value="{{ $route ?? '' }}">
+                            <input type="hidden" name="requisition_item_id" value="{{ $requisition_item_id ?? '' }}">
                             <x-select-dropdown name="product_id" :label="__('translation.product')" :options="$products" :selected="count($products) === 1 ? array_key_first($products) : old('product_id', request('product_id'))" required class="form-control products required-select" mainrows="4" />
-                            <x-text-input name="quantity" type="text" :label="__('translation.quantity')" value="" class="form-control quantity onlyinteger default-zero" maxlength="5" mainrows="4" required />
+                            <x-text-input name="quantity" type="text" :label="__('translation.quantity')" value="{{ $qty ?? '' }}"  class="form-control quantity onlyinteger default-zero" maxlength="5" mainrows="4" required  :readonly="isset($requisition_item_id) && !empty($requisition_item_id)" />
                             <x-date-input name="date" :label="__('translation.transaction') . ' ' . __('translation.date') " value="{{  \App\Helpers\Settings::getFormattedDate(date('Y-m-d')) }}" required class="flatdatepickr date" required data-mindate="{{\App\Helpers\Settings::getFormattedDate(date('Y-m-d', strtotime('0 days')))}}" data-maxdate="{{\App\Helpers\Settings::getFormattedDate(date('Y-m-d'))}}" readonly />
                             {{-- <x-select-dropdown name="stock_status" :label="__('translation.status')" :options="config('constants.accountstatus')" :selected="1" required class="form-control status required-select" mainrows="4" /> --}}
-                            <x-textarea-input name="note" label="{{ __('translation.note') }}" value="" class="" placeholder="{{ __('translation.please_enter_note') }}" :required="!empty($adjustment ?? false)" :mainrows="!empty($adjustment) ? 12 : 12" rows="1" />
+                            <x-textarea-input name="note" label="{{ __('translation.note') }}" value="{{ $masterItemName ?? ''}}" class="" placeholder="{{ __('translation.please_enter_note') }}" :required="!empty($adjustment ?? false)" :mainrows="!empty($adjustment) ? 12 : 12" rows="1" />
                         </div>
                         <div class="row mb-3">
                             <x-form-buttons submitText="{{ __('translation.update') }}" resetText="{{ $breadcrumb['reset_route_title'] }}" url="{{ route($breadcrumb['reset_route']) }}" />

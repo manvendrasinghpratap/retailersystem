@@ -9,7 +9,7 @@ class ProductStock extends Model
     protected $fillable = [
         'account_id',
         'warehouse_id',
-        'product_id',
+        'master_item_id',
         'stock',
         'low_stock_alert'
     ];
@@ -28,5 +28,10 @@ class ProductStock extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function masterItem()
+    {
+        return $this->belongsTo(MasterItem::class);
     }
 }

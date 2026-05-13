@@ -109,6 +109,10 @@ $(document).ready(function () {
         placeholder: "Select Country",
         allowClear: true
     });
+    $(".requisition_status").select2({
+        placeholder: "Select Status",
+        allowClear: true
+    });
     $(".local_government").select2({
         placeholder: "Select Local Government",
         allowClear: true
@@ -123,6 +127,10 @@ $(document).ready(function () {
     });
     $(".accountstatus").select2({
         placeholder: "Select Status",
+        allowClear: true
+    });
+    $(".store").select2({
+        placeholder: "Select Store",
         allowClear: true
     });
     $(".category_id").select2({

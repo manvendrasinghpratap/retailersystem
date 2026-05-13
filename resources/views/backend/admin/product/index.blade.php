@@ -46,7 +46,7 @@
             <div class="card">
                 <div class="card-header">
                     <h4 class="card-title">
-                        {{array_key_exists('route1Title', $breadcrumb) ? $breadcrumb['route1Title'] : ''}}
+                        {{array_key_exists('route2Title', $breadcrumb) ? $breadcrumb['route2Title'] : ''}}
                     </h4>
                 </div>
                 <div class="card-body">
@@ -58,7 +58,7 @@
                                     <th>{{ __('translation.category')}}</th>
                                     <th>{{ __('translation.product_name')}}</th>
                                     <!-- <th>{{ __('translation.cost_price') }}</th> -->
-                                    <th>{{ __('translation.selling_price') }}</th>
+                                    <th>{{ __('translation.currency') }} {{ __('translation.selling_price') }}</th> 
                                     <th>{{ __('translation.barcode')}}</th>
                                     <th>{{ __('translation.sku')}}</th>
                                     <th>Status</th>
@@ -73,7 +73,7 @@
                                             <td>{{ $p->category->name ?? '-' }}</td>
                                             <td>{{ $p->name }}</td>
                                             <!-- <td>{{ $p->cost_price }}</td> -->
-                                            <td>{{ $p->selling_price }}</td>
+                                            <td>{{ __('translation.currency') }} {{ $p->selling_price }}</td>
                                             <td>{!! DNS1D::getBarcodeSVG($p->barcode, 'C128') !!}</td>
                                             <td>{{ $p->sku }}</td>
                                             <td>

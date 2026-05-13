@@ -8,10 +8,27 @@ class Requisition extends Model
 {
     protected $table = 'requisitions';
 
+    /*
+    |--------------------------------------------------------------------------
+    | STATUS CONSTANTS
+    |--------------------------------------------------------------------------
+    */
+
+    const STATUS_CANCELLED = 0;
+    const STATUS_ACTIVE    = 1;
+    const STATUS_PARTIAL   = 2;
+    const STATUS_COMPLETED = 3;
+
+    /*
+    |--------------------------------------------------------------------------
+    | FILLABLE
+    |--------------------------------------------------------------------------
+    */
+
     protected $fillable = [
         'account_id',
         'from_warehouse_id',
-        'to_warehouse_id',
+        'for_store_id',
         'requisition_no',
         'date',
         'total_qty',
@@ -19,10 +36,16 @@ class Requisition extends Model
         'created_by',
     ];
 
+    /*
+    |--------------------------------------------------------------------------
+    | CASTS
+    |--------------------------------------------------------------------------
+    */
+
     protected $casts = [
-        'date' => 'date',
+        'date'      => 'date',
         'total_qty' => 'decimal:2',
-        'status' => 'integer',
+        'status'    => 'integer',
     ];
 
     /*
@@ -33,7 +56,7 @@ class Requisition extends Model
 
     public function items()
     {
-        return $this->hasMany(RequisitionItem::class);
+        return $this->hasMany(RequisitionItem::class, 'requisition_id');
     }
 
     public function fromWarehouse()
@@ -44,6 +67,11 @@ class Requisition extends Model
     public function toWarehouse()
     {
         return $this->belongsTo(Warehouse::class, 'to_warehouse_id');
+    }
+
+    public function store()
+    {
+        return $this->belongsTo(Store::class, 'for_store_id');
     }
 
     public function creator()
@@ -64,12 +92,15 @@ class Requisition extends Model
 
     public function scopeActive($query)
     {
-        return $query->where('status', 1);
+        return $query->where('status', self::STATUS_ACTIVE);
     }
 
     public function scopeOfAccount($query)
     {
-        return $query->where('account_id', auth()->user()->account_id);
+        return $query->where(
+            'account_id',
+            auth()->user()->account_id
+        );
     }
 
     /*
@@ -80,6 +111,101 @@ class Requisition extends Model
 
     public function getStatusLabelAttribute()
     {
-        return $this->status == 1 ? 'Active' : 'Cancelled';
+        return match ($this->status) {
+
+            self::STATUS_ACTIVE =>
+                'Active',
+
+            self::STATUS_PARTIAL =>
+                'Partial To Store',
+
+            self::STATUS_COMPLETED =>
+                'Moved To Store',
+
+            self::STATUS_CANCELLED =>
+                'Cancelled',
+
+            default =>
+                'Unknown',
+        };
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | HELPERS
+    |--------------------------------------------------------------------------
+    */
+
+    public function updateStatusByItems()
+    {
+        // skip if cancelled
+        if ($this->status == self::STATUS_CANCELLED) {
+            return $this;
+        }
+
+        $pendingItems = $this->items()
+            ->whereNull('accepted_by')
+            ->count();
+
+        $this->update([
+            'status' => $pendingItems > 0
+                ? self::STATUS_PARTIAL
+                : self::STATUS_COMPLETED
+        ]);
+
+        return $this;
+    }
+
+    public function refreshStatus()
+    {
+        $totalItems = $this->items()->count();
+
+        // =========================
+        // CANCELLED ITEMS
+        // =========================
+        $cancelledItems = $this->items()
+            ->where('status', 0)
+            ->count();
+
+        // =========================
+        // PENDING ITEMS
+        // status = 1
+        // accepted_by = null
+        // =========================
+        $pendingItems = $this->items()
+            ->where('status', 1)
+            ->whereNull('accepted_by')
+            ->count();
+
+        // =========================
+        // FULLY CANCELLED
+        // =========================
+        if ($cancelledItems == $totalItems) {
+
+            $this->update([
+                'status' => 0
+            ]);
+
+            return;
+        }
+
+        // =========================
+        // PARTIAL / PENDING
+        // =========================
+        if ($pendingItems > 0) {
+
+            $this->update([
+                'status' => 2
+            ]);
+
+            return;
+        }
+
+        // =========================
+        // COMPLETED
+        // =========================
+        $this->update([
+            'status' => 3
+        ]);
     }
 }

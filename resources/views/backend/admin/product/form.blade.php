@@ -21,12 +21,12 @@
                         <input type="hidden" name="product_id" value="{{ isset($product) ? \App\Helpers\Settings::getEncodeCode($product->id) : '' }}">
                         <input type="hidden" name="route" value="{{ $route ?? '' }}">
                         <input type="hidden" name="adjustment" value="{{ $adjustment ?? '' }}">
+                        <input type="hidden" name="requisition_item_id" value="{{ $requisition_item_id ?? '' }}">
                         <div class="row">
                             <x-select-dropdown name="category_id" label="{{ __('translation.category')}}" :options="$categories" :selected="$product->category_id ?? ''" class="category" required />
-                            <x-text-input name="name" label="{{ __('translation.product_name')}}" value="{{ $product->name ?? '' }}" required />
+                            <x-text-input name="name" label="{{ __('translation.product_name')}}" value="{{ $masterItemName ?? @$product->name }}" required readonly />
                             <!-- <x-text-input name="cost_price" :label="__('translation.cost_price') . ' ' . __('translation.b_ngn')" value="{{ $product->cost_price ?? '' }}" class='onlydecimal' required /> -->
                             <x-text-input name="selling_price" :label="__('translation.selling_price') . ' ' . __('translation.b_ngn')" value="{{ $product->selling_price ?? '' }}" required class='onlydecimal' />
-                            <x-textarea-input name="description" label="{{ __('translation.short_description')}}" value="{{ $product->description ?? '' }}" rows='1' />
                             <x-select-dropdown name="status" label="{{ __('translation.status')}}" :options="config('constants.accountstatus')" :selected="$product->status ?? 1" required class="status" />
                         </div>
                         @if($route == 'Add')
@@ -37,7 +37,7 @@
                                     <hr>
                                 </div>
                                 <x-text-input name="barcode" label="Barcode" value="{{ $barcode ?? '' }}" readonly />
-                                <x-text-input name="quantity" label="Quantity" value="" required class="onlyinteger" />
+                                <x-text-input name="quantity" label="Quantity" value="{{ $qty ?? '' }}" required readonly />
                             </div>
                         @endif
                         <div class="row mb-3">

@@ -28,15 +28,18 @@
             <div class="card-body">
                 <form method="GET">
                     <div class="row">
-                        <x-text-input name="requisition_no" label="{{ __('translation.requisition_no') }}" :value="request('requisition_no')" mainrows="3"/>
-                        <x-select-dropdown name="from_warehouse_id" label="{{ __('translation.from_warehouse') }}" :options="$warehouses" :selected="request('from_warehouse_id')" mainrows="3"/>
-                        <x-select-dropdown name="to_warehouse_id" label="{{ __('translation.to_warehouse') }}" :options="$warehouses" :selected="request('to_warehouse_id')" mainrows="3"/> 
-                        <div class="col-xl-2 col-md-2">
-                            <div class="form-group mb-3">
-                                <label class="d-inline-block w-100">&nbsp;</label>
-                                <x-filter-submit-button name="submit" label="{{ __('translation.filter') }}" value="Filter" class="" />
-                                <x-filter-href-button name="reset" href="{!! !empty($breadcrumb['route2']) ? route($breadcrumb['route2']) : '' !!}" label="{{ __('translation.reset') }}" class="" />
-                            </div>
+                        <x-text-input name="requisition_no" label="{{ __('translation.requisition_no') }}" :value="request('requisition_no')" mainrows="2"/>
+                        <x-select-dropdown name="from_warehouse_id" label="{{ __('translation.from_warehouse') }}" :options="$warehouses" :selected="request('from_warehouse_id')" mainrows="2" class="warehouse"/>
+                        <x-select-dropdown name="for_store_id" label="{{ __('translation.for_store') }}" :options="$stores" :selected="request('for_store_id')" mainrows="2" class="store"/> 
+                        <x-text-input name="from_date" :label="__('translation.from_date')" value="{{ request('from_date') }}" mainrows="2" class="flatdatepickr" />
+                        <x-text-input name="to_date" :label="__('translation.to_date')" value="{{ request('to_date')  }}" mainrows="2" class="flatdatepickr" />
+                        <x-select-dropdown name="status" label="{{ __('translation.status') }}" :options="config('constants.requisition_status')" :selected="request('status')" mainrows="2" class="requisition_status"/>
+                    </div>
+                    {{-- Buttons Row --}}
+                    <div class="row mt-2">
+                        <div class="col-12 d-flex justify-content-end">
+                            <x-filter-submit-button name="submit" label="{{ __('translation.filter') }}" value="Filter" class="me-2"/>
+                            <x-filter-href-button name="reset" href="{!! !empty($breadcrumb['route2']) ? route($breadcrumb['route2']) : '' !!}" label="{{ __('translation.reset') }}" />
                         </div>
                     </div>
                 </form>
@@ -61,9 +64,10 @@
                                 <th>#</th>
                                 <th>{{ __('translation.requisition_no') }}</th>
                                 <th>{{ __('translation.from_warehouse') }}</th>
-                                <th>{{ __('translation.to_warehouse') }}</th>
+                                <th>{{ __('translation.for_store') }}</th>
                                 <th>{{ __('translation.total_qty') }}</th>
                                 <th>{{ __('translation.status') }}</th>
+                                <th>{{ __('translation.requester') }}</th>
                                 <th>{{ __('translation.date') }}</th>
                                 <th>{{ __('translation.action') }}</th>
                             </tr>
@@ -74,15 +78,20 @@
                                     <td>{{ $loop->iteration }}</td>
                                     <td>{{ $req->requisition_no }}</td>
                                     <td>{{ $req->fromWarehouse->name ?? '-' }}</td>
-                                    <td>{{ $req->toWarehouse->name ?? '-' }}</td>
+                                    <td>{{ $req->store->name ?? '-' }}</td>
                                     <td>{{ number_format($req->total_qty, 2) }}</td>
                                     <td>
-                                        @if($req->status == 1)
-                                            <span class="badge bg-success">Active</span>
+                                        @if($req->status == 3)
+                                            <span class="badge bg-success">{{ __('translation.moved_to_store') }}</span>
+                                        @elseif($req->status == 2)
+                                            <span class="badge bg-warning">{{ __('translation.partial_to_store') }}</span>
+                                        @elseif($req->status == 1)
+                                            <span class="badge bg-dark">{{ __('translation.active') }}</span>
                                         @else
-                                            <span class="badge bg-danger">Cancelled</span>
+                                            <span class="badge bg-danger">{{ __('translation.cancelled') }}</span>
                                         @endif
                                     </td>
+                                    <td>{{ $req->creator->name ?? '-' }}</td>
                                     <td>{{ \App\Helpers\Settings::getFormattedDatetime($req->created_at) }}</td>
                                     <td>
                                         <x-href-input action="view" name="view" label="View" class="viewRequisition" data-id="{{ \App\Helpers\Settings::getEncodeCode($req->id) }}" href="javascript:void(0);" />
@@ -121,7 +130,11 @@
 @section('script')
 
 <script>
-
+validateSelect2Form('requisitionForm', [
+    'from_warehouse_id',
+    'for_store_id',
+    'status'
+]);
 // =======================
 // VIEW MODAL
 // =======================

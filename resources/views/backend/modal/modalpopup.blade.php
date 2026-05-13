@@ -225,7 +225,7 @@
 </div>
 <!----- Comment popup end --->
 <!---- Attendance Modal Begin ---->
-<div class="modal fade" id="attendanceModal" tabindex="-1">
+<div class="modal fade" id="attendanceModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
@@ -258,7 +258,7 @@
 <!---- Attendance Modal End ---->
 
 <!---- Barcode Modal Begin ---->
-<div class="modal fade" id="barcodeModal">
+<div class="modal fade" id="barcodeModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
@@ -281,7 +281,7 @@
 <!---- Barcode Modal End ---->
 
 <!---- Purchase Modal Begin ---->
-<div class="modal fade" id="purchaseModal" tabindex="-1">
+<div class="modal fade" id="purchaseModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
 
@@ -300,7 +300,7 @@
 <!---- Purchase Modal End ---->
 
 <!---- Stock Return Modal Begin ---->
-<div class="modal fade" id="stockReturnModal" tabindex="-1">
+<div class="modal fade" id="stockReturnModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
 
@@ -318,7 +318,8 @@
 </div>
 <!---- Stock Return Modal End ---->
 
-<div class="modal fade" id="requisitionModal" tabindex="-1">
+<!---- Requisition Modal Begin ---->
+<div class="modal fade" id="requisitionModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
 
@@ -334,4 +335,33 @@
         </div>
     </div>
 </div>
+<!---- Requisition Modal End ---->
+
+<!---- Master Item Modal Begin ---->
+<div class="modal fade" id="masterItemModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ __('translation.add_new_master_item') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="masterItemForm"  method="POST" > 
+                @csrf
+                <div class="modal-body">
+                    <div class="row"> 
+                        <x-text-input name="name" label="Name" value="{{ $item->name ?? '' }}" required  mainrows="6" />
+                        <x-text-input name="description" label="Description" value="{{ $item->description ?? '' }}" mainrows="6" />
+                        <input type="text" name="status" value="1" required  hidden="true" />  
+                    </div>
+                </div>
+                <div class="modal-footer text-center"> 
+                    <button type="submit" class="btn btn-primary saveMasterItem">{{__('translation.save')}}</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{__('translation.close')}}</button> 
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
 

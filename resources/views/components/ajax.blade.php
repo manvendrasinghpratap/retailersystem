@@ -362,5 +362,80 @@
 
         });
     });
+ 
 
+    $(document).ready(function () {
+
+    $('#masterItemForm').on('submit', function(e){
+
+        e.preventDefault();
+
+        let form = $(this);
+
+        $.ajax({
+
+            url: "{{ route('admin.master_items.store.ajax') }}",
+            type: "POST",
+            data: form.serialize(),
+
+            beforeSend: function () {
+
+                $('#saveMasterItemBtn')
+                    .prop('disabled', true)
+                    .text('Saving...');
+            },
+
+            success: function (response) {
+
+                $('#saveMasterItemBtn')
+                    .prop('disabled', false)
+                    .text('Save');
+
+                if(response.success){
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: response.message,
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+
+                    form[0].reset();
+
+                    $('#masterItemModal').modal('hide');
+
+                } else {
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: response.message
+                    });
+                }
+            },
+
+            error: function(xhr){
+
+                $('#saveMasterItemBtn')
+                    .prop('disabled', false)
+                    .text('Save');
+
+                let message = 'Something went wrong';
+
+                if(xhr.responseJSON?.message){
+                    message = xhr.responseJSON.message;
+                }
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: message
+                });
+            }
+        });
+
+    });
+
+});
 </script>

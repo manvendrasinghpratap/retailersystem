@@ -109,6 +109,199 @@ class StockReturnController extends Controller
     |--------------------------------------------------------------------------
     */
     public function store(Request $request)
+{
+    try {
+
+        $validated = $request->validate([
+
+            'vendor_id' => 'required|exists:vendors,id',
+
+            'warehouse_id' => 'required|exists:warehouses,id',
+
+            'items' => 'required|array|min:1',
+
+            'items.*.master_item_id' => 'required|exists:master_items,id',
+
+            'items.*.qty' => 'required|numeric|min:0.01',
+
+            'items.*.price' => 'required|numeric|min:0.01',
+        ]);
+
+        DB::transaction(function () use ($validated) {
+
+            $accountId = auth()->user()->account_id;
+
+            // =========================
+            // RETURN NUMBER
+            // =========================
+            $returnNo = 'RET-' . now()->format('YmdHis');
+
+            // =========================
+            // TOTAL AMOUNT
+            // =========================
+            $totalAmount = collect($validated['items'])->sum(function ($item) {
+
+                return $item['qty'] * $item['price'];
+            });
+
+            // =========================
+            // CREATE RETURN
+            // =========================
+            $return = StockReturn::create([
+
+                'account_id'   => $accountId,
+
+                'vendor_id'    => $validated['vendor_id'],
+
+                'warehouse_id' => $validated['warehouse_id'],
+
+                'return_no'    => $returnNo,
+
+                'return_date'  => now()->format('Y-m-d'),
+
+                'total'        => $totalAmount,
+
+                'created_by'   => auth()->id(),
+            ]);
+
+            $stockService = app(StockService::class);
+
+            // =========================
+            // VALIDATE STOCK
+            // =========================
+            foreach ($validated['items'] as $item) {
+
+                $stock = ProductStock::query()
+
+                    ->where('account_id', $accountId)
+
+                    ->where('warehouse_id', $validated['warehouse_id'])
+
+                    ->where('master_item_id', $item['master_item_id'])
+
+                    ->lockForUpdate()
+
+                    ->first();
+
+                if (!$stock) {
+
+                    throw new \Exception('Item not found in warehouse stock');
+                }
+
+                if ($stock->stock <= 0) {
+
+                    throw new \Exception('No stock available');
+                }
+
+                if ($stock->stock < $item['qty']) {
+
+                    throw new \Exception('Return qty exceeds available stock');
+                }
+            }
+
+            // =========================
+            // PROCESS ITEMS
+            // =========================
+            foreach ($validated['items'] as $item) {
+
+                $qty   = $item['qty'];
+
+                $price = $item['price'];
+
+                // =====================
+                // SAVE RETURN ITEM
+                // =====================
+                StockReturnItem::create([
+
+                    'return_id'      => $return->id,
+
+                    'master_item_id' => $item['master_item_id'],
+
+                    'qty'            => $qty,
+
+                    'price'          => $price,
+
+                    'total'          => $qty * $price
+                ]);
+
+                // =====================
+                // STOCK OUT
+                // =====================
+                $stockService->moveStock([
+
+                    'account_id'   => $accountId,
+
+                    'warehouse_id' => $validated['warehouse_id'],
+
+                    'master_item_id' => $item['master_item_id'],
+
+                    'type'         => 5, // stock return
+
+                    // IMPORTANT
+                    'qty'          => -$qty,
+
+                    'reference_id' => $return->id,
+
+                    'remarks'      => 'Stock Return #' . $returnNo
+                ]);
+            }
+
+            // =========================
+            // VENDOR UPDATE
+            // =========================
+            $vendor = Vendor::lockForUpdate()
+                ->findOrFail($validated['vendor_id']);
+
+            $oldBalance = (float) ($vendor->current_balance ?? 0);
+
+            $newBalance = $oldBalance - $totalAmount;
+
+            // =========================
+            // LEDGER ENTRY
+            // =========================
+            VendorLedger::create([
+
+                'account_id'   => $accountId,
+
+                'vendor_id'    => $vendor->id,
+
+                'type'         => 5,
+
+                'reference_id' => $return->id,
+
+                'debit'        => 0,
+
+                'credit'       => $totalAmount,
+
+                'balance'      => $newBalance,
+
+                'remarks'      => 'Stock Return #' . $returnNo
+            ]);
+
+            // =========================
+            // UPDATE VENDOR BALANCE
+            // =========================
+            $vendor->update([
+
+                'current_balance' => $newBalance
+            ]);
+        });
+
+        return Settings::roleRedirect(
+            'stock_returns.index',
+            'Stock Return Created Successfully.'
+        );
+
+    } catch (\Exception $e) {
+
+        return Settings::roleRedirect(
+            'stock_returns.index',
+            $e->getMessage(),
+            'error'
+        );
+    }
+}
+    public function store_old(Request $request)
     {
         try {
 
@@ -264,7 +457,7 @@ class StockReturnController extends Controller
     {
         $stock = \App\Models\ProductStock::where([
             'warehouse_id' => $request->warehouse_id,
-            'product_id' => $request->product_id,
+            'master_item_id' => $request->master_item_id,
             'account_id' => auth()->user()->account_id
         ])->value('stock') ?? 0;
 
@@ -277,7 +470,7 @@ class StockReturnController extends Controller
     {
         $id = Settings::getDecodeCode($id);
 
-        $return = StockReturn::with(['vendor','warehouse','items.product'])
+        $return = StockReturn::with(['vendor','warehouse','items.masterItem'])
             ->where('account_id', auth()->user()->account_id)
             ->findOrFail($id);
 
@@ -289,92 +482,7 @@ class StockReturnController extends Controller
 | CANCEL RETURN
 |--------------------------------------------------------------------------
 */
-    public function cancel_delete(Request $request)
-    {
-        try {
-
-            $id = Settings::getDecodeCode($request->id);
-
-            DB::transaction(function () use ($id) {
-
-                $accountId = auth()->user()->account_id;
-
-                $return = StockReturn::with('items')
-                    ->where('account_id', $accountId)
-                    ->lockForUpdate()
-                    ->findOrFail($id);
-
-                // ❌ Already cancelled
-                if ($return->status == 0) {
-                    throw new \Exception('Return already cancelled');
-                }
-
-                $stockService = app(StockService::class);
-
-                // ============================
-                // 🔁 REVERSE STOCK
-                // ============================
-                foreach ($return->items as $item) {
-
-                    $stockService->moveStock([
-                        'account_id'   => $accountId,
-                        'warehouse_id' => $return->warehouse_id,
-                        'product_id'   => $item->product_id,
-                        'type'         => 'adjustment_add', // reverse stock
-                        'qty'          => $item->qty,
-                        'reference_id' => $return->id,
-                        'remarks'      => 'Cancel Stock Return #' . $return->return_no
-                    ]);
-                }
-
-                // ============================
-                // 🔁 REVERSE VENDOR BALANCE
-                // ============================
-                $vendor = Vendor::lockForUpdate()->find($return->vendor_id);
-
-                $oldBalance = $vendor->current_balance ?? 0;
-                $newBalance = $oldBalance + $return->total;
-
-                // Ledger reverse entry
-                VendorLedger::create([
-                    'account_id'   => $accountId,
-                    'vendor_id'    => $vendor->id,
-                    'type'         => 6, // cancel return type (define constant if needed)
-                    'reference_id' => $return->id,
-                    'debit'        => $return->total,
-                    'credit'       => 0,
-                    'balance'      => $newBalance,
-                    'remarks'      => 'Cancel Stock Return #' . $return->return_no
-                ]);
-
-                // Update vendor balance
-                $vendor->update([
-                    'current_balance' => $newBalance
-                ]);
-
-                // ============================
-                // 🔁 UPDATE STATUS
-                // ============================
-                $return->update([
-                    'status' => 0
-                ]);
-
-            });
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Stock Return Cancelled Successfully'
-            ]);
-
-        } catch (\Exception $e) {
-
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 500);
-        }
-    }
-
+    
     public function cancel(Request $request)
     {
         try {
@@ -390,70 +498,99 @@ class StockReturnController extends Controller
                     ->lockForUpdate()
                     ->findOrFail($id);
 
-                // ❌ Already cancelled
-                if ((int)$return->status === 0) {
-                    throw new \Exception('Return already cancelled');
+                // =========================
+                // ❌ ALREADY CANCELLED
+                // =========================
+                if ((int) $return->status === 0) {
+                    throw new \Exception('Stock Return already cancelled');
                 }
 
                 $stockService = app(\App\Services\StockService::class);
 
-                // ============================
+                // =========================
                 // 🔁 REVERSE STOCK
-                // ============================
+                // =========================
                 foreach ($return->items as $item) {
 
+                    // Validate item
+                    if (!$item->master_item_id) {
+                        throw new \Exception('Invalid return item detected');
+                    }
+
                     $stockService->moveStock([
-                        'account_id'   => $accountId,
-                        'warehouse_id' => $return->warehouse_id,
-                        'product_id'   => $item->product_id,
-                        'type'         => 'adjustment_add', // reverse stock
-                        'qty'          => (float) $item->qty,
-                        'reference_id' => $return->id,
-                        'remarks'      => 'Cancel Stock Return #' . $return->return_no
+                        'account_id'    => $accountId,
+                        'warehouse_id'  => $return->warehouse_id,
+
+                        // ✅ master item
+                        'master_item_id'=> $item->master_item_id,
+
+                        // ✅ reverse stock add
+                        'type'          => 'adjustment_add',
+
+                        // ✅ positive qty
+                        'qty'           => (float) $item->qty,
+
+                        'reference_id'  => $return->id,
+                        'remarks'       => 'Cancel Stock Return #' . $return->return_no
                     ]);
                 }
 
-                // ============================
+                // =========================
                 // 🔁 REVERSE VENDOR BALANCE
-                // ============================
-                $vendor = Vendor::lockForUpdate()->findOrFail($return->vendor_id);
+                // =========================
+                $vendor = Vendor::where('account_id', $accountId)
+                    ->lockForUpdate()
+                    ->findOrFail($return->vendor_id);
 
                 $oldBalance = (float) ($vendor->current_balance ?? 0);
 
-                // Clean + safe numeric conversion
-                $returnTotal = (float) str_replace(',', '', $return->total);
+                $returnTotal = (float) $return->total;
 
+                // Vendor payable restored
                 $newBalance = $oldBalance + $returnTotal;
 
-                // Ledger reverse entry
+                // =========================
+                // 🧾 LEDGER ENTRY
+                // =========================
                 VendorLedger::create([
-                    'account_id'   => $accountId,
-                    'vendor_id'    => $vendor->id,
-                    'type'         => 6, // cancel return type
-                    'reference_id' => $return->id,
-                    'debit'        => $returnTotal,
-                    'credit'       => 0,
-                    'balance'      => $newBalance,
-                    'remarks'      => 'Cancel Stock Return #' . $return->return_no
+                    'account_id'    => $accountId,
+                    'vendor_id'     => $vendor->id,
+
+                    // cancel stock return type
+                    'type'          => 6,
+
+                    'reference_id'  => $return->id,
+
+                    // payable increased again
+                    'debit'         => $returnTotal,
+                    'credit'        => 0,
+
+                    'balance'       => $newBalance,
+
+                    'remarks'       => 'Cancel Stock Return #' . $return->return_no
                 ]);
 
-                // Update vendor balance
+                // =========================
+                // 💰 UPDATE VENDOR
+                // =========================
                 $vendor->update([
                     'current_balance' => $newBalance
                 ]);
 
-                // ============================
-                // 🔁 UPDATE STATUS
-                // ============================
+                // =========================
+                // 🔁 UPDATE RETURN STATUS
+                // =========================
                 $return->update([
-                    'status' => 0
+                    'status'       => 0,
+                    'cancelled_by' => auth()->id(),
+                    'cancelled_at' => now(),
                 ]);
 
             });
 
             return response()->json([
                 'success' => true,
-                'message' => 'Stock Return Cancelled Successfully'
+                'message' => __('translation.stock_return_cancelled_successfully')
             ]);
 
         } catch (\Exception $e) {

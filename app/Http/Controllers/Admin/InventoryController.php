@@ -11,6 +11,8 @@ use App\Helpers\Settings;
 use Illuminate\Support\Facades\Crypt;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Auth;
+use App\Models\RequisitionItem;
+
 class InventoryController extends Controller
 {
 
@@ -34,12 +36,12 @@ class InventoryController extends Controller
                         'title' => __('translation.dashboard')
                     ],
                     // use route NAME only (not route())
+                    // [
+                    //     'route' => $role . '.no-barcode',
+                    //     'title' => __('translation.add_product_without_barcode')
+                    // ],
                     [
-                        'route' => $role . '.no-barcode',
-                        'title' => __('translation.add_product_without_barcode')
-                    ],
-                    [
-                        'route' => $role . '.barcode',
+                        'route' => 'admin.requisitions.pending.posting',
                         'title' => __('translation.add_stock')
                     ],
                     [
@@ -206,6 +208,10 @@ class InventoryController extends Controller
         } catch (\Exception $e) {
             return redirect()->route('admin.barcode')->with('error', 'Invalid link');
         }
+        
+        $masterItemName = null;
+        $qty = null;
+        $requisition_item_id = null; 
         $adjustmentData = Settings::getInventoryAdjustment($data['adjustment']);
         if (empty($adjustmentData['adjustment'])) {
             return Settings::roleRedirect('inventory', 'Something went wrong!', 'error');
@@ -214,10 +220,19 @@ class InventoryController extends Controller
         $adjustment = $adjustmentData['adjustment'];
         $barcode = $data['barcode'];
         $productId = $data['product_id'];
+        $requisition_item_id = $data['requisition_item_id'];
+        // ==========================
+        // GET REQUISITION ITEM
+        // ==========================
+        $requisitionItem = RequisitionItem::with('masterItem')->find(Settings::getDecodeCode($requisition_item_id));
+        if ($requisitionItem) {
+            $masterItemName = $requisitionItem->masterItem->name ?? null;
+            $qty = (int)($requisitionItem->qty ?? 0);
+        }
 
         // ✅ Load product
         $product = Product::where('account_id', auth()->user()->account_id)->where('barcode', $barcode)->first();
-
+        // $this->pr($product);
         if (!$product) {
             return redirect()->route('admin.barcode')->with('error', 'Product not found');
         }
@@ -230,7 +245,10 @@ class InventoryController extends Controller
             'adjustment',
             'product',        // ✅ Pass product
             'barcode',        // ✅ Pass barcode
-            'productId'       // ✅ Pass product_id
+            'productId',      // ✅ Pass product_id
+            'masterItemName', // ✅ Pass masterItemName
+            'qty',            // ✅ Pass qty
+            'requisition_item_id' // ✅ Pass requisition_item_id
         ));
     }
 

@@ -83,7 +83,6 @@
                                             @if($row->status == 1)
                                             <x-href-input action="cancel" name="cancel" class="cancelPurchase" label="Cancel" href="javascript:void(0);" data-id="{{ \App\Helpers\Settings::getEncodeCode($row->id) }}" />
                                             @endif
-                                            {{--<x-href-input action="delete" name="delete" class="deleteBtn" label="Delete" href="javascript:void(0);" data-id="{{ \App\Helpers\Settings::getEncodeCode($row->id) }}" />--}}
                                         </td> 
                                     </tr>
                                 @empty
@@ -101,17 +100,6 @@
 
 @section('script')
 <script>
-$('.deleteBtn').click(function () {
-    if(confirm('Delete this purchase?')) {
-        $.post("{{ route('admin.purchases.softdelete') }}", {
-            _token: "{{ csrf_token() }}",
-            id: $(this).data('id')
-        }, function () {
-            location.reload();
-        });
-    }
-});
-
 $(document).on('click', '.cancelPurchase', function () {
 
     let id = $(this).data('id');

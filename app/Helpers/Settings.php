@@ -211,6 +211,7 @@ class Settings
     {
         return (!empty($data)) ? substr(str_shuffle("123456789"), 0, 5) . $data : '';
     }
+    
     public static function getDecodeCodeWithHashids($encodedCode)
     {
         return (!empty($encodedCode)) ? Hashids::decode(substr($encodedCode, 5)) : 0;

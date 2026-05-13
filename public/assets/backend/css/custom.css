@@ -1116,3 +1116,53 @@ select:focus:invalid {
 .breadcrumb-item+.breadcrumb-item::before {
     color: #adb5bd;
 }
+
+.badge-approved {
+    background-color: #28a745 !important;
+    color: #fff;
+}
+
+.modal-footer {
+    justify-content: center !important;
+}
+
+.menu-icon-sm {
+    width: 16px;
+    height: 16px;
+    margin-right: 10px;
+    vertical-align: middle;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.menu-icon-sm {
+    width: 16px;
+    height: 16px;
+    margin-right: 10px;
+}
+
+.dropdown-header {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #6c757d;
+    letter-spacing: .5px;
+    padding-top: 10px;
+    padding-bottom: 6px;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.topnav-menu .nav-link i {
+    width: 18px;
+    height: 18px;
+}

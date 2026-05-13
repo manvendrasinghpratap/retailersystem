@@ -5,7 +5,6 @@
 @section('content')
     @include('backend.components.breadcrumb')
 
-
     <div class="row">
         <div class="col-lg-12">
             <div class="card">
@@ -20,38 +19,40 @@
                             <div class="row"> 
                                 <x-select-dropdown name="vendor_id" label="{{ __('translation.vendor')}}" :options="$vendors" :selected="request()->get('vendor_id') ?? ''" class="vendor" mainrows="4" />
                                 <x-select-dropdown name="warehouse_id" label="{{ __('translation.warehouse')}}" :options="$warehouses" :selected="request()->get('warehouse_id') ?? ''" class="warehouse" mainrows="4" />
+                                <div class="col-md-4">
+                                    <label class="form-label d-block">&nbsp;</label>
+                                    <x-href-input action="add" name="add-master-item" label="Add New Master Item" class="addMasterItem" href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#masterItemModal"/>
                                 </div>
-                                {{-- PRODUCTS TABLE --}}
-                                <div class="position-relative">
-                                    <table class="table table-hover align-middle" id="itemsTable">
-                                        <thead class="table-light">
-                                            <tr>
-                                                <th>{{ __('translation.product') }}</th>
-                                                <th>{{ __('translation.quantity') }}</th>  
-                                                <th>@lang('translation.currency') {{ __('translation.price') }}</th>
-                                                <th>@lang('translation.currency') {{ __('translation.total') }}</th>
-                                                <th width="5%">{{ __('translation.action') }}</th>
-                                            </tr>
-                                        </thead>
-
-                                        <tbody></tbody>
-                                    </table>
-
-                                    <!-- ADD ROW BUTTON -->
-                                    <div class="text-center mt-2">
-                                        <button type="button" class="btn btn-success px-4" id="addRow">
-                                            <i class="mdi mdi-plus"></i> {{ __('translation.add_item') }}
-                                        </button>
-                                    </div>
+                            </div>
+                            <div class="position-relative">
+                                <table class="table table-hover align-middle" id="itemsTable">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>{{ __('translation.product') }}</th>
+                                            <th>{{ __('translation.quantity') }}</th>  
+                                            <th>@lang('translation.currency') {{ __('translation.price') }}</th>
+                                            <th>@lang('translation.currency') {{ __('translation.total') }}</th>
+                                            <th width="5%">{{ __('translation.action') }}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                                <!-- ADD ROW BUTTON -->
+                                <div class="text-center mt-2">
+                                    <button type="button" class="btn btn-success px-4" id="addRow">
+                                        <i class="mdi mdi-plus"></i> {{ __('translation.add_item') }}
+                                    </button>
                                 </div>
+                            </div>
                             <div class="text-end">
                                 <h4>{{ __('translation.total')}}: @lang('translation.currency')<span id="grandTotal">0</span></h4>
                                 <input type="hidden" name="total" id="totalInput">
                             </div>
-
-                            <div class="card-footer text-end">
-                                <a href="{{ route('admin.purchases.index') }}" class="btn btn-secondary" id="cancelBtn">{{ __('translation.cancel') }}</a>
-                                <button type="submit" class="btn btn-primary" id="saveBtn">{{ __('translation.save_purchase') }}</button>
+                            <div class="card-footer form-group center">
+                                <div class="d-flex gap-2 dflex">
+                                    <button type="submit" class="btn btn-primary">{{ __('translation.save_purchase') }}</button>
+                                    <a href="{{ route('admin.purchases.index') }}" class="btn btn-secondary">{{ __('translation.cancel') }}</a>
+                                </div>
                             </div>
                         </form>
                     </div>
@@ -62,8 +63,6 @@
 @endsection
 
 @section('script')
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/js/select2.min.js"></script>
-
 <script>
 
 let rowIndex = 0;
@@ -73,10 +72,10 @@ let rowIndex = 0;
 // ========================
 function initSelect2(element) {
     element.select2({
-        placeholder: 'Search Product',
+        placeholder: 'Search Master Item',
         width: '100%',
         ajax: {
-            url: "{{ route('admin.products.search') }}",
+            url: "{{ route('admin.master_items.search') }}",
             dataType: 'json',
             delay: 250,
             data: function (params) {
@@ -277,13 +276,32 @@ document.addEventListener('blur', function (e) {
     }
 }, true);
 
+// Allow empty while typing
 document.addEventListener('input', function (e) {
     if (e.target.classList.contains('qty')) {
-        if (e.target.value < 1) {
+
+        let val = e.target.value;
+
+        // allow empty (user typing)
+        if (val === '') return;
+
+        if (parseFloat(val) < 1) {
             e.target.value = 1;
         }
     }
 });
+
+// Final validation on blur (when user leaves field)
+document.addEventListener('blur', function (e) {
+    if (e.target.classList.contains('qty')) {
+
+        let val = parseFloat(e.target.value);
+
+        if (!val || val < 1) {
+            e.target.value = 1;
+        }
+    }
+}, true);
 
 </script>
 @endsection

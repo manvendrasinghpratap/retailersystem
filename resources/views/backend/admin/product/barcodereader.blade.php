@@ -15,6 +15,7 @@
                     <form method="POST" action="" onkeydown="return event.key != 'Enter';" autocomplete="off">
                         @csrf
                         <div class="row">
+                            <input type="hidden" name="requisition_item_id" value="{{ request()->requisition_item_id ?? '' }}" id="requisition_item_id">
                             <x-text-input id="barcode" name="barcode" label="Barcode" class="barcode" required placeholder="Scan barcode here" autofocus maxlength="15" />
                         </div>
                     </form>
@@ -41,6 +42,7 @@
 
                 let barcode = this.value.trim();
                 let routeName = "{{ request()->route()->getName() }}";
+                let requisition_item_id = document.getElementById('requisition_item_id').value;
 
                 if (barcode !== '') {
 
@@ -50,7 +52,7 @@
                             "Content-Type": "application/json",
                             "X-CSRF-TOKEN": "{{ csrf_token() }}"
                         },
-                        body: JSON.stringify({ barcode: barcode, routeName: routeName })
+                        body: JSON.stringify({ barcode: barcode, routeName: routeName, requisition_item_id: requisition_item_id })
                     })
                         .then(res => res.json())
                         .then(data => {

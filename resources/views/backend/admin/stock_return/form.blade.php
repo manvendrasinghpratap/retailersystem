@@ -127,7 +127,7 @@ function addRow() {
     let row = `
     <tr>
         <td>
-            <select name="items[${rowIndex}][product_id]" class="form-control selectProduct"></select>
+            <select name="items[${rowIndex}][master_item_id]" class="form-control selectProduct"></select>
         </td>
 
         <td class="stock text-center text-primary fw-bold">0</td>
@@ -195,13 +195,14 @@ $(document).on('click', '.removeRow', function () {
 // ========================
 function fetchStock(row) {
 
-    let product_id = row.find('.selectProduct').val();
+    let master_item_id = row.find('.selectProduct').val();
     let warehouse_id = $('select[name="warehouse_id"]').val();
 
-    if (!product_id || !warehouse_id) return;
+    if (!master_item_id || !warehouse_id) return;
 
     $.get("{{ route('admin.stock_returns.stock.check') }}", {
-        product_id, warehouse_id
+        master_item_id,
+        warehouse_id
     }, function (res) {
 
         let stock = parseFloat(res.stock) || 0;
@@ -227,12 +228,12 @@ function fetchStock(row) {
 $(document).on('change', '.selectProduct', function () {
 
     let row = $(this).closest('tr');
-    let product_id = $(this).val();
+    let master_item_id = $(this).val();
 
     // Prevent duplicate
     let duplicate = false;
     $('.selectProduct').not(this).each(function () {
-        if ($(this).val() == product_id && product_id != '') {
+        if ($(this).val() == master_item_id && master_item_id != '') {
             duplicate = true;
         }
     });
@@ -247,7 +248,7 @@ $(document).on('change', '.selectProduct', function () {
 
     // Fetch price
     $.get("{{ route('admin.products.lastPrice') }}", {
-        product_id: product_id,
+        master_item_id: master_item_id,
         vendor_id: $('select[name="vendor_id"]').val(),
         warehouse_id: $('select[name="warehouse_id"]').val()
     }, function (res) {

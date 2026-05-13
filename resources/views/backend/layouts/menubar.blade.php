@@ -1,158 +1,397 @@
 @php
-  use App\Helpers\Settings;
+    use App\Helpers\Settings;
 
-  $role = Settings::getUserRole();
-  $currentRoute = Route::currentRouteName();
+    $role = Settings::getUserRole();
+    $currentRoute = Route::currentRouteName();
 
-  $isActive = function ($routes) use ($currentRoute) {
-    foreach ((array) $routes as $route) {
-      if (Str::is($route, $currentRoute)) {
-        return true;
-      }
-    }
-    return false;
-  };
+    $isActive = function ($routes) use ($currentRoute) {
+        foreach ((array) $routes as $route) {
+            if (Str::is($route, $currentRoute)) {
+                return true;
+            }
+        }
+        return false;
+    };
 @endphp
 
+
+
 <nav class="navbar navbar-light navbar-expand-lg topnav-menu">
-  <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topnav-menu-content" aria-controls="topnav-menu-content" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-  </button>
+    {{-- MOBILE TOGGLE --}}
+    <button class="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#topnav-menu-content">
 
-  <div class="collapse navbar-collapse" id="topnav-menu-content">
-    <ul class="navbar-nav">
+        <span class="navbar-toggler-icon"></span>
+    </button>
 
-      {{-- Dashboard --}}
-      <li class="nav-item">
-        <a href="{{ route('dashboard') }}" class="nav-link {{ $isActive('dashboard') ? 'active' : '' }}">
-          <i data-feather="home"></i>
-          <span>@lang('translation.dashboard')</span>
-        </a>
-      </li>
+    <div class="collapse navbar-collapse" id="topnav-menu-content">
+        <ul class="navbar-nav">
+            {{-- ===================================================== --}}
+            {{-- DASHBOARD --}}
+            {{-- ===================================================== --}}
+            <li class="nav-item">
 
-      {{-- Staff --}}
-      <li class="nav-item">
-        <a href="{{ route($role . '.staff.index') }}" class="nav-link {{ $isActive($role . '.staff.*') ? 'active' : '' }}">
-          <i data-feather="users"></i>
-          <span>@lang('translation.staff')</span>
-        </a>
-      </li>
+                <a href="{{ route('dashboard') }}"
+                   class="nav-link {{ $isActive('dashboard') ? 'active' : '' }}">
 
-      {{-- Categories --}}
-      <li class="nav-item">
-        <a href="{{ route($role . '.categories.index') }}" class="nav-link {{ $isActive($role . '.categories.*') ? 'active' : '' }}">
-          <i data-feather="grid"></i>
-          <span>@lang('translation.categories')</span>
-        </a>
-      </li>
+                    <i data-feather="home"></i>
+                    <span>@lang('translation.dashboard')</span>
+                </a>
 
-      {{-- Inventory --}}
-      <li class="nav-item dropdown {{ $isActive([$role . '.products*', $role . '.inventory*', $role . '.barcode']) ? 'active' : '' }}">
-        <a href="javascript:void(0);" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
-          <i data-feather="package"></i>
-          <span>@lang('translation.inventory')</span>
-        </a>
+            </li>
 
-        <div class="dropdown-menu">
-          <a href="{{ route($role . '.products') }}" class="dropdown-item">
-            @lang('translation.product')
-          </a>
+            {{-- ===================================================== --}}
+            {{-- INVENTORY --}}
+            {{-- ===================================================== --}}
+            <li class="nav-item dropdown {{ $isActive([
+                $role.'.products*',
+                $role.'.categories*',
+                'admin.master_items.*',
+                'admin.warehouses.*',
+                'admin.purchases.*',
+                'admin.stock_returns.*',
+                'admin.requisitions.*',
+                $role.'.inventory*'
+            ]) ? 'active' : '' }}">
 
-          <a href="{{ route($role . '.inventory') }}" class="dropdown-item">
-            @lang('translation.stock_management')
-          </a>
-        </div>
-      </li>
+                <a href="javascript:void(0);"
+                   class="nav-link dropdown-toggle"
+                   data-bs-toggle="dropdown">
 
-      {{-- Billing --}}
-      <li class="nav-item">
-        <a href="{{ route('billing.index') }}" class="nav-link {{ $isActive('billing.*') ? 'active' : '' }}">
-          <i data-feather="credit-card"></i>
-          <span>@lang('translation.billing')</span>
-        </a>
-      </li>
+                    <i data-feather="package"></i>
+                    <span>@lang('translation.inventory')</span>
+                </a>
 
-      {{-- Sales --}}
-      <li class="nav-item">
-        <a href="{{ route('admin.sales.index') }}" class="nav-link {{ $isActive(['admin.sales.*']) ? 'active' : '' }}">
-          <i data-feather="shopping-cart"></i>
-          <span>@lang('translation.sales_record')</span>
-        </a>
-      </li>
+                <div class="dropdown-menu">
 
-      {{-- Coupons --}}
-      <li class="nav-item">
-        <a href="{{ route('admin.coupons.index') }}" class="nav-link {{ $isActive(['admin.coupons.*']) ? 'active' : '' }}">
-          <i data-feather="tag"></i>
-          <span>@lang('translation.coupons')</span>
-        </a>
-      </li>
+                    {{-- PRODUCT SETUP --}}
+                    <h6 class="dropdown-header">
+                        Product Setup
+                    </h6>
 
-      {{-- Customers --}}
-      <li class="nav-item">
-        <a href="{{ route('admin.customers.index') }}" class="nav-link {{ $isActive(['admin.customers.*']) ? 'active' : '' }}">
-          <i data-feather="user"></i>
-          <span>@lang('translation.customers')</span>
-        </a>
-      </li>
+                    <a href="{{ route($role.'.products') }}"
+                       class="dropdown-item">
 
-      {{-- Reports --}}
-      <li class="nav-item dropdown {{ $isActive(['reports.*']) ? 'active' : '' }}">
-        <a href="javascript:void(0);" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
-          <i data-feather="bar-chart-2"></i>
-          <span>@lang('translation.reports')</span>
-        </a>
+                        <i data-feather="box" class="menu-icon-sm"></i>
+                        @lang('translation.products')
+                    </a>
 
-        <div class="dropdown-menu">
-          <a href="{{ route('reports.daily.sales') }}" class="dropdown-item">
-            @lang('translation.daily_sales')
-          </a>
-        </div>
-      </li>
+                    <a href="{{ route($role.'.categories.index') }}"
+                       class="dropdown-item">
 
-      {{-- POS --}}
-      <li class="nav-item dropdown {{ $isActive([
-  $role . '.pos',
-  $role . '.no-barcode',
-  $role . '.barcode',
-  $role . '.sales-barcode',
-  $role . '.return-barcode',
-  $role . '.damage-barcode',
-  $role . '.deduct-barcode'
-]) ? 'active' : '' }}">
+                        <i data-feather="grid" class="menu-icon-sm"></i>
+                        @lang('translation.categories')
+                    </a>
 
-        <a href="javascript:void(0);" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
-          <i data-feather="monitor"></i>
-          <span>@lang('translation.pos')</span>
-        </a>
+                    <a href="{{ route('admin.master_items.index') }}"
+                       class="dropdown-item">
 
-        <div class="dropdown-menu">
-          <a href="{{ route($role . '.no-barcode') }}" class="dropdown-item">
-            @lang('translation.add_product_without_barcode')
-          </a>
+                        <i data-feather="layers" class="menu-icon-sm"></i>
+                        @lang('translation.master_items')
+                    </a>
 
-          <a href="{{ route($role . '.barcode') }}" class="dropdown-item">
-            @lang('translation.add_update_stock')
-          </a>
+                    <div class="dropdown-divider"></div>
 
-          <a href="{{ route($role . '.sales-barcode') }}" class="dropdown-item">
-            @lang('translation.sale_stock')
-          </a>
+                    {{-- STORAGE --}}
+                    <h6 class="dropdown-header">
+                        Storage & Stock
+                    </h6>
 
-          <a href="{{ route($role . '.return-barcode') }}" class="dropdown-item">
-            @lang('translation.return_stock')
-          </a>
+                    <a href="{{ route('admin.warehouses.index') }}"
+                       class="dropdown-item">
 
-          <a href="{{ route($role . '.damage-barcode') }}" class="dropdown-item">
-            @lang('translation.damage_stock')
-          </a>
+                        <i data-feather="archive" class="menu-icon-sm"></i>
+                        @lang('translation.warehouses')
+                    </a>
 
-          <a href="{{ route($role . '.deduct-barcode') }}" class="dropdown-item">
-            @lang('translation.deduct_stock')
-          </a>
-        </div>
-      </li>
+                    <a href="{{ route($role.'.inventory') }}"
+                       class="dropdown-item">
 
-    </ul>
-  </div>
+                        <i data-feather="database" class="menu-icon-sm"></i>
+                        @lang('translation.stock_management')
+                    </a>
+
+                    <div class="dropdown-divider"></div>
+
+                    {{-- PROCUREMENT --}}
+                    <h6 class="dropdown-header">
+                        Procurement
+                    </h6>
+
+                    <a href="{{ route('admin.purchases.index') }}"
+                       class="dropdown-item">
+
+                        <i data-feather="shopping-bag" class="menu-icon-sm"></i>
+                        @lang('translation.purchases')
+                    </a>
+
+                    <a href="{{ route('admin.stock_returns.index') }}"
+                       class="dropdown-item">
+
+                        <i data-feather="corner-up-left" class="menu-icon-sm"></i>
+                        @lang('translation.stock_returns')
+                    </a>
+
+                    <a href="{{ route('admin.requisitions.index') }}"
+                       class="dropdown-item">
+
+                        <i data-feather="repeat" class="menu-icon-sm"></i>
+                        @lang('translation.requisitions')
+                    </a>
+
+                </div>
+
+            </li>
+
+            {{-- ===================================================== --}}
+            {{-- POS --}}
+            {{-- ===================================================== --}}
+            <li class="nav-item dropdown {{ $isActive([
+                'admin.requisitions.pending.posting',
+                $role.'.sales-barcode',
+                $role.'.return-barcode',
+                $role.'.damage-barcode',
+                $role.'.deduct-barcode'
+            ]) ? 'active' : '' }}">
+
+                <a href="javascript:void(0);"
+                   class="nav-link dropdown-toggle"
+                   data-bs-toggle="dropdown">
+
+                    <i data-feather="monitor"></i>
+                    <span>@lang('translation.pos')</span>
+                </a>
+
+                <div class="dropdown-menu">
+
+                    {{-- STOCK OPERATIONS --}}
+                    <h6 class="dropdown-header">
+                        Stock Operations
+                    </h6>
+
+                    <a href="{{ route('admin.requisitions.pending.posting') }}"
+                       class="dropdown-item">
+
+                        <i data-feather="plus-square" class="menu-icon-sm"></i>
+                        @lang('translation.add_update_stock')
+                    </a>
+
+                    <!-- <a href="{{ route($role.'.sales-barcode') }}"
+                       class="dropdown-item">
+
+                        <i data-feather="shopping-cart" class="menu-icon-sm"></i>
+                        @lang('translation.sale_stock')
+                    </a> -->
+
+                    <div class="dropdown-divider"></div>
+
+                    {{-- STOCK ADJUSTMENTS --}}
+                    <h6 class="dropdown-header">
+                        Stock Adjustments
+                    </h6>
+
+                    <a href="{{ route($role.'.return-barcode') }}"
+                       class="dropdown-item">
+
+                        <i data-feather="rotate-ccw" class="menu-icon-sm"></i>
+                        @lang('translation.return_stock')
+                    </a>
+
+                    <a href="{{ route($role.'.damage-barcode') }}"
+                       class="dropdown-item">
+
+                        <i data-feather="alert-triangle" class="menu-icon-sm"></i>
+                        @lang('translation.damage_stock')
+                    </a>
+
+                    <a href="{{ route($role.'.deduct-barcode') }}"
+                       class="dropdown-item">
+
+                        <i data-feather="minus-circle" class="menu-icon-sm"></i>
+                        @lang('translation.deduct_stock')
+                    </a>
+
+                </div>
+
+            </li>
+
+            {{-- ===================================================== --}}
+            {{-- SALES --}}
+            {{-- ===================================================== --}}
+            <li class="nav-item dropdown {{ $isActive([
+                'admin.sales.*',
+                'admin.coupons.*'
+            ]) ? 'active' : '' }}">
+
+                <a href="javascript:void(0);"
+                   class="nav-link dropdown-toggle"
+                   data-bs-toggle="dropdown">
+
+                    <i data-feather="shopping-cart"></i>
+                    <span>@lang('translation.sales')</span>
+                </a>
+
+                <div class="dropdown-menu">
+
+                    {{-- SALES --}}
+                    <h6 class="dropdown-header">
+                        Sales
+                    </h6>
+
+                    <a href="{{ route('admin.sales.index') }}"
+                       class="dropdown-item">
+
+                        <i data-feather="bar-chart" class="menu-icon-sm"></i>
+                        @lang('translation.sales_record')
+                    </a>
+
+                    <div class="dropdown-divider"></div>
+
+                    {{-- MARKETING --}}
+                    <h6 class="dropdown-header">
+                        Marketing
+                    </h6>
+
+                    <a href="{{ route('admin.coupons.index') }}"
+                       class="dropdown-item">
+
+                        <i data-feather="tag" class="menu-icon-sm"></i>
+                        @lang('translation.coupons')
+                    </a>
+
+                </div>
+
+            </li>
+
+            {{-- ===================================================== --}}
+            {{-- PEOPLE --}}
+            {{-- ===================================================== --}}
+            <li class="nav-item dropdown {{ $isActive([
+                $role.'.staff.*',
+                'admin.customers.*',
+                'admin.vendors.*'
+            ]) ? 'active' : '' }}">
+
+                <a href="javascript:void(0);"
+                   class="nav-link dropdown-toggle"
+                   data-bs-toggle="dropdown">
+
+                    <i data-feather="users"></i>
+                    <span>@lang('translation.people')</span>
+                </a>
+
+                <div class="dropdown-menu">
+
+                    {{-- INTERNAL --}}
+                    <h6 class="dropdown-header">
+                        Internal Users
+                    </h6>
+
+                    <a href="{{ route($role.'.staff.index') }}"
+                       class="dropdown-item">
+
+                        <i data-feather="user-check" class="menu-icon-sm"></i>
+                        @lang('translation.staff')
+                    </a>
+
+                    <div class="dropdown-divider"></div>
+
+                    {{-- EXTERNAL --}}
+                    <h6 class="dropdown-header">
+                        External Contacts
+                    </h6>
+
+                    <a href="{{ route('admin.customers.index') }}"
+                       class="dropdown-item">
+
+                        <i data-feather="users" class="menu-icon-sm"></i>
+                        @lang('translation.customers')
+                    </a>
+
+                    <a href="{{ route('admin.vendors.index') }}"
+                       class="dropdown-item">
+
+                        <i data-feather="truck" class="menu-icon-sm"></i>
+                        @lang('translation.vendors')
+                    </a>
+
+                </div>
+
+            </li>
+
+            {{-- ===================================================== --}}
+            {{-- REPORTS --}}
+            {{-- ===================================================== --}}
+            <li class="nav-item dropdown {{ $isActive(['reports.*']) ? 'active' : '' }}">
+
+                <a href="javascript:void(0);"
+                   class="nav-link dropdown-toggle"
+                   data-bs-toggle="dropdown">
+
+                    <i data-feather="bar-chart-2"></i>
+                    <span>@lang('translation.reports')</span>
+                </a>
+
+                <div class="dropdown-menu">
+
+                    {{-- SALES REPORTS --}}
+                    <h6 class="dropdown-header">
+                        Sales Reports
+                    </h6>
+
+                    <a href="{{ route('reports.daily.sales') }}"
+                       class="dropdown-item">
+
+                        <i data-feather="activity" class="menu-icon-sm"></i>
+                        @lang('translation.daily_sales')
+                    </a>
+
+                    <div class="dropdown-divider"></div>
+
+                    {{-- STAFF REPORTS --}}
+                    <h6 class="dropdown-header">
+                        Staff Reports
+                    </h6>
+
+                    <a href="{{ route('attendance.report') }}"
+                       class="dropdown-item">
+
+                        <i data-feather="clock" class="menu-icon-sm"></i>
+                        @lang('translation.attendance_report')
+                    </a>
+
+                </div>
+
+            </li>
+
+            {{-- ===================================================== --}}
+            {{-- BILLING --}}
+            {{-- ===================================================== --}}
+            <li class="nav-item">
+
+                <a href="{{ route('billing.index') }}"
+                   class="nav-link {{ $isActive('billing.*') ? 'active' : '' }}">
+
+                    <i data-feather="credit-card"></i>
+                    <span>@lang('translation.billing')</span>
+                </a>
+
+            </li>
+
+        </ul>
+
+    </div>
+
 </nav>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    if (typeof feather !== 'undefined') {
+        feather.replace();
+    }
+
+});
+</script>

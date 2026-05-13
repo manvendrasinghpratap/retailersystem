@@ -10,12 +10,27 @@ class RequisitionItem extends Model
 
     protected $fillable = [
         'requisition_id',
-        'product_id',
+        'master_item_id',
         'qty',
+
+        // Status
+        'status',
+
+        // Acceptance
+        'accepted_by',
+        'accepted_at',
+
+        // Cancellation
+        'cancelled_by',
+        'cancelled_at',
     ];
 
     protected $casts = [
         'qty' => 'decimal:2',
+        'status' => 'integer',
+
+        'accepted_at' => 'datetime',
+        'cancelled_at' => 'datetime',
     ];
 
     /*
@@ -29,8 +44,67 @@ class RequisitionItem extends Model
         return $this->belongsTo(Requisition::class);
     }
 
-    public function product()
+    public function masterItem()
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(MasterItem::class, 'master_item_id');
+    }
+
+    public function acceptedBy()
+    {
+        return $this->belongsTo(User::class, 'accepted_by');
+    }
+
+    public function cancelledBy()
+    {
+        return $this->belongsTo(User::class, 'cancelled_by');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | SCOPES
+    |--------------------------------------------------------------------------
+    */
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', 1);
+    }
+
+    public function scopeCancelled($query)
+    {
+        return $query->where('status', 0);
+    }
+
+    public function scopePending($query)
+    {
+        return $query
+            ->where('status', 1)
+            ->whereNull('accepted_by');
+    }
+
+    public function scopeAccepted($query)
+    {
+        return $query
+            ->where('status', 1)
+            ->whereNotNull('accepted_by');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | ACCESSORS
+    |--------------------------------------------------------------------------
+    */
+
+    public function getStatusLabelAttribute()
+    {
+        if ($this->status == 0) {
+            return 'Cancelled';
+        }
+
+        if (!is_null($this->accepted_by)) {
+            return 'Accepted';
+        }
+
+        return 'Pending';
     }
 }

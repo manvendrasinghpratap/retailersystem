@@ -212,6 +212,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','route.permission'])-
         Route::get('/pdf/{id}', [RequisitionController::class, 'pdf'])->name('pdf');
         Route::get('/csv/{id}', [RequisitionController::class, 'csv'])->name('csv');
         Route::get('/view/ajax/{id}', [RequisitionController::class, 'viewAjax'])->name('view.ajax');
+        Route::get('/pending-posting', [RequisitionController::class, 'pendingPosting'])->name('pending.posting');
+        Route::post('/cancel-item',[RequisitionController::class, 'cancelItem'])->name('cancel.item');
+        
     });
 });
 
@@ -221,5 +224,6 @@ require __DIR__ . '/administrator.php';
 require __DIR__ . '/acl.php';
 require __DIR__ . '/attendance.php';
 require __DIR__ . '/warehouse.php';
+require __DIR__ . '/masteritem.php';
 
 

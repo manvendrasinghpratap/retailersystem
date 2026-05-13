@@ -54,6 +54,15 @@
         @case('products')
              <i class="fas fa-box action-btn text-success" title="{{ __('translation.product') }}"></i>
         @break
+        @case('barcode')
+             <i class="fa fa-barcode action-btn text-dark" aria-hidden="true" title="Barcode"></i>
+        @break
+        @case('no-barcode')
+             <i class="fa fa-braille action-btn text-dark" aria-hidden="true" title="No Barcode"></i>
+        @break
+        @case('add')
+            <button class="btn btn-primary btn-sm"><i class="fa fa-plus action-btn text-white" aria-hidden="true" title="Add"></i> {{ $label }}</button>
+        @break
         @default
             <i class="fas action-btn text-success" title="View">{{ $label }}</i>
     @endswitch

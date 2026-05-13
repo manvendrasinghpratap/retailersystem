@@ -34,18 +34,18 @@ class BarcodeController extends Controller
                         'title' => __('translation.dashboard')
                     ],
                     // use route NAME only (not route())
+                    // [
+                    //     'route' => $role . '.no-barcode',
+                    //     'title' => __('translation.add_product_without_barcode')
+                    // ],
                     [
-                        'route' => $role . '.no-barcode',
-                        'title' => __('translation.add_product_without_barcode')
-                    ],
-                    [
-                        'route' => $role . '.barcode',
+                        'route' => 'admin.requisitions.pending.posting',
                         'title' => __('translation.add_stock')
                     ],
-                    [
-                        'route' => $role . '.sales-barcode',
-                        'title' => __('translation.sale_stock')
-                    ],
+                    // [
+                    //     'route' => 'admin.sales-barcode',
+                    //     'title' => __('translation.sale_stock')
+                    // ],
                     [
                         'route' => $role . '.return-barcode',
                         'title' => __('translation.return_stock')
@@ -80,12 +80,17 @@ class BarcodeController extends Controller
      */
     public function nobarcode(Request $request)
     {
+        $requisition_item_id = '';
+        if($request->has('requisition_item_id')){
+            $requisition_item_id = $request->requisition_item_id;
+        }
         $adjustmentData = Settings::getEncodeCode(1);
 
         $payload = Crypt::encrypt([
             'adjustment' => $adjustmentData,
             'barcode' => $request->input('barcode'),
-            'product_id' => null
+            'product_id' => null,
+            'requisition_item_id' => $requisition_item_id
         ]);
 
         return redirect()->route('admin.products.create', $payload);
@@ -115,7 +120,10 @@ class BarcodeController extends Controller
             'barcode' => ['required', 'string'],
             'routeName' => ['required', 'string'],
         ]);
-
+        $requisition_item_id = '';
+        if($request->has('requisition_item_id')){
+            $requisition_item_id = $request->requisition_item_id;
+        }
         $barcode = trim($validated['barcode']);
         $routeName = $validated['routeName'];
 
@@ -152,7 +160,8 @@ class BarcodeController extends Controller
             'adjustment' => $adjustmentData,
             'adjustmentType' => $adjustmentType,
             'barcode' => $barcode,
-            'product_id' => $product?->id
+            'product_id' => $product?->id,
+            'requisition_item_id' => $requisition_item_id
         ];
 
         $payload = Crypt::encrypt($payloadData);

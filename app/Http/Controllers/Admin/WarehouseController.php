@@ -5,12 +5,14 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Warehouse;
 use App\Models\ProductStock;
+use App\Models\MasterItem;
 use App\Models\Product;
 use App\Models\StockTransfer;
 use App\Models\StockTransferItem;
 use App\Helpers\Settings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\User;
 
 class WarehouseController extends Controller
 {
@@ -34,7 +36,11 @@ class WarehouseController extends Controller
                 [
                     'route' => 'admin.warehouses.create',
                     'title' => __('translation.add_new_warehouse')
-                ]
+                ],
+                [
+                'route' => 'admin.warehouses.stock.listing',
+                'title' => __('translation.warehouse_stock_listing')
+            ]
             ],
             'route1' => 'admin.warehouses.create',
             'route1Title' => __('translation.add_warehouse'),
@@ -74,8 +80,10 @@ class WarehouseController extends Controller
 
     public function create()
     {
+        $staffs = User::activeByAccountAndStaff()->pluck('name', 'id');
         return view('backend.admin.warehouses.form', [
-            'breadcrumb' => $this->breadcrumb
+            'breadcrumb' => $this->breadcrumb,
+            'staffs' => $staffs
         ]);
     }
 
@@ -94,15 +102,16 @@ class WarehouseController extends Controller
         ]);
 
         Warehouse::create([
-            'account_id' => auth()->user()->account_id,
-            'warehouse_code' => 'WH' . rand(10000, 99999),
-            'name' => $request->name,
-            'manager_name' => $request->manager_name,
-            'phone' => $request->phone,
-            'email' => $request->email,
-            'address' => $request->address,
-            'status' => $request->status ?? 1,
-            'created_by' => auth()->id(),
+        'account_id' => auth()->user()->account_id,
+        'warehouse_code' => 'WH' . rand(10000, 99999),
+        'name' => $request->name,
+        'staff_id' => $request->staff_id,
+        'manager_name' => optional(User::find($request->staff_id))->name,
+        'phone' => $request->phone,
+        'email' => $request->email,
+        'address' => $request->address,
+        'status' => $request->status ?? 1,
+        'created_by' => auth()->id(),
         ]);
 
         return Settings::roleRedirect('warehouses.index', 'Warehouse Created Successfully');
@@ -117,12 +126,13 @@ class WarehouseController extends Controller
     public function edit($id)
     {
         $id = Settings::getDecodeCode($id);
-
+        $staffs = User::activeByAccountAndStaff()->pluck('name', 'id');
         $warehouse = Warehouse::ofAccount()
             ->findOrFail($id);
 
         return view('backend.admin.warehouses.form', [
             'warehouse' => $warehouse,
+            'staffs' => $staffs,
             'breadcrumb' => $this->breadcrumb
         ]);
     }
@@ -145,13 +155,14 @@ class WarehouseController extends Controller
         ]);
 
         $warehouse->update([
-            'name' => $request->name,
-            'manager_name' => $request->manager_name,
-            'phone' => $request->phone,
-            'email' => $request->email,
-            'address' => $request->address,
-            'status' => $request->status ?? 1,
-            'updated_by' => auth()->id(),
+        'name' => $request->name,
+        'staff_id' => $request->staff_id,
+        'manager_name' => optional(User::find($request->staff_id))->name,
+        'phone' => $request->phone,
+        'email' => $request->email,
+        'address' => $request->address,
+        'status' => $request->status ?? 1,
+        'updated_by' => auth()->id(),
         ]);
 
         return Settings::roleRedirect('warehouses.index', 'Warehouse Updated Successfully');
@@ -272,44 +283,12 @@ class WarehouseController extends Controller
         return response()->json(['success' => $updated ? true : false]);
     }
 
-    public function getWarehouseProductsold($id)
-    {
-        $warehouseId = Settings::getDecodeCode($id);
-        $accountId = auth()->user()->account_id;
-        $breadcrumb['title'] = __('translation.warehouse_products');
-        $breadcrumb['route'] = 'admin.warehouses.products';
-        $breadcrumb['route2'] = 'admin.warehouses.index';
-        $breadcrumb['values'] = [
-            Settings::getEncodeCode($warehouseId),
-        ];
-        $breadcrumb['reset_route'] = 'admin.warehouses.products'; 
-        $breadcrumb['reset_value'] = Settings::getEncodeCode($warehouseId);
-
-        $warehouse = Warehouse::where('account_id', $accountId)
-            ->findOrFail($warehouseId);
-
-        $products = Product::where('account_id', $accountId)
-            ->whereHas('stocks', function ($q) use ($warehouseId, $accountId) {
-                $q->where('warehouse_id', $warehouseId)
-                ->where('account_id', $accountId)
-                ->where('stock', '>', 0);
-            })
-            ->with(['stocks' => function ($q) use ($warehouseId) {
-                $q->where('warehouse_id', $warehouseId);
-            }])
-            ->orderBy('name')
-            ->paginate(20);
-
-        return view('backend.admin.warehouses.products', compact('products', 'warehouse'));
-    }
-
-    public function getWarehouseProducts(Request $request, $id)
+    public function getWarehouseProductsOld(Request $request, $id)
     {
         $warehouseId = Settings::getDecodeCode($id);
         $breadcrumb = $this->breadcrumb;
        
-        $warehouse = Warehouse::ofAccount()
-            ->findOrFail($warehouseId);
+        $warehouse = Warehouse::ofAccount()->findOrFail($warehouseId);
 
         $query = Product::ofAccount()
             ->whereHas('stocks', function ($q) use ($warehouseId) {
@@ -319,8 +298,8 @@ class WarehouseController extends Controller
                 $q->where('warehouse_id', $warehouseId);
             }]);
 
-        if ($request->filled('product_name')) {
-            $query->where('name', 'LIKE', '%' . trim($request->product_name) . '%');
+        if ($request->filled('item_name')) {
+            $query->where('name', 'LIKE', '%' . trim($request->item_name) . '%');
         }
 
         if ($request->stock_filter == 'in_stock') {
@@ -337,11 +316,66 @@ class WarehouseController extends Controller
             });
         }
 
-        $products = $query->orderBy('name')
-            ->paginate(config('constants.pagination'))
-            ->withQueryString(); // important
+        $products = $query->orderBy('name')->paginate(config('constants.pagination'))->withQueryString(); 
 
             return view('backend.admin.warehouses.products', compact('breadcrumb', 'warehouse', 'products'));
+    }
+
+    public function getWarehouseProducts(Request $request, $id)
+    {
+        $warehouseId = Settings::getDecodeCode($id);
+        $breadcrumb = $this->breadcrumb;
+
+        $warehouse = Warehouse::ofAccount()->findOrFail($warehouseId);
+
+        $query = MasterItem::ofAccount()
+
+            // ✅ Only items that exist in this warehouse
+            ->whereHas('stocks', function ($q) use ($warehouseId) {
+                $q->where('warehouse_id', $warehouseId);
+            })
+
+            // ✅ Load stock for this warehouse only
+            ->with(['stocks' => function ($q) use ($warehouseId) {
+                $q->where('warehouse_id', $warehouseId);
+            }]);
+
+        // =========================
+        // 🔍 FILTER: NAME
+        // =========================
+        if ($request->filled('item_name')) {
+            $query->where('name', 'LIKE', '%' . trim($request->item_name) . '%');
+        }
+
+        // =========================
+        // 📦 FILTER: IN STOCK
+        // =========================
+        if ($request->stock_filter === 'in_stock') {
+            $query->whereHas('stocks', function ($q) use ($warehouseId) {
+                $q->where('warehouse_id', $warehouseId)
+                ->where('stock', '>', 0);
+            });
+        }
+
+        // =========================
+        // ⚠️ FILTER: LOW STOCK
+        // =========================
+        if ($request->stock_filter === 'low_stock') {
+            $query->whereHas('stocks', function ($q) use ($warehouseId) {
+                $q->where('warehouse_id', $warehouseId)
+                ->whereColumn('stock', '<=', 'low_stock_alert');
+            });
+        }
+
+        $items = $query
+            ->orderBy('name')
+            ->paginate(config('constants.pagination'))
+            ->withQueryString();
+
+        return view(
+            'backend.admin.warehouses.warehouseProducts', // you can rename later
+            compact('breadcrumb', 'warehouse', 'items')
+        );
     }
 
     public function getProductStock(Request $request)
@@ -354,5 +388,78 @@ class WarehouseController extends Controller
         return response()->json([
             'stock' => $stock->stock ?? 0
         ]);
+    }
+
+    public function stockListing(Request $request)
+    {    
+        $this->breadcrumb['title'] = __('translation.warehouse_stock_listing');
+        $this->breadcrumb['route1'] = 'admin.warehouses.index';
+        $this->breadcrumb['route1Title'] = __('translation.warehouse_list');
+        $this->breadcrumb['route2'] = 'admin.warehouses.stock.listing';
+        $this->breadcrumb['route2Title'] = __('translation.warehouse_stock_listing');
+        $this->breadcrumb['reset_route'] = 'admin.warehouses.stock.listing';
+        $this->breadcrumb['reset_route_title'] = __('translation.reset');
+
+        $breadcrumb =  $this->breadcrumb;
+
+        $query = ProductStock::with([
+                'warehouse',
+                'masterItem'
+            ])
+            ->whereHas('warehouse', function ($q) {
+                $q->ofAccount();
+            });
+
+        // =========================
+        // FILTER : PRODUCT NAME
+        // =========================
+        if ($request->filled('product_name')) {
+
+            $query->whereHas('masterItem', function ($q) use ($request) {
+
+                $q->where(
+                    'name',
+                    'LIKE',
+                    '%' . trim($request->product_name) . '%'
+                );
+            });
+        }
+
+        // =========================
+        // FILTER : WAREHOUSE
+        // =========================
+        if ($request->filled('warehouse_id')) {
+
+            $query->where('warehouse_id', $request->warehouse_id);
+        }
+
+        // =========================
+        // FILTER : STOCK
+        // =========================
+        if ($request->stock_filter == 'in_stock') {
+
+            $query->where('stock', '>', 0);
+        }
+
+        // =========================
+        // FILTER : LOW STOCK
+        // =========================
+        if ($request->stock_filter == 'low_stock') {
+
+            $query->whereColumn('stock', '<=', 'low_stock_alert');
+        }
+
+        $stocks = $query
+            ->latest()
+            ->paginate(config('constants.pagination'))
+            ->withQueryString();
+
+        $warehouses = Warehouse::dropdown();
+        $items = MasterItem::dropdown();
+
+        return view(
+            'backend.admin.warehouses.stock_listing',
+            compact('breadcrumb', 'stocks', 'warehouses', 'items')
+        );
     }
 }

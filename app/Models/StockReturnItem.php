@@ -10,7 +10,7 @@ class StockReturnItem extends Model
 
     protected $fillable = [
         'return_id',
-        'product_id',
+        'master_item_id',
         'qty',
         'price',
         'total',
@@ -32,5 +32,10 @@ class StockReturnItem extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function masterItem()
+    {
+        return $this->belongsTo(MasterItem::class, 'master_item_id');
     }
 }

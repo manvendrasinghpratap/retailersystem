@@ -14,7 +14,8 @@
     @if($islabel)
         <label for="{{ $name }}" class="form-label {{ $labelclass }}">
             {!! $label ?? Str::title(str_replace('_', ' ', $name)) !!}
-            @if($attributes->get('required'))
+            
+            @if($attributes->has('required'))
                 <span class="text-danger">*</span>
             @endif
         </label>
@@ -26,8 +27,8 @@
         name="{{ $name }}"
         id="{{ $name }}"
         value="{{ old($name, $value ?? '') }}"
-        placeholder="{{ $placeholder ?? strip_tags($label) ?? '' }}"
-        {{ $attributes->merge([
+        placeholder="{{ $placeholder ?? strip_tags($label ?? '') }}"
+        {{ $attributes->except(['type'])->merge([
             'class' => 'form-control ' . ($errors->has($name) ? 'is-invalid' : '')
         ]) }}
     >

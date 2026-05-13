@@ -65,5 +65,7 @@
 @include('components.ajax')
 @include('backend.modal.modalpopup')
 </body>
-
+<script>
+    feather.replace();
+</script>
 </html>

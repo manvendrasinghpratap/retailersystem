@@ -185,8 +185,7 @@
                                 selectedCustomerId = updateRes.customer.id;
 
                                 $('#selected_customer').html(
-                                    `Customer: ${updateRes.customer.name} (${updateRes.customer.phone}) 
-                                                                                                                                         ${updateRes.customer.email ? '- ' + updateRes.customer.email : ''}`
+                                    `Customer: ${updateRes.customer.name} (${updateRes.customer.phone}) ${updateRes.customer.email ? '- ' + updateRes.customer.email : ''}`
                                 );
 
                                 $('#save_customer_btn').hide();

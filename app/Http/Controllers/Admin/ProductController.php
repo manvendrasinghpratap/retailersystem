@@ -11,6 +11,10 @@ use Illuminate\Support\Facades\Crypt;
 use App\Models\StockAdjustment;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\PurchaseItem;
+use App\Models\MasterItem;
+use App\Models\RequisitionItem;
+use App\Models\Requisition;
+use DB;
 
 class ProductController extends Controller
 {
@@ -36,21 +40,21 @@ class ProductController extends Controller
                     [
                         'route' => 'admin.products',
                         'title' => __('translation.brands')
-                    ],
+                    ], 
                     // use route NAME only (not route())
+                    // [
+                    //     'route' => $role . '.no-barcode',
+                    //     'title' => __('translation.add_product_without_barcode')
+                    // ],
                     [
-                        'route' => $role . '.no-barcode',
-                        'title' => __('translation.add_product_without_barcode')
-                    ],
-                    [
-                        'route' => $role . '.barcode',
+                        'route' => 'admin.requisitions.index',
                         'title' => __('translation.add_edit_product')
                     ],
                 ],
 
                 'route1' => "admin.barcode",
                 'route1Title' => __('translation.add_edit_product'),
-                'route2Title' => __('translation.add_edit_product'),
+                'route2Title' => __('translation.brands'),
                 'route2' => 'admin.products',
                 'reset_route' => 'admin.products',
                 'reset_route_title' => __('translation.cancel'),
@@ -160,73 +164,167 @@ class ProductController extends Controller
         return $this->index($request);
     }
 
+
     public function create(Request $request, $token = null)
     {
-        $barcode = $productId = $route = $adjustment = null;
+        $barcode = $productId = $route = $adjustment = $requisition_item_id = null;
+        $masterItemName = null;
+        $qty = null;
+
         if ($token) {
+
             try {
+
                 $data = Crypt::decrypt($token);
+
                 $adjustmentData = Settings::getInventoryAdjustment($data['adjustment']);
+
                 if (empty($adjustmentData['adjustment'])) {
-                    return Settings::roleRedirect('inventory', 'Something went wrong!', 'error');
+
+                    return Settings::roleRedirect(
+                        'inventory',
+                        'Something went wrong!',
+                        'error'
+                    );
                 }
+
                 $route = $adjustmentData['route'];
                 $adjustment = $adjustmentData['adjustment'];
                 $barcode = $data['barcode'];
                 $productId = $data['product_id'];
+                $requisition_item_id = $data['requisition_item_id'];
+
+                // ==========================
+                // GET REQUISITION ITEM
+                // ==========================
+                $requisitionItem = RequisitionItem::with('masterItem')->find(Settings::getDecodeCode($requisition_item_id));
+
+                if ($requisitionItem) {
+                    $masterItemName = $requisitionItem->masterItem->name ?? null;
+                    $qty = $requisitionItem->qty;
+                }
 
             } catch (\Exception $e) {
-                return redirect()->route('admin.barcode')->with('error', 'Invalid link');
+
+                return redirect()
+                    ->route('admin.barcode')
+                    ->with('error', 'Invalid link');
             }
         }
+
         $breadcrumb = $this->breadcrumbListing;
+
         $categories = Category::getCategoriesPluck();
-        return view('backend.admin.product.form', compact('categories', 'breadcrumb', 'barcode', 'productId', 'route', 'adjustment'));
+
+        return view(
+            'backend.admin.product.form',
+            compact(
+                'categories',
+                'breadcrumb',
+                'barcode',
+                'productId',
+                'route',
+                'adjustment',
+                'requisition_item_id',
+                'masterItemName',
+                'qty'
+            )
+        );
     }
+
 
     public function store(Request $request)
     {
         $prefix = strtoupper(substr($request->name, 0, 3));
+
         $request->merge([
             'barcode' => $request->filled('barcode')
                 ? $request->barcode
                 : Settings::generateEan13(),
+
             'sku' => $request->filled('sku')
                 ? $request->sku
                 : $prefix . '-' . time() . rand(100, 999),
         ]);
-
+        
         try {
-            $request->merge([
-                'cost_price' => $request->selling_price,
-            ]);
-            $request->validate([
-                'name' => 'required|string|max:255',
-                'selling_price' => 'required|numeric|min:0',
-                'cost_price' => 'required|numeric|min:0',
-                'status' => 'nullable|in:0,1',
-                'category_id' => 'nullable|exists:categories,id',
-                'description' => 'nullable|string',
-            ]);
-            $product = Product::create($request->all());
-            $product->update([
-                'sku' => strtoupper(substr($product->category->name, 0, 3)) . '-' . $product->id
-            ]);
-
-            if ($request->route == 'Add') {
-                StockAdjustment::create([
-                    'product_id' => $product->id,
-                    'type' => 'add',
-                    'quantity' => $request->quantity ?? 0,
-                    'note' => 'Initial stock added'
+            DB::transaction(function () use ($request) {
+                $masterItemId = Settings::getDecodeCode($request->requisition_item_id);
+                $requisitionItem = RequisitionItem::with('masterItem')->lockForUpdate()->find($masterItemId);
+                $request->merge(['master_item_id' => $requisitionItem->master_item_id]);
+                $request->merge(['cost_price' => $request->selling_price,]);
+                $request->validate([
+                    'name'          => 'required|string|max:255',
+                    'selling_price' => 'required|numeric|min:0',
+                    'cost_price'    => 'required|numeric|min:0',
+                    'status'        => 'nullable|in:0,1',
+                    'category_id'   => 'nullable|exists:categories,id',
+                    'description'   => 'nullable|string',
                 ]);
-                return Settings::roleRedirect('barcode', 'Product Added Successfully.');
-            }
 
-            return Settings::roleRedirect('products', 'Product Added Successfully.');
+                // ====================================
+                // CHECK REQUISITION ITEM
+                // ====================================
 
-        } catch (\Exception $e) {
-            return Settings::roleRedirect('products', 'Something went wrong!', 'error');
+                $id = Settings::getDecodeCode($request->requisition_item_id);
+
+                $requisitionItem = RequisitionItem::with('masterItem')
+                    ->lockForUpdate()
+                    ->find($id);
+
+                if (!$requisitionItem) {
+                    throw new \Exception('Invalid requisition item');
+                }
+
+                // ====================================
+                // DUPLICATE CHECK
+                // ====================================
+
+                if (!empty($requisitionItem->accepted_by)) {
+
+                    throw new \Exception(
+                        'This requisition item is already accepted by another user.'
+                    );
+                }
+
+                // ====================================
+                // CREATE PRODUCT
+                // ====================================
+
+                $product = Product::create($request->all());
+
+                $product->update([
+                    'sku' => strtoupper(
+                        substr($product->category->name ?? 'PRD', 0, 3)
+                    ) . '-' . $product->id
+                ]);
+                // ====================================
+                // UPDATE REQUISITION ITEM
+                // ====================================
+                $requisitionItem->update(['accepted_by' => auth()->id()]);
+                // ====================================
+                // UPDATE REQUISITION STATUS
+                // ====================================
+                $requisition = Requisition::find($requisitionItem->requisition_id);
+                $requisition->updateStatusByItems();
+
+                // ====================================
+                // INITIAL STOCK
+                // ====================================
+
+                if ($request->route == 'Add') {
+
+                    StockAdjustment::create([
+                        'product_id' => $product->id,
+                        'type'       => 'add',
+                        'quantity'   => $request->quantity ?? 0,
+                        'note'       => 'Initial stock added'
+                    ]);
+                }
+            });
+            return redirect()->route('admin.requisitions.pending.posting')->with('success', 'Product Added Successfully');           
+        } catch (\Exception $e) { 
+             return redirect()->route('admin.requisitions.pending.posting')->with('error', $e->getMessage());
         }
     }
 
@@ -302,101 +400,114 @@ class ProductController extends Controller
 
     public function getLastPrice(Request $request)
     {
-        $productId   = $request->product_id;
-        $vendorId    = $request->vendor_id;
-        $warehouseId = $request->warehouse_id;
-        $accountId   = auth()->user()->account_id;
+        $masterItemId = $request->master_item_id;
+        $vendorId     = $request->vendor_id;
+        $warehouseId  = $request->warehouse_id;
+        $accountId    = auth()->user()->account_id;
 
-        // 1️⃣ Same Product + Vendor + Warehouse
-        $last = PurchaseItem::where('product_id', $productId)
-            ->whereHas('purchase', function ($q) use ($vendorId, $warehouseId, $accountId) {
-                $q->where('account_id', $accountId)
-                ->where('vendor_id', $vendorId)
-                ->where('warehouse_id', $warehouseId);
+        $baseQuery = PurchaseItem::query()
+            ->where('master_item_id', $masterItemId)
+            ->whereHas('purchase', function ($q) use ($accountId) {
+                $q->where('account_id', $accountId);
+            });
+
+        // =========================
+        // 1️⃣ Same Item + Vendor + Warehouse
+        // =========================
+        $last = (clone $baseQuery)
+            ->whereHas('purchase', function ($q) use ($vendorId, $warehouseId) {
+
+                $q->when($vendorId, function ($sq) use ($vendorId) {
+                    $sq->where('vendor_id', $vendorId);
+                });
+
+                $q->when($warehouseId, function ($sq) use ($warehouseId) {
+                    $sq->where('warehouse_id', $warehouseId);
+                });
             })
-            ->latest()
+            ->latest('id')
             ->first();
 
-        // 2️⃣ Same Product + Vendor
+        // =========================
+        // 2️⃣ Same Item + Vendor
+        // =========================
         if (!$last && $vendorId) {
-            $last = PurchaseItem::where('product_id', $productId)
-                ->whereHas('purchase', function ($q) use ($vendorId, $accountId) {
-                    $q->where('account_id', $accountId)
-                    ->where('vendor_id', $vendorId);
+
+            $last = (clone $baseQuery)
+                ->whereHas('purchase', function ($q) use ($vendorId) {
+                    $q->where('vendor_id', $vendorId);
                 })
-                ->latest()
+                ->latest('id')
                 ->first();
         }
 
-        // 3️⃣ Same Product + Warehouse
+        // =========================
+        // 3️⃣ Same Item + Warehouse
+        // =========================
         if (!$last && $warehouseId) {
-            $last = PurchaseItem::where('product_id', $productId)
-                ->whereHas('purchase', function ($q) use ($warehouseId, $accountId) {
-                    $q->where('account_id', $accountId)
-                    ->where('warehouse_id', $warehouseId);
+
+            $last = (clone $baseQuery)
+                ->whereHas('purchase', function ($q) use ($warehouseId) {
+                    $q->where('warehouse_id', $warehouseId);
                 })
-                ->latest()
+                ->latest('id')
                 ->first();
         }
 
-        // 4️⃣ Fallback → Only Product
+        // =========================
+        // 4️⃣ Fallback → Item Only
+        // =========================
         if (!$last) {
-            $last = PurchaseItem::where('product_id', $productId)
-                ->whereHas('purchase', function ($q) use ($accountId) {
-                    $q->where('account_id', $accountId);
-                })
-                ->latest()
+
+            $last = (clone $baseQuery)
+                ->latest('id')
                 ->first();
         }
 
         return response()->json([
-            'price' => $last ? $last->cost_price : 0
+            'price' => $last?->cost_price ?? 0
         ]);
     }
 
-    public function search_delete(Request $request)
-    {
-        $query = $request->q;
+   
 
-        $products = Product::where('account_id', auth()->user()->account_id)
-            ->where(function ($q2) use ($query) {
-                $q2->where('name', 'LIKE', "%$query%")
-                ->orWhere('barcode', 'LIKE', "%$query%");
-            })
-            ->limit(20)
-            ->get();
-
-        return response()->json(
-            $products->map(function ($p) {
-                return [
-                    'id' => $p->id,
-                    'text' => $p->name . ' (' . $p->barcode . ')'
-                ];
-            })
-        );
-    }
 
     public function search(Request $request)
     {
         $warehouseId = $request->warehouse_id;
+        $search = trim($request->q);
 
-        $products = Product::query()->ofAccount()
-            ->when($warehouseId, function($q) use ($warehouseId) {
-                $q->whereHas('stocks', function($sq) use ($warehouseId) {
+        $items = MasterItem::query()
+            ->ofAccount()
+            ->where('is_deleted', 0)->orderBy('name', 'asc')
+
+            // Search filter
+            ->when($search, function ($q) use ($search) {
+                $q->where('name', 'LIKE', '%' . $search . '%');
+            })
+
+            // Only items available in warehouse
+            ->when($warehouseId, function ($q) use ($warehouseId) {
+
+                $q->whereHas('stocks', function ($sq) use ($warehouseId) {
+
                     $sq->where('warehouse_id', $warehouseId)
-                    ->where('stock', '>', 0);
+                        ->where('stock', '>', 0);
                 });
             })
+
             ->limit(20)
             ->get();
 
         return response()->json(
-            $products->map(function ($p) {
+            $items->map(function ($item) {
+
                 return [
-                    'id' => $p->id,
-                    'text' => $p->name
+                    'id'   => $item->id,
+                    'text' => $item->name
                 ];
             })
         );
     }
+    
 }
