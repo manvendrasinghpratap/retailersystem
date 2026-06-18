@@ -5,43 +5,7 @@
     <meta charset="UTF-8">
     <title>{{ __('translation.webname') }} | {{ __('translation.receipt') }} | {{ Config::get('constants.shop_name')}}</title>
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('assets/images/icons/favicon-16x16.png')}}">
-
-    <style>
-        * {
-            font-size: 12px;
-            font-family: monospace;
-        }
-
-        .ticket {
-            width: 80mm;
-            max-width: 80mm;
-        }
-
-        .centered {
-            text-align: center;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        td,
-        th {
-            border-top: 1px dashed #000;
-            padding: 3px 0;
-        }
-
-        .hidden-print {
-            margin-top: 10px;
-        }
-
-        @media print {
-            .hidden-print {
-                display: none !important;
-            }
-        }
-    </style>
+    @include('backend.admin.print.css')
 </head>
 
 <body>
@@ -49,13 +13,11 @@
     <div class="ticket">
 
         <div class="centered">
-            <img src="{{ asset('assets/images/logo.png') }}" style="width:60px;"><br>
-            <strong>{{ Config::get('constants.shop_name') }} </strong><br>
-            {{ __('translation.webaddress') }}<br>
-            {{ Config::get('constants.mainwebsite') }}<br>
-            {{ __('translation.phone') }} : {{ __('translation.webphone') }}<br>
+            <p><strong>{{ $storeDetails->name ?? Config::get('constants.shop_name') }} </strong></p>
+            {{ $storeDetails->address ?? __('translation.webaddress') }}<br>
+            <!-- <p>{{ Config::get('constants.mainwebsite') }}<br> -->
+            {{ __('translation.phone') }} : {{ $storeDetails->phone ?? '' }} {{ $storeDetails->alternate_phone ? ' | ' . $storeDetails->alternate_phone : '' }}
             <p><strong>{{ __('translation.cashier') }}:</strong> {{ $sale->user->name ?? '-' }}</p>
-            --------------------------------
         </div>
 
         <p>
@@ -116,16 +78,8 @@
         </div>
         <div class="centered">
             --------------------------------<br>
-            {{ __('translation.thanks_for_your_visit') }}<br />
+            {{ __('translation.thanks_for_your_visit')}} {{ $storeDetails->name ?? Config::get('constants.shop_name') }}<br />
             {{ __('translation.we_value_your_patronage') }}<br />
-            {{ __('translation.also_visit_our_havana_kitchen_and_lounge') }}<br>
-            <p>
-                We offer special discounts and promotions to our loyal customers.
-                To enjoy these benefits, please visit the link below to register:
-                <a href="https://havanaworlds.com/customerregistration/" target="_blank">
-                    https://havanaworlds.com/customerregistration/
-                </a>
-            </p>
         </div>
 
     </div>

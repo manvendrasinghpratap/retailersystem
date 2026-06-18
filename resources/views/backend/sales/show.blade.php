@@ -4,7 +4,7 @@
 @endsection
 
 @section('content')
-    @include('backend.components.breadcrumb')
+    {{-- @include('backend.components.breadcrumb') --}}
     <div class="row">
         <div class="col-12">
             <div class="card">

@@ -9,6 +9,7 @@ use App\Models\Customer;
 use App\Mail\CustomerInvoiceMail;
 use Illuminate\Support\Facades\Mail;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\Store;
 class SaleController extends Controller
 {
 
@@ -175,13 +176,15 @@ class SaleController extends Controller
     {
         $id = Settings::getDecodeCodeWithHashids($id);
         try {
+            $storeDetails = Store::where('account_id', auth()->user()->account_id)->first();
+            //  $this->pr($storeDetails);
             if (empty($id)) {
                 return redirect()->route('admin.sales.index')->with('error', 'Invalid sale ID');
             }
             $id = $id[0];
             $sale = Sale::find($id);
             $sale->load('items.product', 'user', 'payments');
-            return view('backend.sales.receipt', compact("sale"));
+            return view('backend.sales.receipt', compact("sale", 'storeDetails'));
         } catch (\Exception $e) {
             return redirect()->route('admin.sales.index')->with('error', 'Invalid sale ID');
         }
@@ -233,11 +236,12 @@ class SaleController extends Controller
             if (empty($id)) {
                 return redirect()->route('admin.sales.index')->with('error', 'Invalid sale ID');
             }
+            $storeDetails = Store::where('account_id', auth()->user()->account_id)->first();
             $id = $id[0];
             $pdfHeaderdata = \Config::get('constants.downloadinvoicpdf');
             $sale = Sale::with(['items.product', 'customer'])->findOrFail($id);
             $customer = Customer::find($sale->customer_id);
-            $pdf = Pdf::loadView('backend.pdf.invoice', compact('sale', 'customer'));
+            $pdf = Pdf::loadView('backend.pdf.invoice', compact('sale', 'customer', 'storeDetails'));
             $pdf = Settings::downloadpdf($pdf);
             $fileName = $pdfHeaderdata['filename'] . '-' . $sale->invoice_no . '.pdf';
             return $pdf->stream($fileName);

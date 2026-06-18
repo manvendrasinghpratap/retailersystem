@@ -139,28 +139,28 @@ Route::middleware(['auth', 'route.permission'])->prefix('admin')->group(function
         |--------------------------------------------------------------------------
         */
 
-        // Payment form
-        Route::get('/vendors/payment/{id}', [VendorController::class, 'paymentForm'])
-            ->name('admin.vendors.paymentForm');
+    // Payment form
+    Route::get('/vendors/payment/{id}', [VendorController::class, 'paymentForm'])
+        ->name('admin.vendors.paymentForm');
 
-        // Save payment
-        Route::post('/vendors/payment/store', [VendorController::class, 'paymentStore'])
-            ->name('admin.vendors.paymentStore');
+    // Save payment
+    Route::post('/vendors/payment/store', [VendorController::class, 'paymentStore'])
+        ->name('admin.vendors.paymentStore');
 
-        /*
-        |--------------------------------------------------------------------------
-        | Vendor Ledger / Statement
-        |--------------------------------------------------------------------------
-        */
+    /*
+    |--------------------------------------------------------------------------
+    | Vendor Ledger / Statement
+    |--------------------------------------------------------------------------
+    */
 
-        Route::get('/vendors/ledger/{id}', [VendorController::class, 'ledger'])
-            ->name('admin.vendors.ledger');
+    Route::get('/vendors/ledger/{id}', [VendorController::class, 'ledger'])
+        ->name('admin.vendors.ledger');
 });
 
 
-Route::prefix('admin')->name('admin.')->middleware(['auth','route.permission'])->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'route.permission'])->group(function () {
     Route::prefix('purchases')->name('purchases.')->group(function () {
-     // List all purchases
+        // List all purchases
         Route::get('/', [PurchaseController::class, 'index'])->name('index');
         // Create purchase form
         Route::get('/create', [PurchaseController::class, 'create'])->name('create');
@@ -213,8 +213,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth','route.permission'])-
         Route::get('/csv/{id}', [RequisitionController::class, 'csv'])->name('csv');
         Route::get('/view/ajax/{id}', [RequisitionController::class, 'viewAjax'])->name('view.ajax');
         Route::get('/pending-posting', [RequisitionController::class, 'pendingPosting'])->name('pending.posting');
-        Route::post('/cancel-item',[RequisitionController::class, 'cancelItem'])->name('cancel.item');
-        
+        Route::post('/cancel-item', [RequisitionController::class, 'cancelItem'])->name('cancel.item');
+
     });
 });
 

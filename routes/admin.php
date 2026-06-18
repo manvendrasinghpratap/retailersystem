@@ -9,7 +9,8 @@ use App\Http\Controllers\Admin\{
     StockAdjustmentController,
     BarcodeController,
     CouponController,
-    CustomerController
+    CustomerController,
+    StoreController
 };
 
 Route::prefix('admin')->middleware(['auth', 'route.permission'])->group(function () {
@@ -44,7 +45,7 @@ Route::prefix('admin/products')->middleware(['auth', 'route.permission'])->group
     Route::post('products/delete', [ProductController::class, 'destroy'])->name('products.delete');
     Route::post('products/softdelete', [ProductController::class, 'softdelete'])->name('admin.products.softdelete');
     Route::get('pdf', [ProductController::class, 'exportPdf'])->name('admin.products.pdf');
-    Route::get('csv', [ProductController::class, 'exportCsv'])->name('admin.products.csv'); 
+    Route::get('csv', [ProductController::class, 'exportCsv'])->name('admin.products.csv');
     Route::get('last-price', [ProductController::class, 'getLastPrice'])->name('admin.products.lastPrice');
     Route::get('search', [ProductController::class, 'search'])->name('admin.products.search');
 });
@@ -97,6 +98,22 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('customers/update-by-phone', [CustomerController::class, 'updateByPhone'])->name('customers.updateByPhone');
     Route::get('customers/export-pdf', [CustomerController::class, 'exportPdf'])->name('customers.exportPdf');
     Route::get('customers/export-csv', [CustomerController::class, 'exportCsv'])->name('customers.exportCsv');
+});
+
+
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::prefix('stores')->name('stores.')->group(function () {
+        Route::get('/', [StoreController::class, 'index'])->name('index');
+        Route::get('/create', [StoreController::class, 'create'])->name('create');
+        Route::post('/store', [StoreController::class, 'store'])->name('store');
+        Route::get('/edit/{id}', [StoreController::class, 'edit'])->name('edit');
+        Route::post('/update', [StoreController::class, 'update'])->name('update');
+        Route::post('/delete', [StoreController::class, 'destroy'])->name('destroy');
+        Route::post('/status-update', [StoreController::class, 'statusUpdate'])->name('status.update');
+        Route::post('/soft-delete', [StoreController::class, 'softdelete'])->name('soft.delete');
+        Route::get('export-pdf', [StoreController::class, 'exportPdf'])->name('exportPdf');
+        Route::get('export-csv', [StoreController::class, 'exportCsv'])->name('exportCsv');
+    });
 });
 
 

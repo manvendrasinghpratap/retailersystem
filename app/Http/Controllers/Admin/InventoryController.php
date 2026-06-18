@@ -11,6 +11,8 @@ use App\Helpers\Settings;
 use Illuminate\Support\Facades\Crypt;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Auth;
+use App\Models\Warehouse;
+use App\Models\Store;
 use App\Models\RequisitionItem;
 
 class InventoryController extends Controller
@@ -208,10 +210,12 @@ class InventoryController extends Controller
         } catch (\Exception $e) {
             return redirect()->route('admin.barcode')->with('error', 'Invalid link');
         }
-        
+        $warehouses = Warehouse::active()->ofAccount()->orderBy('name', 'asc')->pluck('name', 'id')->prepend(__('translation.to_warehouse'), '');
+        $stores = Store::active()->ofAccount()->ofMyStore()->orderBy('name', 'asc')->pluck('name', 'id')->prepend(__('translation.my_store'), '');
+        $form = 'backend.admin.inventory.form';
         $masterItemName = null;
         $qty = null;
-        $requisition_item_id = null; 
+        $requisition_item_id = null;
         $adjustmentData = Settings::getInventoryAdjustment($data['adjustment']);
         if (empty($adjustmentData['adjustment'])) {
             return Settings::roleRedirect('inventory', 'Something went wrong!', 'error');
@@ -227,21 +231,26 @@ class InventoryController extends Controller
         $requisitionItem = RequisitionItem::with('masterItem')->find(Settings::getDecodeCode($requisition_item_id));
         if ($requisitionItem) {
             $masterItemName = $requisitionItem->masterItem->name ?? null;
-            $qty = (int)($requisitionItem->qty ?? 0);
+            $qty = (int) ($requisitionItem->qty ?? 0);
         }
 
         // ✅ Load product
         $product = Product::where('account_id', auth()->user()->account_id)->where('barcode', $barcode)->first();
-        // $this->pr($product);
+        // $this->pr($product->stocks[0]->stock);
         if (!$product) {
             return redirect()->route('admin.barcode')->with('error', 'Product not found');
         }
         $breadcrumb = $this->breadcrumbListing;
         $products = Product::where('account_id', auth()->user()->account_id)->where('barcode', $barcode)->pluck('name', 'id')->toArray();
-        return view('backend.admin.inventory.form', compact(
+        if ($route == 'Deduct') {
+            $form = 'backend.admin.inventory.return_to_warehouse';
+        }
+        return view($form, compact(
             'breadcrumb',
             'products',
             'route',
+            'warehouses',
+            'stores',
             'adjustment',
             'product',        // ✅ Pass product
             'barcode',        // ✅ Pass barcode

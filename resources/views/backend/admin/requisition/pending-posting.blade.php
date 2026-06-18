@@ -85,7 +85,7 @@
                                     <x-href-input action="no-barcode" name="no-barcode" label="" class="no-barcode" data-id="{{ \App\Helpers\Settings::getEncodeCode($item->id) }}" href="javascript:void(0);"/>
                                     <x-href-input action="barcode" name="barcode" label="" class="barcode" data-id="{{ \App\Helpers\Settings::getEncodeCode($item->id) }}" href="javascript:void(0);"/>
                                     <x-href-input action="cancel" name="cancel" label="" class="cancelItem" href="javascript:void(0);" data-id="{{ \App\Helpers\Settings::getEncodeCode($item->id) }}"/>
-                                    {{-- CANCELLED --}}
+                                    {{-- CANCELLED --}} 
                                     @elseif($item->status == 0)
                                     <span class="badge bg-danger">{{ __('translation.cancelled') }}</span>
                                     {{-- ACCEPTED --}}
@@ -157,7 +157,7 @@
 
                 Swal.fire({
                     title: 'Redirecting...',
-                    text: 'Opening in new tab',
+                    text: 'Opening in same tab',
                     icon: 'success',
                     timer: 1000,
                     showConfirmButton: false
@@ -166,7 +166,7 @@
                 // redirect to another URL in new tab
                 window.open(
                     "{{ route('admin.no-barcode') }}?requisition_item_id=" + id,
-                    '_blank'
+                    '_self'
                 );
             }
         });
@@ -193,7 +193,7 @@
 
                 Swal.fire({
                     title: 'Redirecting...',
-                    text: 'Opening in new tab',
+                    text: 'Opening in same tab',
                     icon: 'success',
                     timer: 1000,
                     showConfirmButton: false
@@ -202,7 +202,7 @@
                 // redirect to another URL in new tab
                 window.open(
                     "{{ route('admin.barcode') }}?requisition_item_id=" + id,
-                    '_blank'
+                    '_self'
                 );
             }
         });

@@ -3,25 +3,25 @@
 
 <head>
   <meta charset="utf-8">
-  <title>{{ __('translation.webname') }} | {{ __('translation.invoice') }} | {{ Config::get('constants.shop_name')}}</title>
+  <title>{{ $storeDetails->name ?? Config::get('constants.shop_name') }} || {{ __('translation.invoice') }} </title>
   @include('backend.pdf.layouts.pdfcss')
 </head>
 
 <body>
 
-  <div class="watermark">{{ config('constants.shopname') }}</div>
+  <div class="watermark">{{ $storeDetails->name ?? Config::get('constants.shop_name') }}</div>
 
   <!-- HEADER -->
   <table class="header">
     <tr>
       <td>
         <strong style="font-size:18px; color:#4f46e5;">
-          {{ config('constants.shop_name') }}
+          {{ $storeDetails->name ?? Config::get('constants.shop_name') }}
         </strong><br>
         <span style="font-size:11px;">
-          {{ config('constants.address') }}<br>
-          {{ config('constants.phonenumber') }}<br>
-		  {{ config('constants.website') }}<br>
+          {{ $storeDetails->address ?? config('constants.address') }}<br>
+          {{ $storeDetails->phone ?? config('constants.phonenumber') }} {{ $storeDetails->alternate_phone ? ' | ' . $storeDetails->alternate_phone : '' }}<br>
+          {{ $storeDetails->website ?? config('constants.website') }}<br>
         </span>
       </td>
 
@@ -143,17 +143,14 @@
 
   <!-- FOOTER -->
   <div style="text-align:center; font-size:11px; color:#6b7280;">
-    <strong>{{ __('translation.thanks_for_your_visit') }}</strong><br>
+    <strong>{{ __('translation.thanks_for_your_visit') }} {{ $storeDetails->name ?? Config::get('constants.shop_name') }}</strong><br>
     {{ __('translation.we_value_your_patronage') }}<br><br>
 
-    {{ __('translation.we_offer_special_discounts_and_promotions_to_our_loyal_customers') }}<br>
-    {{ __('translation.to_enjoy_these_benefits_please_visit_the_link_below_to_register') }}<br><br>
+    <!-- {{ __('translation.we_offer_special_discounts_and_promotions_to_our_loyal_customers') }}<br>
+    {{ __('translation.to_enjoy_these_benefits_please_visit_the_link_below_to_register') }}<br><br> -->
 
-    <a href="{{ __('translation.havana_worlds_registration_link') }}" style="color:#4f46e5;">
-      {{ __('translation.havana_worlds') }}
-    </a>
+    <a href="{{ $storeDetails->website }}" style="color:#4f46e5;"> {{ $storeDetails->website ?? config('constants.website') }} </a>
   </div>
-
 </body>
 
 </html>

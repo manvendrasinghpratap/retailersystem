@@ -211,7 +211,7 @@ class Settings
     {
         return (!empty($data)) ? substr(str_shuffle("123456789"), 0, 5) . $data : '';
     }
-    
+
     public static function getDecodeCodeWithHashids($encodedCode)
     {
         return (!empty($encodedCode)) ? Hashids::decode(substr($encodedCode, 5)) : 0;
@@ -385,7 +385,7 @@ class Settings
     public static function getcustomnumberformat($amount)
     {
         return number_format($amount, 2);
-        $amount  =  number_format($amount, 2);
+        $amount = number_format($amount, 2);
         $parts = explode('.', number_format($amount, 2, '.', ''));
         $intPart = $parts[0];
 
@@ -473,7 +473,10 @@ class Settings
     }
     public static function isAdmin()
     {
-        return auth()->check() && auth()->user()->designation_id == 2;
+        return in_array(auth()->user()->designation_id, Config::get('constants.only_admin'))
+            && in_array(auth()->user()->user_type_id, Config::get('constants.only_admin'));
+
+        //return auth()->check() && auth()->user()->designation_id == 2;
     }
 
     public static function userScope($query, $column = 'id')

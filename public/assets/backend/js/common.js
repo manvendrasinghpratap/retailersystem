@@ -133,6 +133,10 @@ $(document).ready(function () {
         placeholder: "Select Store",
         allowClear: true
     });
+    $(".reason").select2({
+        placeholder: "Select Reason",
+        allowClear: true
+    });
     $(".category_id").select2({
         placeholder: "Select Category",
         allowClear: true
@@ -172,6 +176,10 @@ $(document).ready(function () {
     });
     $(".types").select2({
         placeholder: 'Select Type',
+        allowClear: true,
+    });
+    $(".managers").select2({
+        placeholder: 'Select Manager',
         allowClear: true,
     });
     $(".customer_payment_method").select2({
