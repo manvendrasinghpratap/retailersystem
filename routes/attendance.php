@@ -8,7 +8,7 @@ use App\Http\Controllers\Admin\AttendanceController;
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'subscription'])->group(function () {
 
     // ===============================
     // Attendance Main Page

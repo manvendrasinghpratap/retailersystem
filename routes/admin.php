@@ -13,7 +13,7 @@ use App\Http\Controllers\Admin\{
     StoreController
 };
 
-Route::prefix('admin')->middleware(['auth', 'route.permission'])->group(function () {
+Route::prefix('admin')->middleware(['auth', 'route.permission', 'subscription'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
     Route::get('/graph', [DashboardController::class, 'graph'])->name('graph');
     Route::get('change-password', [\App\Http\Controllers\Auth\PasswordController::class, 'editPassword'])->name('admin.change-password');
@@ -22,7 +22,7 @@ Route::prefix('admin')->middleware(['auth', 'route.permission'])->group(function
 });
 
 
-Route::prefix('admin')->middleware(['auth', 'route.permission'])->group(function () {
+Route::prefix('admin')->middleware(['auth', 'route.permission', 'subscription'])->group(function () {
     // Route::get('categories', [CategoryController::class, 'index'])->name('admin.categories');
     Route::get('categories', [CategoryController::class, 'index'])->name('admin.categories.index');
     Route::get('categories/create', [CategoryController::class, 'create'])->name('admin.categories.create');
@@ -36,7 +36,7 @@ Route::prefix('admin')->middleware(['auth', 'route.permission'])->group(function
     Route::get('categories/export-csv', [CategoryController::class, 'exportCsv'])->name('admin.category.exportCsv');
 });
 
-Route::prefix('admin/products')->middleware(['auth', 'route.permission'])->group(function () {
+Route::prefix('admin/products')->middleware(['auth', 'route.permission', 'subscription'])->group(function () {
     Route::get('/', [ProductController::class, 'index'])->name('admin.products');
     Route::get('create/{token?}', [ProductController::class, 'create'])->name('admin.products.create');
     Route::post('store', [ProductController::class, 'store'])->name('admin.products.store');
@@ -50,7 +50,7 @@ Route::prefix('admin/products')->middleware(['auth', 'route.permission'])->group
     Route::get('search', [ProductController::class, 'search'])->name('admin.products.search');
 });
 
-Route::prefix('admin')->middleware(['auth', 'route.permission'])->group(function () {
+Route::prefix('admin')->middleware(['auth', 'route.permission', 'subscription'])->group(function () {
     Route::post('modifiers/store', [ProductModifierController::class, 'store'])->name('admin.modifiers.store');
     Route::get('inventory', [InventoryController::class, 'index'])->name('admin.inventory');
     Route::get('inventory/manage/{id?}', [InventoryController::class, 'create'])->name('admin.inventory.manage');
@@ -60,7 +60,7 @@ Route::prefix('admin')->middleware(['auth', 'route.permission'])->group(function
     Route::get('inventory/export-csv', [InventoryController::class, 'exportCsv'])->name('admin.inventory.exportCsv');
 });
 
-Route::prefix('admin/barcode')->middleware(['auth', 'route.permission'])->group(function () {
+Route::prefix('admin/barcode')->middleware(['auth', 'route.permission', 'subscription'])->group(function () {
     Route::get('/', [BarcodeController::class, 'index'])->name('admin.barcode');
     Route::get('/no-barcode', [BarcodeController::class, 'nobarcode'])->name('admin.no-barcode');
     Route::get('/sales-barcode', [BarcodeController::class, 'index'])->name('admin.sales-barcode');
@@ -70,7 +70,7 @@ Route::prefix('admin/barcode')->middleware(['auth', 'route.permission'])->group(
     Route::post('/validateBarcode', [BarcodeController::class, 'validateBarcode'])->name('admin.barcode.validateBarcode');
 });
 
-Route::prefix('admin')->middleware(['auth', 'route.permission'])->group(function () {
+Route::prefix('admin')->middleware(['auth', 'route.permission', 'subscription'])->group(function () {
     Route::get('coupons', [CouponController::class, 'index'])->name('admin.coupons.index');
     Route::get('coupons/create', [CouponController::class, 'create'])->name('admin.coupons.create');
     Route::post('coupons/store', [CouponController::class, 'store'])->name('admin.coupons.store');
@@ -84,7 +84,7 @@ Route::prefix('admin')->middleware(['auth', 'route.permission'])->group(function
     Route::get('coupons/export-csv', [CouponController::class, 'exportCsv'])->name('admin.coupons.exportCsv');
 });
 
-Route::prefix('admin')->name('admin.')->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'route.permission', 'subscription'])->group(function () {
     Route::get('customers', [CustomerController::class, 'index'])->name('customers.index');
     Route::get('customers/create', [CustomerController::class, 'create'])->name('customers.create');
     Route::post('customers/store', [CustomerController::class, 'store'])->name('customers.store');
@@ -101,7 +101,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 });
 
 
-Route::prefix('admin')->name('admin.')->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'route.permission', 'subscription'])->group(function () {
     Route::prefix('stores')->name('stores.')->group(function () {
         Route::get('/', [StoreController::class, 'index'])->name('index');
         Route::get('/create', [StoreController::class, 'create'])->name('create');

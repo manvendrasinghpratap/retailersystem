@@ -63,23 +63,23 @@ class StockReturnController extends Controller
         $vendors = Vendor::ofAccount()->active()->pluck('name', 'id');
         $warehouses = Warehouse::ofAccount()->active()->pluck('name', 'id');
         $returns = StockReturn::with(['vendor', 'warehouse', 'items.product'])->ofAccount()->latest();
-        
+
         if (request()->has('return_no') && request('return_no') != '') {
             $returns = $returns->where('return_no', 'LIKE', '%' . trim(request('return_no')) . '%');
         }
-        
+
         if (request()->has('vendor_id') && request('vendor_id') != '') {
             $returns = $returns->where('vendor_id', request('vendor_id'));
         }
-        
+
         if (request()->has('warehouse_id') && request('warehouse_id') != '') {
             $returns = $returns->where('warehouse_id', request('warehouse_id'));
         }
-        
-       $returns = Settings::applyDateRange($returns,$request, 'created_at', true); 
-        
+
+        $returns = Settings::applyDateRange($returns, $request, 'created_at', true);
+
         $returns = $returns->paginate(config('constants.pagination'));
-        return view('backend.admin.stock_return.index', compact('returns', 'breadcrumb', 'vendors', 'warehouses','date'));
+        return view('backend.admin.stock_return.index', compact('returns', 'breadcrumb', 'vendors', 'warehouses', 'date'));
     }
 
     /*
@@ -90,7 +90,7 @@ class StockReturnController extends Controller
     public function create()
     {
         $this->breadcrumb['route1Title'] = 'Create Stock Return';
-        
+
         $vendors = Vendor::ofAccount()->active()->pluck('name', 'id');
         $products = Product::ofAccount()->active()->pluck('name', 'id');
         $warehouses = Warehouse::ofAccount()->active()->pluck('name', 'id');
@@ -109,198 +109,198 @@ class StockReturnController extends Controller
     |--------------------------------------------------------------------------
     */
     public function store(Request $request)
-{
-    try {
+    {
+        try {
 
-        $validated = $request->validate([
+            $validated = $request->validate([
 
-            'vendor_id' => 'required|exists:vendors,id',
+                'vendor_id' => 'required|exists:vendors,id',
 
-            'warehouse_id' => 'required|exists:warehouses,id',
+                'warehouse_id' => 'required|exists:warehouses,id',
 
-            'items' => 'required|array|min:1',
+                'items' => 'required|array|min:1',
 
-            'items.*.master_item_id' => 'required|exists:master_items,id',
+                'items.*.master_item_id' => 'required|exists:master_items,id',
 
-            'items.*.qty' => 'required|numeric|min:0.01',
+                'items.*.qty' => 'required|numeric|min:0.01',
 
-            'items.*.price' => 'required|numeric|min:0.01',
-        ]);
-
-        DB::transaction(function () use ($validated) {
-
-            $accountId = auth()->user()->account_id;
-
-            // =========================
-            // RETURN NUMBER
-            // =========================
-            $returnNo = 'RET-' . now()->format('YmdHis');
-
-            // =========================
-            // TOTAL AMOUNT
-            // =========================
-            $totalAmount = collect($validated['items'])->sum(function ($item) {
-
-                return $item['qty'] * $item['price'];
-            });
-
-            // =========================
-            // CREATE RETURN
-            // =========================
-            $return = StockReturn::create([
-
-                'account_id'   => $accountId,
-
-                'vendor_id'    => $validated['vendor_id'],
-
-                'warehouse_id' => $validated['warehouse_id'],
-
-                'return_no'    => $returnNo,
-
-                'return_date'  => now()->format('Y-m-d'),
-
-                'total'        => $totalAmount,
-
-                'created_by'   => auth()->id(),
+                'items.*.price' => 'required|numeric|min:0.01',
             ]);
 
-            $stockService = app(StockService::class);
+            DB::transaction(function () use ($validated) {
 
-            // =========================
-            // VALIDATE STOCK
-            // =========================
-            foreach ($validated['items'] as $item) {
+                $accountId = auth()->user()->account_id;
 
-                $stock = ProductStock::query()
+                // =========================
+                // RETURN NUMBER
+                // =========================
+                $returnNo = 'RET-' . now()->format('YmdHis');
 
-                    ->where('account_id', $accountId)
+                // =========================
+                // TOTAL AMOUNT
+                // =========================
+                $totalAmount = collect($validated['items'])->sum(function ($item) {
 
-                    ->where('warehouse_id', $validated['warehouse_id'])
+                    return $item['qty'] * $item['price'];
+                });
 
-                    ->where('master_item_id', $item['master_item_id'])
+                // =========================
+                // CREATE RETURN
+                // =========================
+                $return = StockReturn::create([
 
-                    ->lockForUpdate()
+                    'account_id' => $accountId,
 
-                    ->first();
-
-                if (!$stock) {
-
-                    throw new \Exception('Item not found in warehouse stock');
-                }
-
-                if ($stock->stock <= 0) {
-
-                    throw new \Exception('No stock available');
-                }
-
-                if ($stock->stock < $item['qty']) {
-
-                    throw new \Exception('Return qty exceeds available stock');
-                }
-            }
-
-            // =========================
-            // PROCESS ITEMS
-            // =========================
-            foreach ($validated['items'] as $item) {
-
-                $qty   = $item['qty'];
-
-                $price = $item['price'];
-
-                // =====================
-                // SAVE RETURN ITEM
-                // =====================
-                StockReturnItem::create([
-
-                    'return_id'      => $return->id,
-
-                    'master_item_id' => $item['master_item_id'],
-
-                    'qty'            => $qty,
-
-                    'price'          => $price,
-
-                    'total'          => $qty * $price
-                ]);
-
-                // =====================
-                // STOCK OUT
-                // =====================
-                $stockService->moveStock([
-
-                    'account_id'   => $accountId,
+                    'vendor_id' => $validated['vendor_id'],
 
                     'warehouse_id' => $validated['warehouse_id'],
 
-                    'master_item_id' => $item['master_item_id'],
+                    'return_no' => $returnNo,
 
-                    'type'         => 5, // stock return
+                    'return_date' => now()->format('Y-m-d'),
 
-                    // IMPORTANT
-                    'qty'          => -$qty,
+                    'total' => $totalAmount,
+
+                    'created_by' => auth()->id(),
+                ]);
+
+                $stockService = app(StockService::class);
+
+                // =========================
+                // VALIDATE STOCK
+                // =========================
+                foreach ($validated['items'] as $item) {
+
+                    $stock = ProductStock::query()
+
+                        ->where('account_id', $accountId)
+
+                        ->where('warehouse_id', $validated['warehouse_id'])
+
+                        ->where('master_item_id', $item['master_item_id'])
+
+                        ->lockForUpdate()
+
+                        ->first();
+
+                    if (!$stock) {
+
+                        throw new \Exception('Item not found in warehouse stock');
+                    }
+
+                    if ($stock->stock <= 0) {
+
+                        throw new \Exception('No stock available');
+                    }
+
+                    if ($stock->stock < $item['qty']) {
+
+                        throw new \Exception('Return qty exceeds available stock');
+                    }
+                }
+
+                // =========================
+                // PROCESS ITEMS
+                // =========================
+                foreach ($validated['items'] as $item) {
+
+                    $qty = $item['qty'];
+
+                    $price = $item['price'];
+
+                    // =====================
+                    // SAVE RETURN ITEM
+                    // =====================
+                    StockReturnItem::create([
+
+                        'return_id' => $return->id,
+
+                        'master_item_id' => $item['master_item_id'],
+
+                        'qty' => $qty,
+
+                        'price' => $price,
+
+                        'total' => $qty * $price
+                    ]);
+
+                    // =====================
+                    // STOCK OUT
+                    // =====================
+                    $stockService->moveStock([
+
+                        'account_id' => $accountId,
+
+                        'warehouse_id' => $validated['warehouse_id'],
+
+                        'master_item_id' => $item['master_item_id'],
+
+                        'type' => 5, // stock return
+
+                        // IMPORTANT
+                        'qty' => -$qty,
+
+                        'reference_id' => $return->id,
+
+                        'remarks' => 'Stock Return #' . $returnNo
+                    ]);
+                }
+
+                // =========================
+                // VENDOR UPDATE
+                // =========================
+                $vendor = Vendor::lockForUpdate()
+                    ->findOrFail($validated['vendor_id']);
+
+                $oldBalance = (float) ($vendor->current_balance ?? 0);
+
+                $newBalance = $oldBalance - $totalAmount;
+
+                // =========================
+                // LEDGER ENTRY
+                // =========================
+                VendorLedger::create([
+
+                    'account_id' => $accountId,
+
+                    'vendor_id' => $vendor->id,
+
+                    'type' => 5,
 
                     'reference_id' => $return->id,
 
-                    'remarks'      => 'Stock Return #' . $returnNo
+                    'debit' => 0,
+
+                    'credit' => $totalAmount,
+
+                    'balance' => $newBalance,
+
+                    'remarks' => 'Stock Return #' . $returnNo
                 ]);
-            }
 
-            // =========================
-            // VENDOR UPDATE
-            // =========================
-            $vendor = Vendor::lockForUpdate()
-                ->findOrFail($validated['vendor_id']);
+                // =========================
+                // UPDATE VENDOR BALANCE
+                // =========================
+                $vendor->update([
 
-            $oldBalance = (float) ($vendor->current_balance ?? 0);
+                    'current_balance' => $newBalance
+                ]);
+            });
 
-            $newBalance = $oldBalance - $totalAmount;
+            return Settings::roleRedirect(
+                'stock_returns.index',
+                'Stock Return Created Successfully.'
+            );
 
-            // =========================
-            // LEDGER ENTRY
-            // =========================
-            VendorLedger::create([
+        } catch (\Exception $e) {
 
-                'account_id'   => $accountId,
-
-                'vendor_id'    => $vendor->id,
-
-                'type'         => 5,
-
-                'reference_id' => $return->id,
-
-                'debit'        => 0,
-
-                'credit'       => $totalAmount,
-
-                'balance'      => $newBalance,
-
-                'remarks'      => 'Stock Return #' . $returnNo
-            ]);
-
-            // =========================
-            // UPDATE VENDOR BALANCE
-            // =========================
-            $vendor->update([
-
-                'current_balance' => $newBalance
-            ]);
-        });
-
-        return Settings::roleRedirect(
-            'stock_returns.index',
-            'Stock Return Created Successfully.'
-        );
-
-    } catch (\Exception $e) {
-
-        return Settings::roleRedirect(
-            'stock_returns.index',
-            $e->getMessage(),
-            'error'
-        );
+            return Settings::roleRedirect(
+                'stock_returns.index',
+                $e->getMessage(),
+                'error'
+            );
+        }
     }
-}
     public function store_old(Request $request)
     {
         try {
@@ -333,13 +333,13 @@ class StockReturnController extends Controller
 
                 // ✅ Create Return
                 $return = StockReturn::create([
-                    'account_id'   => $accountId,
-                    'vendor_id'    => $validated['vendor_id'],
+                    'account_id' => $accountId,
+                    'vendor_id' => $validated['vendor_id'],
                     'warehouse_id' => $validated['warehouse_id'],
-                    'return_no'    => $returnNo,
-                    'return_date'  => now()->format('Y-m-d'),
-                    'total'        => $totalAmount,
-                    'created_by'   => auth()->id(),
+                    'return_no' => $returnNo,
+                    'return_date' => now()->format('Y-m-d'),
+                    'total' => $totalAmount,
+                    'created_by' => auth()->id(),
                 ]);
 
                 $stockService = app(StockService::class);
@@ -378,22 +378,22 @@ class StockReturnController extends Controller
 
                     // Save item
                     StockReturnItem::create([
-                        'return_id'  => $return->id,
+                        'return_id' => $return->id,
                         'product_id' => $item['product_id'],
-                        'qty'        => $qty,
-                        'price'      => $price,
-                        'total'      => $qty * $price
+                        'qty' => $qty,
+                        'price' => $price,
+                        'total' => $qty * $price
                     ]);
 
                     // ✅ STOCK OUT (use existing supported type)
                     $stockService->moveStock([
-                        'account_id'   => $accountId,
+                        'account_id' => $accountId,
                         'warehouse_id' => $validated['warehouse_id'],
-                        'product_id'   => $item['product_id'],
-                        'type'         => 'adjustment_sub', // ✅ IMPORTANT FIX
-                        'qty'          => $qty,
+                        'product_id' => $item['product_id'],
+                        'type' => 'adjustment_sub', // ✅ IMPORTANT FIX
+                        'qty' => $qty,
                         'reference_id' => $return->id,
-                        'remarks'      => 'Stock Return #' . $returnNo
+                        'remarks' => 'Stock Return #' . $returnNo
                     ]);
                 }
 
@@ -408,14 +408,14 @@ class StockReturnController extends Controller
 
                 // Ledger Entry
                 VendorLedger::create([
-                    'account_id'  => $accountId,
-                    'vendor_id'   => $vendor->id,
-                    'type'        => 5, //
-                    'reference_id'=> $return->id,
-                    'debit'       => 0,
-                    'credit'      => $totalAmount,
-                    'balance'     => $newBalance,
-                    'remarks'     => 'Stock Return #' . $returnNo
+                    'account_id' => $accountId,
+                    'vendor_id' => $vendor->id,
+                    'type' => 5, //
+                    'reference_id' => $return->id,
+                    'debit' => 0,
+                    'credit' => $totalAmount,
+                    'balance' => $newBalance,
+                    'remarks' => 'Stock Return #' . $returnNo
                 ]);
 
                 // Update Vendor
@@ -470,11 +470,11 @@ class StockReturnController extends Controller
     {
         $id = Settings::getDecodeCode($id);
 
-        $return = StockReturn::with(['vendor','warehouse','items.masterItem'])
+        $return = StockReturn::with(['vendor', 'warehouse', 'items.masterItem'])
             ->where('account_id', auth()->user()->account_id)
             ->findOrFail($id);
 
-        return view('backend.admin.stock_return._view', compact('return')); 
+        return view('backend.admin.stock_return._view', compact('return'));
     }
 
     /*
@@ -482,7 +482,7 @@ class StockReturnController extends Controller
 | CANCEL RETURN
 |--------------------------------------------------------------------------
 */
-    
+
     public function cancel(Request $request)
     {
         try {
@@ -518,20 +518,20 @@ class StockReturnController extends Controller
                     }
 
                     $stockService->moveStock([
-                        'account_id'    => $accountId,
-                        'warehouse_id'  => $return->warehouse_id,
+                        'account_id' => $accountId,
+                        'warehouse_id' => $return->warehouse_id,
 
                         // ✅ master item
-                        'master_item_id'=> $item->master_item_id,
+                        'master_item_id' => $item->master_item_id,
 
                         // ✅ reverse stock add
-                        'type'          => 'adjustment_add',
+                        'type' => 'adjustment_add',
 
                         // ✅ positive qty
-                        'qty'           => (float) $item->qty,
+                        'qty' => (float) $item->qty,
 
-                        'reference_id'  => $return->id,
-                        'remarks'       => 'Cancel Stock Return #' . $return->return_no
+                        'reference_id' => $return->id,
+                        'remarks' => 'Cancel Stock Return #' . $return->return_no
                     ]);
                 }
 
@@ -553,21 +553,21 @@ class StockReturnController extends Controller
                 // 🧾 LEDGER ENTRY
                 // =========================
                 VendorLedger::create([
-                    'account_id'    => $accountId,
-                    'vendor_id'     => $vendor->id,
+                    'account_id' => $accountId,
+                    'vendor_id' => $vendor->id,
 
                     // cancel stock return type
-                    'type'          => 6,
+                    'type' => 6,
 
-                    'reference_id'  => $return->id,
+                    'reference_id' => $return->id,
 
                     // payable increased again
-                    'debit'         => $returnTotal,
-                    'credit'        => 0,
+                    'debit' => $returnTotal,
+                    'credit' => 0,
 
-                    'balance'       => $newBalance,
+                    'balance' => $newBalance,
 
-                    'remarks'       => 'Cancel Stock Return #' . $return->return_no
+                    'remarks' => 'Cancel Stock Return #' . $return->return_no
                 ]);
 
                 // =========================
@@ -581,7 +581,7 @@ class StockReturnController extends Controller
                 // 🔁 UPDATE RETURN STATUS
                 // =========================
                 $return->update([
-                    'status'       => 0,
+                    'status' => 0,
                     'cancelled_by' => auth()->id(),
                     'cancelled_at' => now(),
                 ]);

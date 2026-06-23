@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\Admin\WarehouseController;
 
-Route::middleware(['auth', 'route.permission'])->prefix('admin/warehouses')->name('admin.warehouses.')->group(function () {
+Route::middleware(['auth', 'route.permission', 'subscription'])->prefix('admin/warehouses')->name('admin.warehouses.')->group(function () {
     Route::get('/', [WarehouseController::class, 'index'])->name('index');
     Route::get('/create', [WarehouseController::class, 'create'])->name('create');
     Route::post('/store', [WarehouseController::class, 'store'])->name('store');

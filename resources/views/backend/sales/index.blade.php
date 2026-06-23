@@ -77,7 +77,7 @@
                                         <td>{{ $sale->payment_methods }}</td>
                                         <td>{{ __('translation.b_ngn') . ' ' . number_format($sale->total, 2) }}</td>
                                         <td>{{ App\Helpers\Settings::getFormattedDatetime($sale->created_at)}}</td>
-                                        <td><a href="{{ route('admin.sales.show', $sale->id) }}" class="" title="View"><i class="fas fa-eye"></i></a>
+                                        <td><a href="{{ route('admin.sales.show', \App\Helpers\Settings::getEncodeCodeWithHashids($sale->id)) }}" class="" title="View"><i class="fas fa-eye"></i></a>
                                             <a href="{{ route('printinvoice', \App\Helpers\Settings::getEncodeCodeWithHashids($sale->id)) }}" class="" title="Receipt" target="_blank"><i class="fas fa-receipt"></i></a>
                                             <a href="{{ route('downloadinvoice', \App\Helpers\Settings::getEncodeCodeWithHashids($sale->id)) }}" class="" title="Download Invoice" target="_blank"><i class="fas fa-download"></i></a>
                                             <a href="javascript:void(0)" class="send-invoice-btn" data-sale-id="{{ $sale->id }}" title="Send Invoice via Email"><i class="fas fa-envelope"></i></a>

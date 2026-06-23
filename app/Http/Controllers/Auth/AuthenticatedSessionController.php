@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use App\Models\User;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -22,7 +23,70 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-   public function store(LoginRequest $request): RedirectResponse
+
+    public function store(LoginRequest $request): RedirectResponse
+    {
+        $request->authenticate();
+
+        $user = auth()->user();
+
+        // Super Admin Bypass
+        if ($user->id != 1) {
+
+            // Check account status
+            if (!$user->account || $user->account->status != 1) {
+
+                auth()->logout();
+                return back()->with('error', 'Your main account has been deactivated. Please contact support.');
+            }
+
+            // Check subscription status
+            if (!$user->account->hasActiveSubscription()) {
+
+                auth()->logout();
+
+                return back()->with('error', 'Your subscription has expired. Please renew your subscription.');
+            }
+        }
+
+        $request->session()->regenerate();
+
+        return redirect($this->redirectByRole($user));
+    }
+
+    public function store_old(LoginRequest $request): RedirectResponse
+    {
+        $request->authenticate();
+
+        $user = auth()->user();
+
+        // Check account status
+        if ($user->id != 1 && (!$user->account || $user->account->status != 1)) {
+
+            auth()->logout();
+
+            return back()->withErrors([
+                'email' => 'Your main account has been deactivated. Please contact support.',
+            ]);
+        }
+
+        // Check subscription status
+        if (!$user->account->hasActiveSubscription()) {
+
+            auth()->logout();
+
+            return back()->withErrors([
+                'email' => 'Your subscription has expired. Please renew your subscription.',
+            ]);
+        }
+
+        $request->session()->regenerate();
+
+        return redirect($this->redirectByRole($user));
+    }
+
+
+    public function store_delete(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
 
@@ -33,32 +97,63 @@ class AuthenticatedSessionController extends Controller
         return redirect($this->redirectByRole($user));
     }
 
-    
+
+
+
     public function modellogin(Request $request)
     {
         $request->validate([
-            'login' => ['required'], // email or username
+            'login' => ['required'],
             'password' => ['required'],
         ]);
+
         $login = $request->input('login');
         $field = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+
+        $user = User::where($field, $login)->first();
+
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Invalid username/email or password.',
+            ], 422);
+        }
+
+        // Account status check
+        if ($user->id != 1 && (!$user->account || $user->account->status != 1)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Your subscription account has been deactivated. Please contact support.',
+            ], 422);
+        }
+
+        // Subscription check
+        // if (!$user->account->hasActiveSubscription()) {
+        //     return response()->json([
+        //         'status' => false,
+        //         'message' => 'Your subscription has expired. Please renew your subscription.',
+        //     ], 422);
+        // }
+
         $credentials = [
             $field => $login,
             'password' => $request->password
         ];
-        $remember = $request->boolean('remember');
-        if (Auth::attempt($credentials, $remember)) {
-            $request->session()->regenerate();
-            $user = Auth::user();
+
+        if (!Auth::attempt($credentials, $request->boolean('remember'))) {
             return response()->json([
-                'status' => true,
-                'redirect' => $this->redirectByRole($user),
-            ]);
+                'status' => false,
+                'message' => 'Invalid username/email or password.',
+            ], 422);
         }
+
+        $request->session()->regenerate();
+
         return response()->json([
-            'status' => false,
-            'message' => 'The provided credentials do not match our records.',
-        ], 422);
+            'status' => true,
+            'message' => 'Login successful.',
+            'redirect' => $this->redirectByRole(Auth::user()),
+        ]);
     }
 
 

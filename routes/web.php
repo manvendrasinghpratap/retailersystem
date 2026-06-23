@@ -64,8 +64,8 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-Route::middleware(['auth'])->get('admin', [DashboardController::class, 'index'])->name('dashboard');
-Route::middleware(['auth', 'route.permission'])->prefix('admin/staff')->group(function () {
+Route::middleware(['auth', 'subscription'])->get('admin', [DashboardController::class, 'index'])->name('dashboard');
+Route::middleware(['auth', 'route.permission', 'subscription'])->prefix('admin/staff')->group(function () {
     Route::get('/', [StaffController::class, 'index'])->name('admin.staff');
     Route::get('/index', [StaffController::class, 'index'])->name('admin.staff.index');
     Route::get('/add', [StaffController::class, 'create'])->name('admin.staff.add');
@@ -77,20 +77,20 @@ Route::middleware(['auth', 'route.permission'])->prefix('admin/staff')->group(fu
     Route::get('/exportcsv', [StaffController::class, 'exportCsv'])->name('staff.csv');
 });
 
-Route::middleware(['auth', 'route.permission'])->prefix('admin/members')->group(function () {
+Route::middleware(['auth', 'route.permission', 'subscription'])->prefix('admin/members')->group(function () {
     Route::post('/destroy', [StaffController::class, 'delete'])->name('destroy');
     Route::post('/status-update', [StaffController::class, 'statusUpdate'])->name('statusUpdate');
 });
 
 
-Route::middleware(['route.permission', 'auth'])->group(function () {
+Route::middleware(['route.permission', 'auth', 'subscription'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::middleware(['auth', 'route.permission'])->group(function () {
+Route::middleware(['auth', 'route.permission', 'subscription'])->group(function () {
     Route::get('barcode/scan-product', [BarcodeController::class, 'index'])->name('barcode.scan.product');
     Route::get('barcode/{id}', [BarcodeController::class, 'barcodeForm'])->name('barcode.form');
     Route::post('barcode/print', [BarcodeController::class, 'barcodePrint'])->name('barcode.print');
@@ -99,23 +99,23 @@ Route::middleware(['auth', 'route.permission'])->group(function () {
 //  Route::get('/profile', [App\Http\Controllers\Auth\PasswordController::class, 'edit'])->name('profile');
 Route::post('update-password', [\App\Http\Controllers\Auth\PasswordController::class, 'update'])->name('update-password');
 
-Route::middleware(['auth', 'route.permission'])->group(function () {
+Route::middleware(['auth', 'route.permission', 'subscription'])->group(function () {
     Route::get('/create/transaction', [BillingController::class, 'index'])->name('billing.index');
     Route::post('/billing/scan', [BillingController::class, 'scanProduct'])->name('billing.scan');
     Route::post('/billing/complete', [BillingController::class, 'completeSale'])->name('billing.complete');
 });
-Route::middleware(['auth', 'route.permission'])->group(function () {
+Route::middleware(['auth', 'route.permission', 'subscription'])->group(function () {
     Route::get('/sales', [SaleController::class, 'index'])->name('admin.sales.index');
     Route::get('/sales/export-pdf', [SaleController::class, 'exportPdf'])->name('admin.sales.exportPdf');
     Route::get('/sales/export-csv', [SaleController::class, 'exportCsv'])->name('admin.sales.exportCsv');
     Route::get('/sales/{sale}', [SaleController::class, 'show'])->name('admin.sales.show');
 });
-Route::middleware(['auth', 'route.permission'])->group(function () {
+Route::middleware(['auth', 'route.permission', 'subscription'])->group(function () {
     Route::get('admin/print/invoice/{id}', [SaleController::class, 'printinvoice'])->name('printinvoice');
     Route::post('admin/send-invoice-email', [SaleController::class, 'sendInvoiceEmail'])->name('sendinvoice');
     Route::get('admin/download-invoice/{id}', [SaleController::class, 'downloadInvoice'])->name('downloadinvoice');
 });
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'subscription'])->group(function () {
     Route::get('admin/sync-routes', [\App\Http\Controllers\Administrator\AclController::class, 'syncRoutes'])->name('syncroutes');
     Route::get('/reports/daily-sales', [ReportController::class, 'dailySales'])->name('reports.daily.sales');
     Route::get('/reports/daily-sales/pdf', [ReportController::class, 'dailySalesPdf'])->name('reports.daily.sales.pdf');
@@ -123,7 +123,7 @@ Route::middleware(['auth'])->group(function () {
 });
 
 
-Route::middleware(['auth', 'route.permission'])->prefix('admin')->group(function () {
+Route::middleware(['auth', 'route.permission', 'subscription'])->prefix('admin')->group(function () {
     Route::get('/vendors', [VendorController::class, 'index'])->name('admin.vendors.index');
     Route::get('/vendors/create', [VendorController::class, 'create'])->name('admin.vendors.create');
     Route::post('/vendors/store', [VendorController::class, 'store'])->name('admin.vendors.store');
@@ -158,7 +158,7 @@ Route::middleware(['auth', 'route.permission'])->prefix('admin')->group(function
 });
 
 
-Route::prefix('admin')->name('admin.')->middleware(['auth', 'route.permission'])->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'route.permission', 'subscription'])->group(function () {
     Route::prefix('purchases')->name('purchases.')->group(function () {
         // List all purchases
         Route::get('/', [PurchaseController::class, 'index'])->name('index');

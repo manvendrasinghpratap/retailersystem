@@ -41,4 +41,13 @@
             </div>
         </div>
     </div>
+    @if ($errors->any())
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Login Failed',
+                text: '{{ $errors->first() }}',
+            });
+        </script>
+    @endif
 </x-guest-layout>

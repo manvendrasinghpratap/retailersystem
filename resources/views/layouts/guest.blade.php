@@ -46,6 +46,17 @@
 	<script src="{{ asset('assets/plugins/rating/jquery.rating-stars.js') }}"></script>
 	<script src="{{ asset('assets/plugins/rating/jquery.barrating.js') }}"></script>
 	<script src="{{ asset('assets/js/custom.js') }}"></script>
-
+	@if(session('error'))
+		<script>
+			@if (session('error'))
+				Swal.fire({
+					icon: 'error',
+					title: 'Error',
+					text: "{{ session('error') }}",
+					confirmButtonColor: '#dc3545'
+				});
+			@endif
+		</script>
+	@endif
 </body>
 </html>

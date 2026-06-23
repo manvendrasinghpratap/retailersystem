@@ -239,4 +239,8 @@ class User extends Authenticatable
         }
         return $query;
     }
+    public function account()
+    {
+        return $this->belongsTo(Account::class);
+    }
 }

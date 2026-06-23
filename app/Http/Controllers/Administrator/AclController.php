@@ -57,6 +57,7 @@ class AclController extends Controller
         DB::transaction(function () {
 
             $designations = Designation::getSelectable(); // [id => name]
+            $designations[1] = 'Superadmin';
             $routes = RouteModel::getSelectable();        // [id => name]
 
             // ✅ Get existing ACL combinations

@@ -59,14 +59,14 @@ class SaleController extends Controller
                     'route' => 'admin.sales.index',
                     'title' => __('translation.sales_list')
                 ],
-                [
-                    'route' => 'admin.sales.show',
-                    'title' => __('translation.invoice')
-                ],
-                [
-                    'route' => 'admin.sales.payment',
-                    'title' => __('translation.payment_details')
-                ]
+                // [
+                //     'route' => 'admin.sales.show',
+                //     'title' => __('translation.invoice')
+                // ],
+                // [
+                //     'route' => 'admin.sales.payment',
+                //     'title' => __('translation.payment_details')
+                // ]
             ],
             'route1' => "admin.sales.index",
             'route1Title' => __('translation.sales_list'),
@@ -156,9 +156,11 @@ class SaleController extends Controller
         return $this->index($request);
     }
 
-    public function show(Sale $sale)
+    public function show($sale)
     {
         $breadcrumb = $this->breadcrumShow;
+        $saleId = Settings::getDecodeCodeWithHashids($sale);
+        $sale = Sale::findOrFail($saleId[0]);
         $sale->load('items.product', 'user', 'payments');
 
         return view('backend.sales.show', compact('sale', 'breadcrumb'));
