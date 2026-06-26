@@ -501,5 +501,13 @@ function validateSelect2Form(formId, fields = []) {
 
 }
 
+function showLoader() {
+    $('#common-loader').show();
+}
+
+function hideLoader() {
+    $('#common-loader').hide();
+}
+
 
 

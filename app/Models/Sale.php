@@ -18,9 +18,17 @@ class Sale extends Model
         'total',
         'paid_amount',
         'change_amount',
+        'payment_type',
         'payment_method',
         'status',
         'user_id',
+        'payable_amount',
+        'balance_amount',
+        'interest_amount',
+        'interest_rate',
+        'due_date',
+        'credit_duration_id',
+        'payment_status'
     ];
 
     /**
@@ -54,13 +62,6 @@ class Sale extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
-    public function getPaymentMethodsOldAttribute()
-    {
-        return $this->payments
-            ->pluck('method')
-            ->map(fn($method) => ucwords($method))
-            ->implode(', ');
-    }
 
     public function getPaymentMethodsAttribute()
     {
@@ -93,5 +94,20 @@ class Sale extends Model
     public function getTransferAmountAttribute()
     {
         return $this->payments->where('method', 'transfer')->sum('amount');
+    }
+    public function creditDuration()
+    {
+        return $this->belongsTo(
+            CreditDuration::class,
+            'credit_duration_id'
+        );
+    }
+    public function customerPaymentType()
+    {
+        return $this->belongsTo(
+            PaymentType::class,
+            'payment_type',
+            'short_name'
+        );
     }
 }

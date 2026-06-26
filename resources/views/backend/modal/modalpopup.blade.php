@@ -345,23 +345,135 @@
                 <h5 class="modal-title">{{ __('translation.add_new_master_item') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form id="masterItemForm"  method="POST" > 
+            <form id="masterItemForm" method="POST">
                 @csrf
                 <div class="modal-body">
-                    <div class="row"> 
-                        <x-text-input name="name" label="Name" value="{{ $item->name ?? '' }}" required  mainrows="6" />
+                    <div class="row">
+                        <x-text-input name="name" label="Name" value="{{ $item->name ?? '' }}" required mainrows="6" />
                         <x-text-input name="description" label="Description" value="{{ $item->description ?? '' }}" mainrows="6" />
-                        <input type="text" name="status" value="1" required  hidden="true" />  
+                        <input type="text" name="status" value="1" required hidden="true" />
                     </div>
                 </div>
-                <div class="modal-footer text-center"> 
+                <div class="modal-footer text-center">
                     <button type="submit" class="btn btn-primary saveMasterItem">{{__('translation.save')}}</button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{__('translation.close')}}</button> 
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{__('translation.close')}}</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+<!---- Master Item Modal End ---->
 
 
+<!---- Payment Status Modal Begin ---->
+<div class="modal fade" id="paymentStatusModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{__('translation.credit_payment_details')}}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="paymentDetails"></div>
 
+                <form id="creditPaymentForm">
+                    <hr>
+                    <h5>{{__('translation.addpayment')}}</h5>
+                    <input type="hidden" id="sale_id" name="sale_id">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label>{{ __('translation.payment_method') }}</label>
+                            <select class="form-control" name="payment_method_id" id="payment_method_id"></select>
+                        </div>
+                        <div class="col-md-4">
+                            <label>{{ __('translation.amount') }}</label>
+                            <input type="number" step="0.01" class="form-control" id="payment_amount" name="amount">
+                        </div>
+                        <div class="col-md-4">
+                            <label>&nbsp;</label>
+                            <button type="button" class="btn btn-primary w-100 " id="saveCreditPayment">{{ __('translation.savepayment')}}</button>
+                        </div>
+                    </div>
+                </form>
+                <hr>
+                <h5>{{ __('translation.paymenthistory')}}</h5>
+                <div id="paymentHistory"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $('#saveCreditPayment').on('click', function () {
+        let btn = $(this);
+        // Prevent double click
+        if (btn.prop('disabled')) {
+            return;
+        }
+
+        let method = $('#payment_method_id').val();
+        let amount = parseFloat($('#payment_amount').val()) || 0;
+
+        if (!method) {
+            showAlert(
+                'error',
+                'Error',
+                'Please select a payment method.'
+            );
+            return;
+        }
+
+        if (amount <= 0) {
+            showAlert(
+                'error',
+                'Error',
+                'Please enter a valid payment amount.'
+            );
+            return;
+        }
+
+        btn.prop('disabled', true)
+            .html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+        $.post(
+            "{{ route('admin.sales.save-credit-payment') }}",
+            {
+                _token: "{{ csrf_token() }}",
+                sale_id: $('#sale_id').val(),
+                payment_method_id: $('#payment_method_id').val(),
+                amount: $('#payment_amount').val()
+            },
+            function (res) {
+                if (res.status == 'success') {
+                    showAlert(
+                        'success',
+                        'Success',
+                        res.message
+                    ).then(() => {
+                        location.reload();
+                    });
+                } else if (res.status == 'error') {
+                    showAlert(
+                        'error',
+                        'Error',
+                        res.message
+                    );
+                    $('#payment_amount').val(0)
+                    btn.prop('disabled', false)
+                        .html('{{ __("translation.savepayment") }}');
+                }
+            }
+        ).fail(function (xhr) {
+            btn.prop('disabled', false)
+                .html('{{ __("translation.savepayment") }}');
+
+            showAlert(
+                'error',
+                'Error',
+                xhr.responseJSON?.message || 'Something went wrong.'
+            );
+
+        });
+
+    });
+</script>
+<!---- Payment Status Modal End ---->

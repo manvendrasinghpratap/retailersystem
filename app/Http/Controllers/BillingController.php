@@ -13,6 +13,10 @@ use Illuminate\Support\Facades\DB;
 use App\Helpers\EmailHelper;
 use App\Mail\CustomerInvoiceMail;
 use Illuminate\Support\Facades\Mail;
+use App\Models\PaymentType;
+use App\Models\CreditDuration;
+use App\Models\SalePayment;
+use App\Models\PaymentMethod;
 
 class BillingController extends Controller
 {
@@ -61,6 +65,29 @@ class BillingController extends Controller
             'breadcrumb' => $this->breadcrumbBarcodeReader,
             'categories' => Category::getCategoriesPluck(),
             'products' => Product::getProductPluck(),
+            'paymentTypes' => PaymentType::getSelectable(),
+            'creditDurations' => CreditDuration::getSelectable(),
+            'paymentMethods' => PaymentMethod::getSelectable(),
+            'taxPercentage' => '10.5'
+        ]);
+    }
+
+    /**
+     * Summary of getCreditDuration
+     * @param mixed $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getCreditDuration($id)
+    {
+        $duration = CreditDuration::ofAccount()
+            ->active()
+            ->findOrFail($id);
+
+        return response()->json([
+            'id' => $duration->id,
+            'name' => $duration->name,
+            'duration_days' => $duration->duration_days,
+            'interest' => $duration->interest,
         ]);
     }
 
@@ -109,6 +136,269 @@ class BillingController extends Controller
 
     public function completeSale(Request $request)
     {
+        // echo '<pre>';
+        // print_r($request->all());
+        // exit;
+        $request->validate([
+            'items' => 'required|array|min:1',
+            'items.*.id' => 'required|integer',
+            'items.*.quantity' => 'required|numeric|min:1',
+            'items.*.price' => 'required|numeric|min:0',
+
+            'subtotal' => 'required|numeric',
+            'tax' => 'nullable|numeric',
+            'discount' => 'nullable|numeric',
+            'total' => 'required|numeric',
+
+            'payment_type' => 'required|in:full,partial,credit',
+
+            'payments' => 'nullable|array',
+            'payments.*.amount' => 'required|numeric|min:0',
+            'payments.*.method' => 'required_with:payments.*.amount|string',
+
+            'customer_id' => 'required_if:payment_type,credit|nullable|integer',
+
+            'credit_duration_id' => 'required_if:payment_type,credit|nullable|integer',
+        ]);
+
+        try {
+
+            if (
+                $request->payment_type === 'credit' &&
+                empty($request->customer_id)
+            ) {
+                throw ValidationException::withMessages([
+                    'customer_id' => 'Customer is required for credit sales.'
+                ]);
+            }
+
+            $sale = DB::transaction(function () use ($request) {
+
+                $total = round($request->total, 2);
+
+                $totalPaid = round(
+                    collect($request->payments ?? [])->sum('amount'),
+                    2
+                );
+
+                $creditDuration = null;
+                $dueDate = null;
+                $interestRate = 0;
+                $interestAmount = 0;
+                $payableAmount = $total;
+                $balanceAmount = 0;
+                $status = 'completed';
+                $payment_status = 'paid';
+                /*
+                |--------------------------------------------------------------------------
+                | Credit Sale
+                |--------------------------------------------------------------------------
+                */
+                if ($request->payment_type === 'credit') {
+
+                    $creditDuration = CreditDuration::ofAccount()
+                        ->active()
+                        ->findOrFail($request->credit_duration_id);
+
+                    $interestRate = $creditDuration->interest;
+
+                    $interestAmount = $request->interest_amount ?? 0; //round(($total * $interestRate) / 100, 2);
+                    $payableAmount = $request->payable_amount ?? 0; //round($total + $interestAmount, 2);
+                    $balanceAmount = $payableAmount;
+                    $dueDate = now()->addDays($creditDuration->duration_days);
+
+                    $totalPaid = 0;
+                    $status = 'pending';
+                    $payment_status = 'unpaid';
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Full Payment
+                |--------------------------------------------------------------------------
+                */ elseif ($request->payment_type === 'full') {
+
+                    if (abs($totalPaid - $total) > 0.01) {
+                        throw new \Exception('Payment total mismatch');
+                    }
+
+                    $balanceAmount = 0;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Partial Payment
+                |--------------------------------------------------------------------------
+                */ elseif ($request->payment_type === 'partial') {
+                    if (empty($request->payments)) {
+                        throw new \Exception(
+                            'At least one payment method is required.'
+                        );
+                    }
+                    if (abs($totalPaid - $total) > 0.01) {
+                        throw new \Exception(
+                            'Split payment total must equal invoice total.'
+                        );
+                    }
+
+                    $balanceAmount = 0;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Create Sale
+                |--------------------------------------------------------------------------
+                */
+                $sale = Sale::create([
+                    'invoice_no' => 'INV' . now()->timestamp,
+
+                    'customer_id' => $request->customer_id,
+
+                    'account_id' => auth()->user()->account_id,
+
+                    'subtotal' => $request->subtotal,
+                    'tax' => $request->tax ?? 0,
+                    'discount' => $request->discount ?? 0,
+
+                    'total' => $total,
+
+                    'paid_amount' => $totalPaid,
+                    'balance_amount' => $balanceAmount,
+
+                    'change_amount' => 0,
+
+                    'payment_method' => $request->payment_type === 'full'
+                        ? ($request->payments[0]['method'] ?? null)
+                        : null,
+
+                    'status' => $status,
+                    'payment_status' => $payment_status,
+
+                    'payment_type' => $request->payment_type,
+
+                    // Credit Fields
+                    'credit_duration_id' => $creditDuration?->id,
+                    'due_date' => $dueDate,
+                    'interest_rate' => $interestRate,
+                    'interest_amount' => $interestAmount,
+                    'payable_amount' => $payableAmount,
+
+                    'user_id' => auth()->id(),
+                ]);
+
+                /*
+                |--------------------------------------------------------------------------
+                | Sale Items
+                |--------------------------------------------------------------------------
+                */
+                foreach ($request->items as $item) {
+
+                    $inventory = Inventory::where(
+                        'product_id',
+                        $item['id']
+                    )
+                        ->lockForUpdate()
+                        ->first();
+
+                    if (!$inventory) {
+                        throw new \Exception(
+                            'Inventory not found for product ID: ' .
+                            $item['id']
+                        );
+                    }
+
+                    if ($inventory->stock < $item['quantity']) {
+                        throw new \Exception(
+                            'Insufficient stock for product ID: ' .
+                            $item['id']
+                        );
+                    }
+
+                    SaleItem::create([
+                        'sale_id' => $sale->id,
+                        'product_id' => $item['id'],
+                        'quantity' => $item['quantity'],
+                        'price' => $item['price'],
+                        'total' => $item['quantity'] * $item['price'],
+                    ]);
+
+                    // Uncomment when stock deduction is required
+                    // $inventory->decrement(
+                    //     'stock',
+                    //     $item['quantity']
+                    // );
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Sale Payments
+                |--------------------------------------------------------------------------
+                */
+                if (!empty($request->payments) && !in_array($request->payment_type, ['credit'])) {
+                    foreach ($request->payments as $pay) {
+                        $paymentMethod = PaymentMethod::findOrFail($pay['method']);
+                        SalePayment::create([
+                            'sale_id' => $sale->id,
+                            'method' => $paymentMethod->short_name,
+                            'amount' => $pay['amount'],
+                            'payment_received_by' => auth()->id(),
+                        ]);
+                    }
+                }
+
+                return $sale;
+            });
+
+            $sale->load('items');
+
+            $customer = $request->customer_id
+                ? Customer::find($request->customer_id)
+                : null;
+
+            /*
+            |--------------------------------------------------------------------------
+            | Email Invoice
+            |--------------------------------------------------------------------------
+            */
+            if (!empty($customer?->email)) {
+
+                $data = [
+                    'sale' => $sale,
+                    'items' => $sale->items ?? [],
+                    'customer' => $customer,
+                    'total' => $sale->total ?? 0,
+                    'invoice_no' => $sale->invoice_no,
+                    'date' => optional($sale->created_at)->format('Y-m-d'),
+                    'time' => optional($sale->created_at)->format('h:i A'),
+                ];
+
+                // sendCustomerEmail(
+                //     $customer->email,
+                //     'Invoice #' . $sale->invoice_no,
+                //     'emails.invoice',
+                //     $data
+                // );
+            }
+
+            return response()->json([
+                'success' => true,
+                'sale_id' => $sale->id,
+                'message' => 'Sale completed successfully'
+            ]);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'success' => false,
+                'sale_id' => null,
+                'message' => $e->getMessage()
+            ], 400);
+        }
+    }
+
+
+    public function completeSale_working(Request $request)
+    {
         // ✅ Validation
         $request->validate([
             'items' => 'required|array|min:1',
@@ -155,6 +445,7 @@ class BillingController extends Controller
                         ? ($request->payments[0]['method'] ?? null)
                         : null,
                     'status' => 'completed',
+                    'payment_type' => $request->payment_type,
                     'user_id' => auth()->id(),
                 ]);
 
@@ -183,7 +474,7 @@ class BillingController extends Controller
                     ]);
 
                     // 🔥 Reduce stock (IMPORTANT)
-                   // $inventory->decrement('stock', $item['quantity']);
+                    // $inventory->decrement('stock', $item['quantity']);
                 }
 
                 // ✅ Save Payments
@@ -192,6 +483,7 @@ class BillingController extends Controller
                         'sale_id' => $sale->id,
                         'method' => $pay['method'],
                         'amount' => $pay['amount'],
+                        'payment_received_by' => auth()->id(),
                     ]);
                 }
 
@@ -333,6 +625,7 @@ class BillingController extends Controller
                         'sale_id' => $sale->id,
                         'method' => $pay['method'],
                         'amount' => $pay['amount'],
+                        'payment_received_by' => auth()->id(),
                     ]);
                 }
 

@@ -10,6 +10,10 @@ use App\Mail\CustomerInvoiceMail;
 use Illuminate\Support\Facades\Mail;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Store;
+use App\Models\PaymentType;
+use App\Models\SalePayment;
+use Illuminate\Support\Facades\DB;
+use App\Models\PaymentMethod;
 class SaleController extends Controller
 {
 
@@ -86,6 +90,7 @@ class SaleController extends Controller
     public function index(Request $request)
     {
         $breadcrumb = $this->breadcrumbBilling;
+        $paymentTypes = PaymentType::getSelectable();
         $query = Sale::with('user', 'payments')->visibleToUser();
 
         // Filter by date
@@ -142,14 +147,111 @@ class SaleController extends Controller
             return Settings::downloadcsvfile($data, $fileName);
         }
         $sales = $sales->paginate(config('constants.pagination'));
-        return view('backend.sales.index', compact('sales', 'breadcrumb'));
+        return view('backend.sales.index', compact('sales', 'breadcrumb', 'paymentTypes'));
     }
 
+    public function paymentDetails($saleId)
+    {
+        $sale = Sale::with([
+            'customer',
+            'payments' => function ($query) {
+                $query->with('paymentReceivedBy')
+                    ->orderBy('created_at', 'desc');
+            }
+        ])->findOrFail($saleId);
+        $sale->formatted_due_date = $sale->due_date
+            ? \App\Helpers\Settings::getFormattedDate($sale->due_date)
+            : '-';
+        $sale->formatted_created_at = $sale->created_at
+            ? \App\Helpers\Settings::getFormattedDate($sale->created_at)
+            : '-';
+        return response()->json([
+            'sale' => $sale,
+            'payment_methods' => PaymentMethod::getSelectable(),
+        ]);
+    }
+
+    /**
+     * Save Credit Payment
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function saveCreditPayment(Request $request)
+    {
+        $request->validate([
+            'sale_id' => 'required|exists:sales,id',
+            'payment_method_id' => 'required|exists:payment_methods,id',
+            'amount' => 'required|numeric|min:0.01',
+        ]);
+        $sale = Sale::findOrFail($request->sale_id);
+        $paymentMethod = PaymentMethod::findOrFail($request->payment_method_id);
+        if (!$paymentMethod) {
+            return response()->json([
+                'status' => 'error',
+                'message' => __('translation.invalid_payment_method')
+            ]);
+        }
+        if ($request->amount > $sale->balance_amount) {
+            return response()->json([
+                'status' => 'error',
+                'message' => __('translation.payment_amount_cannot_exceed_pending_balance')
+            ]);
+        }
+        $existingPayment = SalePayment::where('sale_id', $sale->id)
+            ->where('method', $paymentMethod->short_name)
+            ->where('amount', $request->amount)
+            ->where('payment_received_by', auth()->id())
+            ->where('created_at', '>=', now()->subSeconds(10))
+            ->exists();
+
+        if ($existingPayment) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Duplicate payment request detected.'
+            ]);
+        }
+
+
+        DB::transaction(function () use ($sale, $request, $paymentMethod) {
+            SalePayment::create([
+                'sale_id' => $sale->id,
+                'method' => $paymentMethod->short_name,
+                'amount' => $request->amount,
+                'payment_received_by' => auth()->id(),
+            ]);
+            $sale->paid_amount += $request->amount;
+            $sale->balance_amount = $sale->payable_amount - $sale->paid_amount;
+            if ($sale->balance_amount <= 0) {
+                $sale->balance_amount = 0;
+                $sale->payment_status = 'paid';
+            } elseif ($sale->paid_amount > 0) {
+                $sale->payment_status = 'partial';
+            }
+            $sale->save();
+        });
+        return response()->json([
+            'status' => 'success',
+            'message' => __('translation.payment_received_successfully')
+        ]);
+    }
+
+    /**
+     * Export PDF
+     *
+     * @param Request $request
+     */
     public function exportPdf(Request $request)
     {
         $request->merge(['pdf' => 1]);
         return $this->index($request);
     }
+
+    /**
+     * Export CSV
+     *
+     * @param Request $request
+     */
     public function exportCsv(Request $request)
     {
         $request->merge(['csv' => 1]);
@@ -158,12 +260,13 @@ class SaleController extends Controller
 
     public function show($sale)
     {
+        $paymentTypes = PaymentType::getSelectable();
+        $paymentMethods = PaymentMethod::getSelectable();
         $breadcrumb = $this->breadcrumShow;
-        $saleId = Settings::getDecodeCodeWithHashids($sale);
-        $sale = Sale::findOrFail($saleId[0]);
-        $sale->load('items.product', 'user', 'payments');
-
-        return view('backend.sales.show', compact('sale', 'breadcrumb'));
+        $saleDecodeId = Settings::getDecodeCodeWithHashids($sale);
+        $saleId = $saleDecodeId[0];
+        $sale = Sale::with(['customer', 'user', 'creditDuration', 'items.product', 'payments.paymentMethod', 'payments.paymentReceivedBy'])->findOrFail($saleId);
+        return view('backend.sales.show', compact('sale', 'breadcrumb', 'paymentTypes', 'paymentMethods'));
     }
 
     public function payment(Sale $sale)

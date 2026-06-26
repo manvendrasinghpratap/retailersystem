@@ -23,6 +23,7 @@
 </head>
 @section('body')
 <input type="hidden" name="passwordlength" value="{{Config::get('constants.passwordlength')}}" class="passwordlength" id="passwordlength">
+@include('backend.layouts.loader')
 @include('backend.layouts.body', ['fullBg' => true])
 @show
 <div id="layout-wrapper">
@@ -66,6 +67,7 @@
 @include('backend.modal.modalpopup')
 </body>
 <script>
-    feather.replace();
+  feather.replace();
 </script>
+
 </html>

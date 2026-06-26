@@ -58,9 +58,9 @@
                                 @forelse($inventory as $stock)
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
-                                        <td>{{ $stock->product->category->name ?? '' }}</td>
-                                        <td>{{ $stock->product->name ?? '' }}</td>
-                                        <td>{{ $stock->product->sku ?? '' }}</td>
+                                        <td>{!! $stock->product->category->name ?? '' !!}</td>
+                                        <td>{!! $stock->product->name ?? '' !!}</td>
+                                        <td>{!! $stock->product->sku ?? '' !!}</td>
                                         <td>@if(!empty($stock->product->barcode)){!! DNS1D::getBarcodeSVG($stock->product->barcode, 'C128') !!}@endif</td>
                                         <td>{{ $stock->stock }}</td>
                                         <td>{{ $stock->low_stock_alert }}</td>

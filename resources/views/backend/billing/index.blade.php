@@ -11,7 +11,6 @@
                     <div class="mb-3">
                         <input type="text" id="barcode" class="form-control" placeholder="Scan barcode here" autofocus autocomplete="off">
                     </div>
-
                     <!-- Cart -->
                     <table class="table table-bordered" id="cart-table">
                         <thead>
@@ -32,21 +31,32 @@
                     <div class="text-end">
                         <p>Subtotal: {{ __('translation.b_ngn') }} <span id="subtotal">0.00</span></p>
                         <p>Tax: {{ __('translation.b_ngn') }} <span id="tax">0.00</span></p>
-                        <h4>Total: {{ __('translation.b_ngn') }} <span id="grand_total">0.00</span></h4>
+                        <input type="hidden" id="tax_percentage" value="{{ $taxPercentage }}">
+                        <h4>Total Payable Amount: {{ __('translation.b_ngn') }} <span id="grand_total">0.00</span></h4>
                         <!-- <input type="number" id="paid_amount" class="form-control mb-2" placeholder="Paid Amount"> -->
                         <!-- Payment Type -->
                         <div class="mt-4 mb-2">
-                            <x-select-dropdown :noselect="true" :nolabel="true" id="payment_type" name="payment_type" label="{{ __('translation.payment_type') }}" :options="config('constants.paymenttypes')" :selected="request('payment_type')" class="payment_type" mainrows="12" />
+                            <x-select-dropdown :noselect="true" :nolabel="true" id="payment_type" name="payment_type" label="{{ __('translation.payment_type') }}" :options="$paymentTypes ?? config('constants.paymenttypes')" :selected="request('payment_type')" class="payment_type" mainrows="12" />
                         </div>
                         <!-- FULL PAYMENT -->
                         <div id="full_payment_section">
                             <x-text-input :islabel="true" labelclass="left" name="full_amount" :label="__('translation.amount')" :value="request('full_amount')" :placeholder="__('translation.amount')" class="form-control onlydecimal default-zero" mainrows="12" />
-                            <x-select-dropdown :nolabel="true" id="full_method" name="full_method" label="{{ __('translation.customer_payment_method') }}" :options="config('constants.customer_payment_method')" :selected="request('full_method')" class="full_method" mainrows="12" />
+                            <x-select-dropdown :nolabel="true" id="full_method" name="full_method" label="{{ __('translation.customer_payment_method') }}" :options="$paymentMethods ?? config('constants.customer_payment_method')" :selected="request('full_method')" class="full_method" mainrows="12" />
                         </div>
+
+                        <!-- CREDIT PAYMENT SECTION BEGIN -->
+                        <div id="credit_payment_section" style="display:none;">
+                            <x-select-dropdown :noselect="true" :nolabel="false" id="credit_duration_id" name="credit_duration_id" label="Credit Duration" :options="$creditDurations" class="credit_duration_id" mainrows="12" />
+                            <x-text-input :islabel="true" label="Interest (%)" id="interest_rate" name="interest_rate" value="0" class="form-control onlydecimal default-zero" readonly mainrows="12" />
+                            <x-text-input :islabel="true" label="Interest Amount" id="interest_amount" name="interest_amount" value="0" class="form-control" readonly mainrows="12" />
+                            <x-text-input :islabel="true" label="Payable Amount" id="payable_amount" name="payable_amount" value="0" class="form-control" readonly mainrows="12" />
+                        </div>
+                        <!-- CREDIT PAYMENT SECTION END -->
                         <div class="mb-2 d-flex gap-2 justify-content-end">
                             <input type="text" id="coupon_code" class="form-control" style="max-width:200px;" placeholder="Enter Coupon">
                             <button type="button" class="btn btn-primary" id="apply_coupon">Apply</button>
                         </div>
+
                         <!-- CUSTOMER SECTION -->
                         <div class="mt-3 p-3 border rounded">
                             <div class="d-flex justify-content-between align-items-center mb-2">
@@ -96,6 +106,7 @@
         // 🔥 Auto focus
         $(document).ready(function () {
             $('#barcode').focus();
+            getCreditDurationDetails();
         });
 
         // =========================
@@ -434,16 +445,34 @@
                 subtotal += item.quantity * item.price;
             });
 
-            let tax = 0;
+            // Tax percentage
+            let taxPercentage = parseFloat($('#tax_percentage').val()) || 0;
+
+            let tax = (subtotal * taxPercentage) / 100;
+
+            // Calculate tax amount
+            // let tax = (subtotal * taxPercentage) / 100;
+
             let total = subtotal + tax - discount;
 
-            if (total < 0) total = 0;
+            if (total < 0) {
+                total = 0;
+            }
 
             $('#subtotal').text(subtotal.toFixed(2));
             $('#tax').text(tax.toFixed(2));
             $('#grand_total').text(total.toFixed(2));
 
             syncFullAmount();
+
+            // Recalculate credit payable amount if credit payment selected
+            if ($('#payment_type').val() === 'credit') {
+
+                let interestRate =
+                    parseFloat($('#interest_rate').val()) || 0;
+
+                calculateCreditAmount(interestRate);
+            }
         }
 
         function syncFullAmount() {
@@ -453,17 +482,29 @@
 
         // =========================
         // 🔹 PAYMENT TYPE SWITCH
-        // =========================
+        // ========================= 
         $('#payment_type').on('change', function () {
-
+            calculateTotals();
+            resetPaymentCalculations();
+            syncFullAmount();
             let type = $(this).val();
 
+            $('#full_payment_section').hide();
+            $('#partial_payment_section').hide();
+            $('#credit_payment_section').hide();
+
             if (type === 'full') {
+
                 $('#full_payment_section').show();
-                $('#partial_payment_section').hide();
-            } else {
-                $('#full_payment_section').hide();
+
+            } else if (type === 'partial') {
+
                 $('#partial_payment_section').show();
+
+            } else if (type === 'credit') {
+                $('#credit_payment_section').show();
+                let rate = parseFloat($('#interest_rate').val()) || 0;
+                calculateCreditAmount(rate);
             }
         });
 
@@ -519,6 +560,36 @@
                     return false;
                 }
             }
+            if (type === 'credit') {
+
+                let durationId =
+                    $('#credit_duration_id').val();
+
+                if (!durationId) {
+
+                    showAlert(
+                        'error',
+                        'Error',
+                        'Select Credit Duration'
+                    );
+
+                    return false;
+                }
+
+                payments.push({
+                    method: 'credit',
+                    amount: total
+                });
+
+                return {
+                    payment_type: type,
+                    payments: payments,
+                    credit_duration_id: durationId,
+                    interest_rate: $('#interest_rate').val(),
+                    interest_amount: $('#interest_amount').val(),
+                    payable_amount: $('#payable_amount').val()
+                };
+            }
 
             return {
                 payment_type: type,
@@ -536,6 +607,7 @@
                 showAlert('error', 'Error', 'Cart is empty');
                 return;
             }
+
 
             Swal.fire({
                 title: 'Complete Purchase?',
@@ -577,7 +649,7 @@
                         // ✅ EXISTING CUSTOMER → UPDATE
                         // ==============================
                         if (res.exists) {
-
+                            showLoader();
                             $.post("{{ route('admin.customers.updateByPhone') }}", {
                                 _token: "{{ csrf_token() }}",
                                 phone: phone,
@@ -585,13 +657,13 @@
                                 email: email
                             })
                                 .done(function (updateRes) {
-
                                     selectedCustomerId = updateRes.customer.id;
-
                                     completeSale(paymentData, selectedCustomerId);
+                                    hideLoader();
                                 })
                                 .fail(function () {
                                     showAlert('error', 'Error', 'Failed to update customer');
+                                    hideLoader();
                                 });
 
                         }
@@ -602,6 +674,7 @@
 
                             if (!name) {
                                 showAlert('error', 'Error', 'Name is required for new customer');
+                                hideLoader();
                                 return;
                             }
 
@@ -612,18 +685,18 @@
                                 email: email
                             })
                                 .done(function (res) {
-
                                     selectedCustomerId = res.customer.id;
-
                                     completeSale(paymentData, selectedCustomerId);
                                 })
                                 .fail(function () {
                                     showAlert('error', 'Error', 'Failed to create customer');
+                                    hideLoader();
                                 });
                         }
                     })
                     .fail(function () {
                         showAlert('error', 'Error', 'Customer lookup failed');
+                        hideLoader();
                     });
 
             });
@@ -632,35 +705,85 @@
         // 🔹 FINAL API
         // =========================
         function completeSale(paymentData, customer_id) {
+            showLoader();
+            let total = parseFloat($('#grand_total').text()) || 0;
+
+            // For credit sales use payable amount
+            if (
+                paymentData.payment_type === 'credit' &&
+                paymentData.payable_amount
+            ) {
+                total = parseFloat(paymentData.payable_amount) || total;
+            }
 
             $.post("{{ route('billing.complete') }}", {
                 _token: "{{ csrf_token() }}",
+
                 customer_id: customer_id,
+
                 items: cart,
+
                 subtotal: parseFloat($('#subtotal').text()) || 0,
+
                 tax: parseFloat($('#tax').text()) || 0,
+
                 discount: discount || 0,
-                total: parseFloat($('#grand_total').text()) || 0,
+
+                total: total,
+
                 payment_type: paymentData.payment_type,
-                payments: paymentData.payments
+
+                payments: paymentData.payments || [],
+
+                credit_duration_id:
+                    paymentData.credit_duration_id ?? null,
+
+                interest_rate:
+                    paymentData.interest_rate ?? 0,
+
+                interest_amount:
+                    paymentData.interest_amount ?? 0,
+
+                payable_amount:
+                    paymentData.payable_amount ?? total,
             })
                 .done(function (res) {
 
                     if (!res || !res.success) {
-                        showAlert('error', 'Error', res?.message || 'Something went wrong');
+                        showAlert(
+                            'error',
+                            'Error',
+                            res?.message || 'Something went wrong'
+                        );
+                        hideLoader();
                         return;
                     }
-
-                    showAlert('success', 'Success', 'Sale Completed!')
-                        .then(() => {
-                            // printReceipt(res.sale_id);
-                            // setTimeout(() => location.reload(), 500);
-                            location.reload();
-                        });
+                    hideLoader();
+                    showAlert('success', 'Success', 'Sale Completed!').then(() => {
+                        // printReceipt(res.sale_id);
+                        hideLoader();
+                        location.reload();
+                    });
 
                 })
                 .fail(function (xhr) {
-                    showAlert('error', 'Error', xhr.responseJSON?.message || 'Server Error');
+
+                    let message =
+                        xhr.responseJSON?.message ||
+                        'Server Error';
+
+                    if (xhr.responseJSON?.errors) {
+                        message = Object.values(
+                            xhr.responseJSON.errors
+                        ).flat().join('<br>');
+                    }
+
+                    showAlert(
+                        'error',
+                        'Error',
+                        message
+                    );
+                    hideLoader();
                 });
         }
 
@@ -671,4 +794,56 @@
             let url = "{{ route('printinvoice', ':id') }}".replace(':id', sale_id);
             window.open(url, '_blank');
         }
-</script>@endsection
+
+        function getCreditDurationDetails(id) {
+
+            if (!id) {
+                return;
+            }
+
+            $.get(
+                "{{ url('credit-duration') }}/" + id,
+                function (res) {
+
+                    $('#interest_rate').val(res.interest);
+
+                    calculateCreditAmount(res.interest);
+                }
+            );
+        }
+
+        $('#credit_duration_id').change(function () {
+            getCreditDurationDetails($(this).val());
+        });
+
+
+        function calculateCreditAmount(interestRate) {
+            let total = parseFloat($('#grand_total').text()) || 0;
+
+            let interestAmount = (total * interestRate) / 100;
+
+            let payableAmount = total + interestAmount;
+
+            $('#interest_amount').val(interestAmount.toFixed(2));
+            $('#payable_amount').val(payableAmount.toFixed(2));
+
+            // Update displayed grand total
+            $('#grand_total').text(payableAmount.toFixed(2));
+        }
+        function resetPaymentCalculations() {
+            // Full payment
+            $('#full_amount').val('');
+
+            // Partial / Split payment
+            $('#cash_amount').val('');
+            $('#transfer_amount').val('');
+            $('#card_amount').val('');
+
+            // Credit payment
+            $('#credit_duration_id').val('').trigger('change');
+            $('#interest_rate').val('0');
+            $('#interest_amount').val('0');
+            $('#payable_amount').val('0');
+        }
+    </script>
+@endsection

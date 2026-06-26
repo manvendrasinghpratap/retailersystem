@@ -59,6 +59,7 @@
                                     <th>{{ __('translation.invoice_no') }}</th>
                                     <th>{{ __('translation.cashier') }}</th>
                                     <th>{{ __('translation.payment_type') }}</th>
+                                    <th>{{ __('translation.payment_status') }}</th>
                                     <th>{{ __('translation.payment_method') }}</th>
                                     <th>{{ __('translation.b_ngn') . ' ' . __('translation.total_amount') }}</th>
                                     <th>{{ __('translation.transaction_date') }}</th>
@@ -73,8 +74,9 @@
                                         <td>{{ $sale->customer->email ?? '-' }}</td>
                                         <td>{{ $sale->invoice_no }}</td>
                                         <td>{{ $sale->user->name ?? '-' }}</td>
-                                        <td>{{ ($sale->payment_method == null) ? 'Partial Payment' : 'Full Payment' }}</td>
-                                        <td>{{ $sale->payment_methods }}</td>
+                                        <td>{{ ucfirst($paymentTypes[$sale->payment_type]) ?? '-' }}</td>
+                                        <td><a href="javascript:void(0)" class="payment-status-btn" data-sale-id="{{ $sale->id }}"> {{ ucfirst($sale->payment_status) }}</a></td>
+                                        <td>{{ ucfirst($sale->payment_methods) }}</td>
                                         <td>{{ __('translation.b_ngn') . ' ' . number_format($sale->total, 2) }}</td>
                                         <td>{{ App\Helpers\Settings::getFormattedDatetime($sale->created_at)}}</td>
                                         <td><a href="{{ route('admin.sales.show', \App\Helpers\Settings::getEncodeCodeWithHashids($sale->id)) }}" class="" title="View"><i class="fas fa-eye"></i></a>
@@ -139,6 +141,90 @@
                 });
             });
         });
+
+        $(document).on('click', '.payment-status-btn', function () {
+            let saleId = $(this).data('sale-id');
+            showLoader();
+             $('#creditPaymentForm').show();
+            $.get(
+                '{{ route("admin.sales.payment-details", "saleId") }}'.replace('saleId', saleId),
+                function (res) {
+                    console.log(res);
+                    if (res.sale.payment_status == 'paid') {
+                        $('#creditPaymentForm').hide();
+                        hideLoader();
+                       // return;
+                    }                   
+                    let options = '<option value="">Select Payment Method</option>';
+
+                    $.each(res.payment_methods, function(id, name) {
+                        options += `<option value="${id}">${name}</option>`;
+                    });
+
+                    $('#payment_method_id').html(options);
+                    hideLoader();
+                    let sale = res.sale;
+                    $('#sale_id').val(sale.id);
+                    $('#paymentDetails').html(`
+                    <table class="table table-bordered">
+                        <tr>
+                            <th>Invoice</th>
+                            <td>${sale.invoice_no}</td>
+                        </tr>
+                        <tr>
+                            <th>Customer</th>
+                            <td>${sale.customer?.name ?? '-'}</td>
+                        </tr>
+                        <tr>
+                            <th>Payable Amount</th>
+                            <td>{{ __('translation.b_ngn') }} ${sale.payable_amount}</td>
+                        </tr>
+                        <tr>
+                            <th>Paid Amount</th>
+                            <td>{{ __('translation.b_ngn') }} ${sale.paid_amount}</td>
+                        </tr>
+                        <tr>
+                            <th>Pending Amount</th>
+                            <td>{{ __('translation.b_ngn') }} ${sale.balance_amount}</td>
+                        </tr>
+                        <tr>
+                            <th>Due Date</th>
+                            <td>${sale.formatted_due_date ?? '-'}</td>
+                        </tr>
+                    </table>
+                `);
+                let history = `
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>{{ __('translation.date') }}</th>
+                                <th>{{ __('translation.method') }}</th>
+                                <th>{{ __('translation.b_ngn') . ' ' . __('translation.amount') }}</th>
+                                <th>{{ __('translation.payment_received_by') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+                sale.payments.forEach(function (row) {
+                    history += `
+                        <tr> 
+                            <td>${row.formatted_date}</td>
+                            <td>${row.method ? row.method.charAt(0).toUpperCase() + row.method.slice(1) : '-'}</td>
+                            <td>{{ __('translation.b_ngn') }} ${row.amount}</td>
+                            <td>${row.payment_received_by?.name ?? '-'}</td>
+                        </tr>
+                    `;
+                });
+                history += `
+                        </tbody>
+                    </table>
+                `;
+                $('#paymentHistory').html(history);
+                $('#paymentStatusModal').modal('show');
+            });
+        });
+
+        
+
 
         $(document).ready(function() {
             setupPdfDownload('.downloadsalespdf', 'data-downloadroutepdf');

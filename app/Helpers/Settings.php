@@ -501,6 +501,16 @@ class Settings
             ->format($format);
     }
 
+    public static function getDataUcfirst($str)
+    {
+        return ucfirst($str);
+    }
+
+    public static function getDataTitle($str)
+    {
+        return ucwords($str);
+    }
+
 
 }
 

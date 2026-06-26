@@ -101,6 +101,7 @@ Route::post('update-password', [\App\Http\Controllers\Auth\PasswordController::c
 
 Route::middleware(['auth', 'route.permission', 'subscription'])->group(function () {
     Route::get('/create/transaction', [BillingController::class, 'index'])->name('billing.index');
+    Route::get('credit-duration/{id}', [BillingController::class, 'getCreditDuration'])->name('credit.duration');
     Route::post('/billing/scan', [BillingController::class, 'scanProduct'])->name('billing.scan');
     Route::post('/billing/complete', [BillingController::class, 'completeSale'])->name('billing.complete');
 });
@@ -109,6 +110,8 @@ Route::middleware(['auth', 'route.permission', 'subscription'])->group(function 
     Route::get('/sales/export-pdf', [SaleController::class, 'exportPdf'])->name('admin.sales.exportPdf');
     Route::get('/sales/export-csv', [SaleController::class, 'exportCsv'])->name('admin.sales.exportCsv');
     Route::get('/sales/{sale}', [SaleController::class, 'show'])->name('admin.sales.show');
+    Route::get('/sales/{sale}/payment-details', [SaleController::class, 'paymentDetails'])->name('admin.sales.payment-details');
+    Route::post('/sales/save-credit-payment', [SaleController::class, 'saveCreditPayment'])->name('admin.sales.save-credit-payment');
 });
 Route::middleware(['auth', 'route.permission', 'subscription'])->group(function () {
     Route::get('admin/print/invoice/{id}', [SaleController::class, 'printinvoice'])->name('printinvoice');
