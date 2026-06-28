@@ -9,6 +9,9 @@ use App\Models\User;
 use App\Helpers\Settings;
 use App\Models\SalePayment;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\PaymentType;
+use App\Models\PaymentMethod;
+use Auth;
 class ReportController extends Controller
 {
 
@@ -62,166 +65,247 @@ class ReportController extends Controller
         ];
     }
 
+    /**
+     * Summary of dailySales
+     * @param Request $request
+     */
     public function dailySales(Request $request)
     {
+        $paymentMethods = PaymentMethod::getSelectableWithData()->toArray();
+        $paymentTypes = PaymentType::getSelectable();
         $breadcrumb = $this->breadcrumbDailySales;
         $accountId = auth()->user()->account_id;
         $staffId = $request->staff_id;
 
-        $fromDate = Settings::checkAndformatDate($request->get('from_date'), 'Y-m-d');
-        $toDate = Settings::checkAndformatDate($request->get('to_date'), 'Y-m-d');
+        $fromDate = Settings::checkAndformatDate($request->from_date, 'Y-m-d');
+        $toDate = Settings::checkAndformatDate($request->to_date, 'Y-m-d');
 
-        // ✅ Smart Date Filtering
-        if (!empty($fromDate) && !empty($toDate)) {
-            // Between from & to
+        /*
+        |--------------------------------------------------------------------------
+        | Date Range
+        |--------------------------------------------------------------------------
+        */
+        if ($fromDate && $toDate) {
+
             $start = Carbon::parse($fromDate)->startOfDay();
             $end = Carbon::parse($toDate)->endOfDay();
 
-        } elseif (!empty($fromDate)) {
-            // From date → today
+        } elseif ($fromDate) {
+
             $start = Carbon::parse($fromDate)->startOfDay();
             $end = Carbon::now()->endOfDay();
 
-        } elseif (!empty($toDate)) {
-            // Beginning → to date
-            $start = Carbon::parse($toDate)->startOfDay(); // OR earliest date if needed
+        } elseif ($toDate) {
+
+            $start = Carbon::parse($toDate)->startOfDay();
             $end = Carbon::parse($toDate)->endOfDay();
 
         } else {
-            // Default → today
+
             $start = Carbon::today()->startOfDay();
             $end = Carbon::today()->endOfDay();
         }
-        // =========================
-        // Base Query
-        // =========================
+
+        /*
+        |--------------------------------------------------------------------------
+        | Base Query
+        |--------------------------------------------------------------------------
+        */
         $query = Sale::where('account_id', $accountId)
             ->visibleToUser()
             ->whereBetween('created_at', [$start, $end]);
-        if ($request->has('invoice_no') && !empty($request->invoice_no)) {
+
+        if ($request->filled('invoice_no')) {
             $query->where('invoice_no', $request->invoice_no);
         }
 
-        if ($staffId) {
+        if (!empty($staffId)) {
             $query->where('user_id', $staffId);
         }
 
-        // Clone for totals
-        $totalQuery = clone $query;
+        /*
+        |--------------------------------------------------------------------------
+        | Totals
+        |--------------------------------------------------------------------------
+        */
+        $totalSales = (clone $query)->sum('total');
+        $totalOrders = (clone $query)->count();
 
-        // =========================
-        // Paginated Sales (Eager Loaded)
-        // =========================
+        /*
+        |--------------------------------------------------------------------------
+        | Payment Totals
+        |--------------------------------------------------------------------------
+        | Use filtered sale IDs so every filter is respected.
+        |--------------------------------------------------------------------------
+        */
+
+        $saleIds = (clone $query)->pluck('id');
+
+        $paymentTotals = SalePayment::whereIn('sale_id', $saleIds)
+            ->selectRaw('method, SUM(amount) as total')
+            ->groupBy('method')
+            ->pluck('total', 'method')
+            ->toArray();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Sales List
+        |--------------------------------------------------------------------------
+        */
+
         $sales = $query->with([
             'customer:id,name',
             'user:id,name',
             'payments:id,sale_id,method,amount'
         ])
-            ->latest();
+            ->latest()
+            ->paginate(config('pagination'))
+            ->withQueryString();
 
-        // =========================
-        // Overall Totals
-        // =========================
-        $totalSales = $totalQuery->sum('total');
-        $totalOrders = $totalQuery->count();
+        /*
+        |--------------------------------------------------------------------------
+        | Staff List
+        |--------------------------------------------------------------------------
+        */
 
-        // =========================
-        // Payment Totals (JOIN + SAME FILTER)
-        // =========================
-        $paymentTotals = SalePayment::join('sales', 'sale_payments.sale_id', '=', 'sales.id')
-            ->where('sales.account_id', $accountId)
-            ->whereBetween('sales.created_at', [$start, $end])
-            ->when($staffId, fn($q) => $q->where('sales.user_id', $staffId))
-            ->selectRaw('sale_payments.method, SUM(sale_payments.amount) as total')
-            ->groupBy('sale_payments.method')
-            ->pluck('total', 'method');
-
-        $cashTotal = $paymentTotals['cash'] ?? 0;
-        $cardTotal = $paymentTotals['card'] ?? 0;
-        $transferTotal = $paymentTotals['transfer'] ?? 0;
-
-        // =========================
-        // Staff Dropdown
-        // =========================
         $staffs = User::where('account_id', $accountId)
             ->visibleToUser()
             ->pluck('name', 'id');
+
         if ($request->has('pdf')) {
             $pdfHeaderdata = \Config::get('constants.dailySalespdf');
-            $pdfSales = $sales->get();
-            $pdf = PDF::loadView('backend.pdf.reports.dailySalespdf', compact('pdfSales', 'pdfHeaderdata', 'totalSales', 'totalOrders', 'staffs', 'staffId', 'breadcrumb', 'cashTotal', 'cardTotal', 'transferTotal'));
+            $pdfSales = (clone $query)->with([
+                'customer:id,name',
+                'user:id,name',
+                'payments:id,sale_id,method,amount'
+            ])
+                ->latest()
+                ->get();
+            $pdf = PDF::loadView('backend.pdf.reports.dailySalespdf', compact('pdfSales', 'pdfHeaderdata', 'totalSales', 'totalOrders', 'staffs', 'staffId', 'breadcrumb', 'paymentMethods', 'paymentTotals', 'paymentTypes'));
             $pdf = Settings::downloadlandscapepdf($pdf);
             $fileName = $pdfHeaderdata['filename'] . '-' . date('Y-m-d') . '.pdf';
             return $pdf->stream($fileName);
         }
         if ($request->has('csv')) {
+
             $pdfHeaderdata = \Config::get('constants.dailySalespdf');
-            $salesList = $sales->get(); // full data (no pagination)
+            $salesList = (clone $query)->with([
+                'customer:id,name',
+                'user:id,name',
+                'payments:id,sale_id,method,amount'
+            ])
+                ->latest()
+                ->get();
 
             $fileName = $pdfHeaderdata['filename'] . '-' . date('Y-m-d') . '.csv';
 
             $data = [];
             $ii = 0;
 
-            // ✅ Header Row
-            $data[$ii++] = [
+            /*
+            |--------------------------------------------------------------------------
+            | Header Row
+            |--------------------------------------------------------------------------
+            */
+
+            $header = [
                 '#',
                 __('translation.invoice_no'),
                 __('translation.customer_name'),
-                __('translation.payment_type'),
-                __('translation.currency') . '  ' . __('translation.cash'),
-                __('translation.currency') . '  ' . __('translation.card'),
-                __('translation.currency') . '  ' . __('translation.transfer'),
-                __('translation.currency') . '  ' . __('translation.total_amount'),
-                __('translation.transaction_date'),
             ];
 
-            if (!empty($salesList) && count($salesList) > 0) {
+            if (Auth::user()->hasDesignation()) {
+                $header[] = __('translation.staff_name');
+            }
+
+            $header[] = __('translation.payment_type');
+
+            foreach ($paymentMethods as $method) {
+                $header[] = __('translation.currency') . ' ' . $method['name'];
+            }
+
+            $header[] = __('translation.currency') . ' ' . __('translation.total_amount');
+            $header[] = __('translation.transaction_date');
+
+            $data[$ii++] = $header;
+
+            /*
+            |--------------------------------------------------------------------------
+            | Data Rows
+            |--------------------------------------------------------------------------
+            */
+
+            if ($salesList->count()) {
 
                 foreach ($salesList as $i => $sale) {
 
-                    // ✅ Payment Summary (optimized)
                     $summary = $sale->payments
                         ->groupBy('method')
-                        ->map(fn(\Illuminate\Support\Collection $items) => $items->sum('amount'));
+                        ->map(fn($items) => $items->sum('amount'));
 
-                    $data[$ii++] = [
+                    $row = [
                         $i + 1,
                         $sale->invoice_no ?? '-',
                         $sale->customer->name ?? '-',
-                        $sale->payment_method == null ? 'Partial Payment' : 'Full Payment',
-
-                        $summary['cash'] ?? 0,
-                        $summary['card'] ?? 0,
-                        $summary['transfer'] ?? 0,
-
-                        $sale->total ?? 0,
-
-                        // Prevent Excel auto-format
-                        !empty($sale->created_at) ? "\t" . $sale->created_at : '-',
                     ];
+
+                    if (Auth::user()->hasDesignation()) {
+                        $row[] = $sale->user->name ?? '-';
+                    }
+
+                    $row[] = $sale->payment_method
+                        ? __('translation.full_payment')
+                        : __('translation.partial_payment');
+
+                    foreach ($paymentMethods as $method) {
+                        $row[] = number_format($summary[$method['short_name']] ?? 0, 2, '.', '');
+                    }
+
+                    $row[] = number_format($sale->total ?? 0, 2, '.', '');
+                    $row[] = !empty($sale->created_at)
+                        ? "\t" . \App\Helpers\Settings::getFormattedDatetime($sale->created_at)
+                        : '-';
+
+                    $data[$ii++] = $row;
                 }
 
-                // ✅ Add Totals Row
-                $data[$ii++] = [
+                /*
+                |--------------------------------------------------------------------------
+                | Totals Row
+                |--------------------------------------------------------------------------
+                */
+
+                $totalRow = [
                     '',
                     '',
                     '',
-                    'TOTAL',
-                    __('translation.currency') . '  ' . $cashTotal,
-                    __('translation.currency') . '  ' . $cardTotal,
-                    __('translation.currency') . '  ' . $transferTotal,
-                    __('translation.currency') . '  ' . $totalSales,
-                    ''
                 ];
 
+                if (Auth::user()->hasDesignation()) {
+                    $totalRow[] = '';
+                }
+
+                $totalRow[] = strtoupper(__('translation.total'));
+
+                foreach ($paymentMethods as $method) {
+                    $totalRow[] = __('translation.currency') . ' ' .
+                        number_format($paymentTotals[$method['short_name']] ?? 0, 2);
+                }
+
+                $totalRow[] = __('translation.currency') . ' ' . number_format($totalSales, 2);
+                $totalRow[] = '';
+
+                $data[$ii++] = $totalRow;
+
             } else {
-                $data[$ii++] = [__('translation.no_data_found')];
+
+                $data[$ii++] = [
+                    __('translation.no_data_found')
+                ];
             }
 
             return Settings::downloadcsvfile($data, $fileName);
         }
-        $sales = $sales->paginate(config('pagination'));
         return view('backend.admin.reports.daily_sales', compact(
             'sales',
             'totalSales',
@@ -229,9 +313,9 @@ class ReportController extends Controller
             'staffs',
             'staffId',
             'breadcrumb',
-            'cashTotal',
-            'cardTotal',
-            'transferTotal'
+            'paymentMethods',
+            'paymentTotals',
+            'paymentTypes'
         ));
     }
 

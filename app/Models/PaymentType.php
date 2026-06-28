@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Helpers\Settings;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class PaymentType extends Model
 {
@@ -30,33 +32,46 @@ class PaymentType extends Model
     ];
 
     /**
-     * Boot Method
+     * Automatically assign account_id.
      */
-    protected static function boot()
+    protected static function booted()
     {
-        parent::boot();
-
         static::creating(function ($model) {
-            if (auth()->check() && empty($model->account_id)) {
-                $model->account_id = auth()->user()->account_id;
+
+            if (auth()->check()) {
+
+                $model->account_id ??= auth()->user()->account_id;
             }
         });
     }
 
+    protected function name(): Attribute
+    {
+        return Attribute::make(
+            get: fn($value) => ucwords(strtolower($value)),
+            set: fn($value) => ucwords(strtolower(trim($value))),
+        );
+    }
+    /*
+    |--------------------------------------------------------------------------
+    | Query Scopes
+    |--------------------------------------------------------------------------
+    */
+
     /**
-     * Scope Account Records
+     * Scope records by logged-in account.
      */
     public function scopeOfAccount($query)
     {
         if (auth()->check()) {
-            return $query->where('account_id', auth()->user()->account_id);
+            $query->where('account_id', auth()->user()->account_id);
         }
 
         return $query;
     }
 
     /**
-     * Scope Active Records
+     * Scope active records.
      */
     public function scopeActive($query)
     {
@@ -64,35 +79,130 @@ class PaymentType extends Model
     }
 
     /**
-     * Account Relationship
+     * Default ordering.
      */
+    public function scopeOrdered($query)
+    {
+        return $query->orderBy('id');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
+
     public function account()
     {
         return $this->belongsTo(Account::class);
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Accessors
+    |--------------------------------------------------------------------------
+    */
+
     /**
-     * Status Text Accessor
+     * Active / Inactive text.
      */
     public function getStatusTextAttribute()
     {
-        return $this->status ? 'Active' : 'Inactive';
+        return $this->status
+            ? __('translation.active')
+            : __('translation.inactive');
     }
 
     /**
-     * Dropdown Options
+     * Display Name
+     * Example:
+     * Cash (cash)
+     */
+    public function getDisplayNameAttribute()
+    {
+        return sprintf(
+            '%s (%s)',
+            $this->name,
+            $this->short_name
+        );
+    }
+
+    /**
+     * Formatted created date.
+     */
+    public function getCreatedDateAttribute()
+    {
+        return Settings::getFormattedDatetime($this->created_at);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Helpers
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Dropdown options.
+     *
+     * Returns:
+     * [
+     *     'cash' => 'Cash',
+     *     'card' => 'Card'
+     * ]
      */
     public static function getSelectable($activeOnly = true)
     {
-        $query = self::ofAccount();
+        $query = self::query()
+            ->ofAccount()
+            ->ordered();
 
         if ($activeOnly) {
             $query->active();
         }
 
         return $query
-            ->orderBy('id')
             ->pluck('name', 'short_name')
             ->toArray();
+    }
+
+    /**
+     * Dropdown with display names.
+     *
+     * Returns:
+     * [
+     *     'cash' => 'Cash (cash)',
+     *     'card' => 'Card (card)'
+     * ]
+     */
+    public static function getSelectableDisplay($activeOnly = true)
+    {
+        $query = self::query()
+            ->ofAccount()
+            ->ordered();
+
+        if ($activeOnly) {
+            $query->active();
+        }
+
+        return $query
+            ->get()
+            ->pluck('display_name', 'short_name')
+            ->toArray();
+    }
+
+    /**
+     * Return full collection.
+     */
+    public static function getSelectableWithData($activeOnly = true)
+    {
+        $query = self::query()
+            ->ofAccount()
+            ->ordered();
+
+        if ($activeOnly) {
+            $query->active();
+        }
+
+        return $query->get();
     }
 }

@@ -334,7 +334,7 @@ class SaleController extends Controller
         }
     }
 
-    public function downloadInvoice($id)
+    public function downloadInvoice_delete($id)
     {
         $id = Settings::getDecodeCodeWithHashids($id);
         try {
@@ -354,6 +354,121 @@ class SaleController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function downloadInvoicesss($id)
+    {
+        try {
+
+            $decoded = Settings::getDecodeCodeWithHashids($id);
+
+            if (empty($decoded)) {
+                return redirect()
+                    ->route('admin.sales.index')
+                    ->with('error', 'Invalid Sale');
+            }
+
+            $saleId = $decoded[0];
+
+            $storeDetails = [];
+
+            $sale = Sale::with([
+                'customer',
+                'items.product.category',
+                'payments',
+                'user',
+                'creditDuration'
+            ])->findOrFail($saleId);
+
+            $pdf = Pdf::loadView(
+                'backend.pdf.invoice',
+                compact(
+                    'sale',
+                    'storeDetails'
+                )
+            );
+
+            $pdf->setPaper('a4');
+
+            $pdf->setOptions([
+                'isHtml5ParserEnabled' => true,
+                'isPhpEnabled' => true,
+                'isRemoteEnabled' => true,
+                'defaultFont' => 'DejaVu Sans',
+            ]);
+
+            $pdf = Settings::downloadpdf($pdf);
+
+            return $pdf->stream(
+                'Invoice-' . $sale->invoice_no . '.pdf'
+            );
+
+        } catch (\Throwable $e) {
+
+            report($e);
+
+            return back()->with(
+                'error',
+                $e->getMessage()
+            );
+        }
+    }
+
+    public function downloadInvoice($id)
+    {
+        $id = Settings::getDecodeCodeWithHashids($id);
+
+        try {
+
+            if (empty($id)) {
+                return redirect()
+                    ->route('admin.sales.index')
+                    ->with('error', 'Invalid Sale ID');
+            }
+
+            $id = $id[0];
+
+            $storeDetails = Store::where(
+                'account_id',
+                auth()->user()->account_id
+            )->first();
+
+            $pdfHeaderdata = config('constants.downloadinvoicpdf');
+
+            $sale = Sale::with([
+                'customer',
+                'items.product',
+                'payments',
+                'user',
+                'warehouse',
+                'creditDuration'
+            ])->findOrFail($id);
+
+            $pdf = Pdf::loadView(
+                'backend.pdf.invoice',
+                compact(
+                    'sale',
+                    'storeDetails'
+                )
+            );
+
+            $pdf = Settings::downloadpdf($pdf);
+
+            $fileName =
+                $pdfHeaderdata['filename']
+                . '-'
+                . ($sale->invoice_no ?? $sale->id)
+                . '.pdf';
+
+            return $pdf->stream($fileName);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
             ], 500);
         }
     }

@@ -53,4 +53,13 @@ class PaymentMethod extends Model
             ->pluck('name', 'id')
             ->toArray();
     }
+
+    public static function getSelectableWithData()
+    {
+        return self::ofAccount()
+            ->active()
+            ->orderBy('name')
+            ->get(['id', 'name', 'short_name']);
+    }
+
 }

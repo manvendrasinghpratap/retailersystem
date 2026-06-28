@@ -2,97 +2,150 @@
 
 @section('content')
     @include('backend.components.breadcrumb')
-
     <div class="row">
-        <div class="col-lg-12">
+        {{-- LEFT SIDE --}}
+        <div class="col-lg-8">
             <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{{ __('translation.scan_barcode') }}</h5>
+                </div>
                 <div class="card-body">
-                    <!-- Barcode -->
-                    <div class="mb-3">
-                        <input type="text" id="barcode" class="form-control" placeholder="Scan barcode here" autofocus autocomplete="off">
+                    <input type="text" id="barcode" class="form-control form-control-lg mb-4" placeholder="Scan barcode here..." autofocus autocomplete="off">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover align-middle" id="cart-table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>{{ __('translation.category_name') }}</th>
+                                    <th>{{ __('translation.product_name') }}</th>
+                                    <th width="80">{{ __('translation.stock') }}</th>
+                                    <th width="100">{{ __('translation.quantity') }}</th>
+                                    <th width="120">
+                                        {{ __('translation.b_ngn') }}
+                                        {{ __('translation.price') }}
+                                    </th>
+                                    <th width="140">
+                                        {{ __('translation.b_ngn') }}
+                                        {{ __('translation.total') }}
+                                    </th>
+                                    <th width="60">
+                                        {{ __('translation.action') }}
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
                     </div>
-                    <!-- Cart -->
-                    <table class="table table-bordered" id="cart-table">
-                        <thead>
-                            <tr>
-                                <th>{{ __('translation.category_name') }}</th>
-                                <th>{{ __('translation.product_name') }}</th>
-                                <th>{{ __('translation.stock') }}</th>
-                                <th>{{ __('translation.quantity') }}</th>
-                                <th>{{ __('translation.b_ngn') . ' ' . __('translation.price') }}</th>
-                                <th>{{ __('translation.b_ngn') . ' ' . __('translation.total') }}</th>
-                                <th>{{ __('translation.action') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-
-                    <!-- Totals -->
-                    <div class="text-end">
-                        <p>Subtotal: {{ __('translation.b_ngn') }} <span id="subtotal">0.00</span></p>
-                        <p>Tax: {{ __('translation.b_ngn') }} <span id="tax">0.00</span></p>
-                        <input type="hidden" id="tax_percentage" value="{{ $taxPercentage }}">
-                        <h4>Total Payable Amount: {{ __('translation.b_ngn') }} <span id="grand_total">0.00</span></h4>
-                        <!-- <input type="number" id="paid_amount" class="form-control mb-2" placeholder="Paid Amount"> -->
-                        <!-- Payment Type -->
-                        <div class="mt-4 mb-2">
-                            <x-select-dropdown :noselect="true" :nolabel="true" id="payment_type" name="payment_type" label="{{ __('translation.payment_type') }}" :options="$paymentTypes ?? config('constants.paymenttypes')" :selected="request('payment_type')" class="payment_type" mainrows="12" />
-                        </div>
-                        <!-- FULL PAYMENT -->
-                        <div id="full_payment_section">
-                            <x-text-input :islabel="true" labelclass="left" name="full_amount" :label="__('translation.amount')" :value="request('full_amount')" :placeholder="__('translation.amount')" class="form-control onlydecimal default-zero" mainrows="12" />
-                            <x-select-dropdown :nolabel="true" id="full_method" name="full_method" label="{{ __('translation.customer_payment_method') }}" :options="$paymentMethods ?? config('constants.customer_payment_method')" :selected="request('full_method')" class="full_method" mainrows="12" />
-                        </div>
-
-                        <!-- CREDIT PAYMENT SECTION BEGIN -->
-                        <div id="credit_payment_section" style="display:none;">
-                            <x-select-dropdown :noselect="true" :nolabel="false" id="credit_duration_id" name="credit_duration_id" label="Credit Duration" :options="$creditDurations" class="credit_duration_id" mainrows="12" />
-                            <x-text-input :islabel="true" label="Interest (%)" id="interest_rate" name="interest_rate" value="0" class="form-control onlydecimal default-zero" readonly mainrows="12" />
-                            <x-text-input :islabel="true" label="Interest Amount" id="interest_amount" name="interest_amount" value="0" class="form-control" readonly mainrows="12" />
-                            <x-text-input :islabel="true" label="Payable Amount" id="payable_amount" name="payable_amount" value="0" class="form-control" readonly mainrows="12" />
-                        </div>
-                        <!-- CREDIT PAYMENT SECTION END -->
-                        <div class="mb-2 d-flex gap-2 justify-content-end">
-                            <input type="text" id="coupon_code" class="form-control" style="max-width:200px;" placeholder="Enter Coupon">
-                            <button type="button" class="btn btn-primary" id="apply_coupon">Apply</button>
-                        </div>
-
-                        <!-- CUSTOMER SECTION -->
-                        <div class="mt-3 p-3 border rounded">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <strong>Customer</strong>
-                                <a href="javascript:void(0)" id="toggle_customer_form">+ Add Customer</a>
-                            </div>
-
-                            <!-- Selected Customer -->
-                            <div id="selected_customer" class="text-muted mb-2">
-                                No customer selected
-                            </div>
-
-                            <!-- Hidden Form -->
-                            <div id="customer_form" style="display:none;">
-                                <x-text-input :islabel="false" labelclass="left" id="customer_phone" name="customer_phone" :value="request('customer_phone')" :placeholder="__('translation.phone_number_or_whatsapp_number')" class="form-control onlyinteger default-zero" mainrows="12" maxlength="11" />
-                                <x-text-input :islabel="false" labelclass="left" id="customer_name" name="customer_name" :value="request('customer_name')" :placeholder="__('translation.customer_name')" class="form-control" mainrows="12" />
-                                <x-text-input :islabel="false" labelclass="left" id="customer_email" name="customer_email" :value="request('customer_email')" :placeholder="__('translation.email')" class="form-control" mainrows="12" />
-                                <!-- <input type="text" id="customer_name" class="form-control mb-2" placeholder="Customer name"> -->
-                                <button type="button" class="btn btn-sm btn-primary" id="save_customer_btn">Save Customer</button>
-                            </div>
-                        </div>
-                        <p>Discount: {{ __('translation.b_ngn') }} <span id="discount">0.00</span></p>
-                        <!-- PARTIAL PAYMENT -->
-                        <div id="partial_payment_section" style="display:none;">
-                            <x-text-input :islabel="true" labelclass="left" name="cash_amount" data-method="cash" :label="__('translation.cash')" :value="request('cash_amount')" :placeholder="__('translation.cash')" class="form-control partial-amount onlydecimal default-zero" mainrows="12" />
-                            <x-text-input :islabel="true" labelclass="left" name="card_amount" data-method="card" :label="__('translation.card')" :value="request('card_amount')" :placeholder="__('translation.card')" class="form-control partial-amount onlydecimal default-zero" mainrows="12" />
-                            <x-text-input :islabel="true" labelclass="left" name="transfer_amount" data-method="transfer" :label="__('translation.transfer')" :value="request('transfer_amount')" :placeholder="__('translation.transfer')" class="form-control partial-amount onlydecimal default-zero" mainrows="12" />
-                        </div>
-                        <button class="btn btn-success w-100 mb-4" id="complete-sale">{{ __('translation.complete_payment') }}</button>
-
-                    </div>
-
                 </div>
             </div>
         </div>
+
+        {{-- RIGHT SIDE --}}
+        <div class="col-lg-4">
+            {{-- COUPON --}}
+            <div class="card mb-3">
+                <div class="card-header">
+                    <strong>{{__('translation.coupon')}}</strong>
+                </div>
+                <div class="card-body">
+                    <div class="input-group">
+                        <input type="text" id="coupon_code" class="form-control" placeholder="Enter Coupon">
+                        <button type="button" class="btn btn-primary" id="apply_coupon">{{ __('translation.apply') }}</button>
+                    </div>
+                </div>
+            </div>
+            {{-- ORDER SUMMARY --}}
+            <div class="card mb-3">
+                <div class="card-header">
+                    <strong>{{ __('translation.order_summary') }}</strong>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>{{ __('translation.subtotal') }}</span>
+                        <strong>
+                            {{ __('translation.b_ngn') }}
+                            <span id="subtotal">0.00</span>
+                        </strong>
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>{{ __('translation.discount') }}</span>
+                        <strong>
+                            {{ __('translation.b_ngn') }}
+                            <span id="discount">0.00</span>
+                        </strong>
+                    </div>
+
+                    @if(account_setting('general.tax'))
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>
+                                {{__('translation.tax')}} ({{ account_setting('general.tax') }}%)
+                            </span>
+                            <strong>
+                                {{ __('translation.b_ngn') }}
+                                <span id="tax">0.00</span>
+                            </strong>
+                        </div>
+                    @endif
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <h5 class="mb-0">{{ __('translation.total') }}</h5>
+                        <h4 class="text-success mb-0">{{ __('translation.b_ngn') }} <span id="grand_total">0.00</span></h4>
+                    </div>
+                    <input type="hidden" id="tax_percentage" value="{{ $taxPercentage }}">
+                </div>
+
+            </div>
+
+            {{-- PAYMENT --}}
+            <div class="card mb-3">
+                <div class="card-header">
+                    <strong>{{ __('translation.payment_details') }}</strong>
+                </div>
+                <div class="card-body">
+                    <x-select-dropdown :noselect="true" :nolabel="false" id="payment_type" name="payment_type" label="{{ __('translation.payment_type') }}" :options="$paymentTypes ?? config('constants.paymenttypes')" :selected="request('payment_type')" class="payment_type" mainrows="12" />
+                    {{-- FULL PAYMENT --}}
+                    <div id="full_payment_section">
+                        <x-text-input :islabel="true" labelclass="left" name="full_amount" :label="__('translation.amount') . ' ' . __('translation.b_ngn')" :value="request('full_amount')" :placeholder="__('translation.amount')" class="form-control onlydecimal default-zero" mainrows="12" readonly />
+                        <x-select-dropdown :nolabel="false" id="full_method" name="full_method" label="{{ __('translation.customer_payment_method') }}" :options="$paymentMethods ?? config('constants.customer_payment_method')" :selected="request('full_method')" class="full_method" mainrows="12" />
+                    </div>
+                    {{-- CREDIT PAYMENT --}}
+                    <div id="credit_payment_section" style="display:none;">
+                        <x-select-dropdown :noselect="true" :nolabel="false" id="credit_duration_id" name="credit_duration_id" label="Credit Duration" :options="$creditDurations" class="credit_duration_id" mainrows="12" />
+                        <x-text-input :islabel="true" label="Interest (%)" id="interest_rate" name="interest_rate" value="0" readonly class="form-control" mainrows="12" />
+                        <x-text-input :islabel="true" :label=" __('translation.interest_amount') . ' ' . __('translation.b_ngn')" id="interest_amount" name="interest_amount" value="0" readonly class="form-control" mainrows="12" />
+                        <x-text-input :islabel="true" :label=" __('translation.payable_amount') . ' ' . __('translation.b_ngn')" id="payable_amount" name="payable_amount" value="0" readonly class="form-control" mainrows="12" />
+                    </div>
+                    {{-- PARTIAL PAYMENT --}}
+                    <div id="partial_payment_section" style="display:none;">
+                        @foreach($paymentMethods ?? config('constants.customer_payment_method') as $key => $method)
+                            <x-text-input :islabel="true" :label="$method . ' ' . __('translation.b_ngn')" :name="$key" :data-method="$key" class="form-control partial-amount onlydecimal default-zero" mainrows="12" min="0" maxlength="15" />
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+
+            {{-- CUSTOMER --}}
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <strong>{{ __('translation.customer') }}</strong>
+                    <a href="javascript:void(0)" id="toggle_customer_form">+ {{ __('translation.add_customer') }}</a>
+                </div>
+                <div class="card-body">
+                    <div id="selected_customer" class="alert alert-light">{{ __('translation.no_customer_selected') }}</div>
+                    <div id="customer_form" style="display:none;">
+                        <x-text-input :islabel="false" id="customer_phone" name="customer_phone" :placeholder="__('translation.phone_number_or_whatsapp_number')" class="form-control onlyinteger" maxlength="11" mainrows="12" />
+                        <x-text-input :islabel="false" id="customer_name" name="customer_name" :placeholder="__('translation.customer_name')" class="form-control" mainrows="12" />
+                        <x-text-input :islabel="false" id="customer_email" name="customer_email" :placeholder="__('translation.email')" class="form-control" mainrows="12" />
+                        <button type="button" class="btn btn-primary w-100" id="save_customer_btn">{{ __('translation.save_customer') }}</button>
+                    </div>
+                </div>
+            </div>
+
+            {{-- COMPLETE PAYMENT --}}
+            <button class="btn btn-success btn-lg w-100" id="complete-sale"> {{ __('translation.complete_payment') }}</button>
+        </div>
     </div>
+
 @endsection
 
 @section('script')

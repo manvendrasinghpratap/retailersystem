@@ -10,7 +10,9 @@ use App\Http\Controllers\Admin\{
     BarcodeController,
     CouponController,
     CustomerController,
-    StoreController
+    StoreController,
+    CreditDurationController,
+    PaymentTypeController
 };
 
 Route::prefix('admin')->middleware(['auth', 'route.permission', 'subscription'])->group(function () {
@@ -116,4 +118,37 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'route.permission', 
     });
 });
 
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'route.permission', 'subscription'])->group(function () {
+    Route::prefix('credit-durations')->name('credit-durations.')->group(function () {
+        Route::get('/', [CreditDurationController::class, 'index'])->name('index');
+        Route::get('/create', [CreditDurationController::class, 'create'])->name('create');
+        Route::post('/store', [CreditDurationController::class, 'store'])->name('store');
+        Route::get('/edit/{id}', [CreditDurationController::class, 'edit'])->name('edit');
+        Route::post('/update', [CreditDurationController::class, 'update'])->name('update');
+        Route::post('/delete', [CreditDurationController::class, 'destroy'])->name('destroy');
+        Route::post('/status-update', [CreditDurationController::class, 'statusUpdate'])->name('status.update');
+        Route::post('/soft-delete', [CreditDurationController::class, 'softdelete'])->name('soft.delete');
+        Route::get('export-pdf', [CreditDurationController::class, 'exportPdf'])->name('exportPdf');
+        Route::get('export-csv', [CreditDurationController::class, 'exportCsv'])->name('exportCsv');
+    });
+});
+
+/*
+|--------------------------------------------------------------------------
+| Payment Types
+|--------------------------------------------------------------------------
+*/
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'route.permission', 'subscription'])->group(function () {
+    Route::prefix('payment-types')->name('payment-types.')->group(function () {
+        Route::get('/', [PaymentTypeController::class, 'index'])->name('index');
+        Route::get('/create', [PaymentTypeController::class, 'create'])->name('create');
+        Route::post('/store', [PaymentTypeController::class, 'store'])->name('store');
+        Route::get('/edit/{id}', [PaymentTypeController::class, 'edit'])->name('edit');
+        Route::post('/update/{id}', [PaymentTypeController::class, 'update'])->name('update');
+        Route::post('/softdelete/{id}', [PaymentTypeController::class, 'softdelete'])->name('softdelete');
+        Route::post('/status-update', [PaymentTypeController::class, 'statusUpdate'])->name('statusUpdate');
+        Route::get('/export-pdf', [PaymentTypeController::class, 'exportPdf'])->name('exportPdf');
+        Route::get('/export-csv', [PaymentTypeController::class, 'exportCsv'])->name('exportCsv');
+    });
+});
 

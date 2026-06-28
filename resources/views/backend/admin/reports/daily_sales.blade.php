@@ -22,7 +22,6 @@
                         ])                 
                     </div>
                 </div>
-
                 <div class="card-body">
                     <form method="GET">
                         <div class="row"> 
@@ -44,13 +43,12 @@
                     </form>
                 </div>
             </div>
-        </div>
+        </div>  
     </div>
     {{-- ================= LISTING SECTION ================= --}}
     <div class="row">
         <div class="col-12">
             <div class="card">
-
                 <div class="card-header">
                     <h4 class="card-title">
                         {{ array_key_exists('title', $breadcrumb) ? $breadcrumb['title'] : '' }}
@@ -70,19 +68,13 @@
                                         <th>{{ __('translation.staff_name') }}</th>
                                     @endif
                                     <th>{{ __('translation.payment_type') }}</th>
-
-                                    <!-- Payment Methods -->
-                                    <th class="text-center">{{ __('translation.currency') }} {{ __('translation.cash') }}</th>
-                                    <th class="text-center">{{ __('translation.currency') }} {{ __('translation.card') }}</th>
-                                    <th class="text-center">{{ __('translation.currency') }} {{ __('translation.transfer') }}</th>
-
-                                    
-
+                                    @foreach($paymentMethods as $method)
+                                        <th class="text-center">{{ __('translation.currency') }} {{ $method['name'] }}</th>
+                                    @endforeach
                                     <th>{{ __('translation.currency') }} {{ __('translation.total_amount') }}</th>
                                     <th>{{ __('translation.transaction_date') }}</th>
                                 </tr>
                             </thead>
-
                             <tbody>
                                 @forelse($sales as $sale)
                                     @php
@@ -90,82 +82,50 @@
                                             ->groupBy('method')
                                             ->map(fn($items) => $items->sum('amount'));
                                     @endphp
-
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
                                         <td>{{ $sale->invoice_no }}</td>
                                         <td>{{ $sale->customer->name ?? '-' }}</td>
                                         @if(Auth::user()->hasDesignation())
                                             <td>{{ $sale->user->name ?? '-' }}</td>
-                                        @endif
-
-                                        <td>
-                                            {{ $sale->payment_method == null ? 'Partial Payment' : 'Full Payment' }}
-                                        </td>
-
-                                        <td class="text-center">
-                                            {{ __('translation.currency') }} {{ number_format($summary['cash'] ?? 0, 2) }}
-                                        </td>
-
-                                        <td class="text-center">
-                                            {{ __('translation.currency') }} {{ number_format($summary['card'] ?? 0, 2) }}
-                                        </td>
-
-                                        <td class="text-center">
-                                            {{ __('translation.currency') }} {{ number_format($summary['transfer'] ?? 0, 2) }}
-                                        </td>
-
-                                       
-
-                                        <td>
-                                            {{ __('translation.currency') }} {{ number_format($sale->total, 2) }}
-                                        </td>
-
-                                        <td>
-                                            {{ \App\Helpers\Settings::getFormattedDatetime($sale->created_at) }}
-                                        </td>
+                                        @endif 
+                                        <td>{{ \App\Helpers\Settings::getDataUcfirst($paymentTypes[$sale->payment_type] ?? '') }}</td>
+                                        @foreach($paymentMethods as $method)
+                                            <td class="text-center"> {{ __('translation.currency') }}{{ \App\Helpers\Settings::getcustomnumberformat($summary[$method['short_name']] ?? 0) }}</td>
+                                        @endforeach
+                                        <td>{{ __('translation.currency') }}{{ \App\Helpers\Settings::getcustomnumberformat($sale->total) }}</td>
+                                        <td>{{ \App\Helpers\Settings::getFormattedDatetime($sale->created_at) }}</td>
                                     </tr>
                                 @empty
+                                    @php
+                                        $columns = 6 + count($paymentMethods) + (Auth::user()->hasDesignation() ? 1 : 0);
+                                    @endphp
                                     <tr>
-                                        <td colspan="{{ Auth::user()->hasDesignation() ? 10 : 9 }}" class="text-center">
-                                            {{ __('translation.no_data_found') }}
-                                        </td>
+                                        <td colspan="{{ $columns }}" class="text-center"> {{ __('translation.no_data_found') }}</td>
                                     </tr>
                                 @endforelse
-                            </tbody>
+                            </tbody>    
                             <tfoot>
                                 <tr class="fw-bold bg-light">
                                     @if(Auth::user()->hasDesignation())
                                         <td></td>
                                     @endif
-                                    <td colspan="4" class="text-end">Total</td>
-
-                                    <td class="text-center">
-                                        {{ __('translation.currency') }} {{ number_format($cashTotal, 2) }}
-                                    </td>
-
-                                    <td class="text-center">
-                                        {{ __('translation.currency') }} {{ number_format($cardTotal, 2) }}
-                                    </td>
-
-                                    <td class="text-center">
-                                        {{ __('translation.currency') }} {{ number_format($transferTotal, 2) }}
-                                    </td>
-                                    <td>
-                                        {{ __('translation.currency') }} {{ number_format($totalSales, 2) }}
-                                    </td>
-
+                                    <td colspan="4" class="text-end"> {{ __('translation.total') }}</td>
+                                    @foreach($paymentMethods as $method)
+                                        <td class="text-center">
+                                            {{ __('translation.currency') }}{{ \App\Helpers\Settings::getcustomnumberformat($paymentTotals[$method['short_name']] ?? 0) }}
+                                        </td>
+                                    @endforeach
+                                    <td> {{ __('translation.currency') }}{{ \App\Helpers\Settings::getcustomnumberformat($totalSales) }}</td>
                                     <td></td>
                                 </tr>
-                            </tfoot>
-                        </table>
+                            </tfoot> 
+                        </table> 
                     </div>
-
                     {{-- Pagination --}}
                     <div class="right user-navigation right">
                         {!! $sales->appends(request()->input())->links() !!}
                     </div>
-
                 </div>
             </div>
         </div>

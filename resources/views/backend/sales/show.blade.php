@@ -13,81 +13,55 @@
                 </div>
                 <div class="card-body">
                     <div class="row">
-
                         <div class="col-md-6">
-
                             <h4>{{ __('translation.invoice') }}: {{ $sale->invoice_no }}</h4>
-
                             <p>
                                 <strong>{{ __('translation.date') }}:</strong>
                                 {{ App\Helpers\Settings::getFormattedDatetime($sale->created_at) }}
                             </p>
-
                             <p>
                                 <strong>{{ __('translation.cashier') }}:</strong>
                                 {{ $sale->user->name ?? '-' }}
                             </p>
-
                             <p>
                                 <strong>{{ __('translation.customer_name') }}:</strong>
                                 {{ $sale->customer->name ?? '-' }}
                             </p>
-
                             <p>
                                 <strong>{{ __('translation.customer_phone') }}:</strong>
                                 {{ $sale->customer->phone ?? '-' }}
                             </p>
-
                             @if(!empty($sale->customer?->email))
                                 <p>
                                     <strong>{{ __('translation.customer_email') }}:</strong>
                                     {{ $sale->customer->email }}
                                 </p>
                             @endif
-
                         </div>
-
                         <div class="col-md-6">
-
                             <p>
                                 <strong>{{ __('translation.payment_type') }}:</strong>
                                 {{ $sale->customerPaymentType->name ?? ucfirst($sale->payment_type) }}
                             </p>
-
                             <p>
                                 <strong>{{ __('translation.payment_status') }}:</strong>
-
                                 @if($sale->payment_status == 'paid')
-                                    <span class="badge bg-success">
-                                        {{ ucfirst($sale->payment_status) }}
-                                    </span>
+                                    <span class="badge bg-success">{{ ucfirst($sale->payment_status) }}</span>
                                 @elseif($sale->payment_status == 'partial')
-                                    <span class="badge bg-warning">
-                                        {{ ucfirst($sale->payment_status) }}
-                                    </span>
+                                    <span class="badge bg-warning">{{ ucfirst($sale->payment_status) }}</span>
                                 @else
-                                    <span class="badge bg-danger">
-                                        {{ ucfirst($sale->payment_status) }}
-                                    </span>
+                                    <span class="badge bg-danger">{{ ucfirst($sale->payment_status) }}</span>
                                 @endif
                             </p>
-
                             <hr>
-
                             <p>
-                                <strong>{{ __('translation.subtotal') }}:</strong>
-                                {{ __('translation.b_ngn') }}
-                                {{ number_format($sale->subtotal, 2) }}
+                                <strong>{{ __('translation.subtotal') }}:</strong> {{ __('translation.b_ngn') }} {{ number_format($sale->subtotal, 2) }}
                             </p>
-
                             @if($sale->tax > 0)
                                 <p>
-                                    <strong>{{ __('translation.tax') }}:</strong>
-                                    {{ __('translation.b_ngn') }}
-                                    {{ number_format($sale->tax, 2) }}
+                                    <strong>{{ __('translation.tax') }}({{ account_setting('general.tax') }}%) :</strong> {{ __('translation.b_ngn') }} {{ number_format($sale->tax, 2) }}
                                 </p>
                             @endif
-
                             @if($sale->discount > 0)
                                 <p>
                                     <strong>{{ __('translation.discount') }}:</strong>
@@ -95,70 +69,38 @@
                                     {{ number_format($sale->discount, 2) }}
                                 </p>
                             @endif
-
                             @if($sale->payment_type == 'credit')
-
-                                                <p>
-                                                    <strong>{{ __('translation.credit_duration') }}:</strong>
-                                                    {{ $sale->creditDuration->name ?? '-' }}
-                                                </p>
-
-                                                <p>
-                                                    <strong>{{ __('translation.due_date') }}:</strong>
-                                                    {{ $sale->due_date
-                                ? App\Helpers\Settings::getFormattedDate($sale->due_date)
-                                : '-' }}
-                                                </p>
-
-                                                <p>
-                                                    <strong>{{ __('translation.interest_rate') }}:</strong>
-                                                    {{ number_format($sale->interest_rate, 2) }}%
-                                                </p>
-
-                                                @if($sale->interest_amount > 0)
-                                                    <p>
-                                                        <strong>{{ __('translation.interest_amount') }}:</strong>
-                                                        {{ __('translation.b_ngn') }}
-                                                        {{ number_format($sale->interest_amount, 2) }}
-                                                    </p>
-                                                @endif
-
-                            @endif
-
-                            <hr>
-
-                            <p>
-                                <strong>{{ __('translation.total_amount') }}:</strong>
-                                {{ __('translation.b_ngn') }}
-                                {{ number_format(
-        $sale->payable_amount > 0
-        ? $sale->payable_amount
-        : $sale->total,
-        2
-    ) }}
-                            </p>
-
-                            @if($sale->payment_type == 'credit')
-
                                 <p>
-                                    <strong>{{ __('translation.paid_amount') }}:</strong>
-                                    {{ __('translation.b_ngn') }}
-                                    {{ number_format($sale->paid_amount, 2) }}
+                                    <strong>{{ __('translation.credit_duration') }}:</strong> {{ $sale->creditDuration->name ?? '-' }}
                                 </p>
-
+                                <p>
+                                    <strong>{{ __('translation.due_date') }}:</strong> {{ $sale->due_date ? App\Helpers\Settings::getFormattedDate($sale->due_date) : '-' }}
+                                </p>
+                                <p>
+                                    <strong>{{ __('translation.interest_rate') }}:</strong> {{ number_format($sale->interest_rate, 2) }}%
+                                </p>
+                                @if($sale->interest_amount > 0)
+                                    <p>
+                                        <strong>{{ __('translation.interest_amount') }}:</strong> {{ __('translation.b_ngn') }} {{ number_format($sale->interest_amount, 2) }}
+                                    </p>
+                                @endif
+                            @endif
+                            <hr>
+                            <p>
+                                <strong>{{ __('translation.total_amount') }}:</strong> {{ __('translation.b_ngn') }} {{ number_format($sale->payable_amount > 0 ? $sale->payable_amount : $sale->total, 2) }}
+                            </p>
+                            @if($sale->payment_type == 'credit')
+                                <p>
+                                    <strong>{{ __('translation.paid_amount') }}:</strong> {{ __('translation.b_ngn') }} {{ number_format($sale->paid_amount, 2) }}
+                                </p>
                                 <p>
                                     <strong>{{ __('translation.balance_amount') }}:</strong>
-
                                     <span class="{{ $sale->balance_amount > 0 ? 'text-danger fw-bold' : 'text-success fw-bold' }}">
-                                        {{ __('translation.b_ngn') }}
-                                        {{ number_format($sale->balance_amount, 2) }}
+                                        {{ __('translation.b_ngn') }} {{ number_format($sale->balance_amount, 2) }}
                                     </span>
                                 </p>
-
                             @endif
-
                         </div>
-
                     </div>
                 </div>
             </div>
@@ -200,63 +142,38 @@
                                 @endforelse
                             </tbody>
                             <tfoot>
-
                                 <tr>
                                     <th colspan="4" class="text-end">
                                         {{ __('translation.subtotal') }}
                                     </th>
                                     <th>
-                                        {{ __('translation.b_ngn') }}
-                                        {{ number_format($sale->subtotal, 2) }}
+                                        {{ __('translation.b_ngn') }} {{ number_format($sale->subtotal, 2) }}
                                     </th>
                                 </tr>
-
                                 @if($sale->tax > 0)
                                     <tr>
-                                        <th colspan="4" class="text-end">
-                                            {{ __('translation.tax') }}
-                                        </th>
-                                        <th>
-                                            {{ __('translation.b_ngn') }}
-                                            {{ number_format($sale->tax, 2) }}
-                                        </th>
+                                        <th colspan="4" class="text-end">{{ __('translation.tax') }}({{ account_setting('general.tax') }}%)</th>
+                                        <th>{{ __('translation.b_ngn') }} {{ number_format($sale->tax, 2) }}</th>
                                     </tr>
                                 @endif
-
                                 @if($sale->discount > 0)
                                     <tr>
-                                        <th colspan="4" class="text-end">
-                                            {{ __('translation.discount') }}
-                                        </th>
-                                        <th class="text-danger">
-                                            - {{ __('translation.b_ngn') }}
-                                            {{ number_format($sale->discount, 2) }}
+                                        <th colspan="4" class="text-end">{{ __('translation.discount') }}</th>
+                                        <th class="text-danger">- {{ __('translation.b_ngn') }} {{ number_format($sale->discount, 2) }}
                                         </th>
                                     </tr>
                                 @endif
-
                                 @if($sale->interest_amount > 0)
                                     <tr>
-                                        <th colspan="4" class="text-end">
-                                            {{ __('translation.interest_amount') }}
-                                        </th>
-                                        <th>
-                                            {{ __('translation.b_ngn') }}
-                                            {{ number_format($sale->interest_amount, 2) }}
-                                        </th>
+                                        <th colspan="4" class="text-end">{{ __('translation.interest_amount') }}</th>
+                                        <th>{{ __('translation.b_ngn') }} {{ number_format($sale->interest_amount, 2) }}</th>
                                     </tr>
                                 @endif
-
                                 <tr>
-                                    <th colspan="4" class="text-end fw-bold">
-                                        {{ __('translation.grand_total') }}
-                                    </th>
-                                    <th class="fw-bold">
-                                        {{ __('translation.b_ngn') }}
-                                        {{ number_format($sale->payable_amount > 0 ? $sale->payable_amount : $sale->total, 2) }}
+                                    <th colspan="4" class="text-end fw-bold">{{ __('translation.grand_total') }}</th>
+                                    <th class="fw-bold">{{ __('translation.b_ngn') }} {{ number_format($sale->payable_amount > 0 ? $sale->payable_amount : $sale->total, 2) }}
                                     </th>
                                 </tr>
-
                             </tfoot>
                         </table>
                     </div>

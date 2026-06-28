@@ -2,7 +2,7 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col-sm-12">
-                <script>document.write(new Date().getFullYear())</script> © @lang('translation.webname').
+                <script>document.write(new Date().getFullYear())</script> © Powered by @lang('translation.webname').
             </div>
         </div>
     </div>

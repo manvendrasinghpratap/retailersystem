@@ -57,6 +57,11 @@ class Sale extends Model
         return $this->belongsTo(Customer::class, 'customer_id');
     }
 
+    public function warehouse()
+    {
+        return $this->belongsTo(Warehouse::class);
+    }
+
     // ✅ Sale belongs to user (cashier)
     public function user()
     {

@@ -17,6 +17,7 @@ use App\Models\PaymentType;
 use App\Models\CreditDuration;
 use App\Models\SalePayment;
 use App\Models\PaymentMethod;
+use App\Helpers\AccountSettingHelper;
 
 class BillingController extends Controller
 {
@@ -68,7 +69,7 @@ class BillingController extends Controller
             'paymentTypes' => PaymentType::getSelectable(),
             'creditDurations' => CreditDuration::getSelectable(),
             'paymentMethods' => PaymentMethod::getSelectable(),
-            'taxPercentage' => '10.5'
+            'taxPercentage' => account_setting('general.tax')
         ]);
     }
 

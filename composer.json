@@ -37,7 +37,8 @@
         },
         "files": [
         "app/Helpers/Settings.php",
-		 "app/Helpers/EmailHelper.php"
+		 "app/Helpers/EmailHelper.php",
+		 "app/Helpers/account_setting.php"
         ]
     },
     "autoload-dev": {

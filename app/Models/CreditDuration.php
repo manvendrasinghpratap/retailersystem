@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Helpers\Settings;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -35,44 +36,40 @@ class CreditDuration extends Model
     ];
 
     /**
-     * Auto assign account and creator
+     * Automatically assign account_id and created_by
      */
-    protected static function boot()
+    protected static function booted()
     {
-        parent::boot();
-
         static::creating(function ($model) {
 
             if (auth()->check()) {
 
-                if (empty($model->account_id)) {
-                    $model->account_id = auth()->user()->account_id;
-                }
-
-                if (empty($model->created_by)) {
-                    $model->created_by = auth()->id();
-                }
+                $model->account_id ??= auth()->user()->account_id;
+                $model->created_by ??= auth()->id();
             }
         });
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Query Scopes
+    |--------------------------------------------------------------------------
+    */
+
     /**
-     * Account Scope
+     * Filter by logged-in account.
      */
     public function scopeOfAccount($query)
     {
         if (auth()->check()) {
-            return $query->where(
-                'account_id',
-                auth()->user()->account_id
-            );
+            $query->where('account_id', auth()->user()->account_id);
         }
 
         return $query;
     }
 
     /**
-     * Active Scope
+     * Active records only.
      */
     public function scopeActive($query)
     {
@@ -80,45 +77,105 @@ class CreditDuration extends Model
     }
 
     /**
-     * Creator Relationship
+     * Order by duration.
      */
+    public function scopeOrdered($query)
+    {
+        return $query->orderBy('duration_days');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
+
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Accessors
+    |--------------------------------------------------------------------------
+    */
+
     /**
-     * Dropdown Options
+     * Active / Inactive
+     */
+    public function getStatusTextAttribute()
+    {
+        return $this->status
+            ? __('translation.active')
+            : __('translation.inactive');
+    }
+
+    /**
+     * Example:
+     * 30 Days (5.00%)
+     */
+    public function getDisplayNameAttribute()
+    {
+        return sprintf(
+            '%s (%.2f%%)',
+            $this->name,
+            $this->interest
+        );
+    }
+
+    /**
+     * Formatted created date.
+     */
+    public function getCreatedDateAttribute()
+    {
+        return Settings::getFormattedDatetime($this->created_at);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Helpers
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Get dropdown options.
+     *
+     * @param bool $activeOnly
+     * @return array
      */
     public static function getSelectable($activeOnly = true)
     {
-        $query = self::ofAccount();
+        $query = self::query()
+            ->ofAccount()
+            ->ordered();
 
         if ($activeOnly) {
             $query->active();
         }
 
         return $query
-            ->orderBy('duration_days')
-            ->pluck('name', 'id')
+            ->get()
+            ->pluck('display_name', 'id')
             ->toArray();
     }
 
     /**
-     * Status Text
+     * Get collection with all data.
+     *
+     * @param bool $activeOnly
+     * @return \Illuminate\Database\Eloquent\Collection
      */
-    public function getStatusTextAttribute()
+    public static function getSelectableWithData($activeOnly = true)
     {
-        return $this->status ? 'Active' : 'Inactive';
-    }
+        $query = self::query()
+            ->ofAccount()
+            ->ordered();
 
-    /**
-     * Example:
-     * 7 Days (0%)
-     * 30 Days (5%)
-     */
-    public function getDisplayNameAttribute()
-    {
-        return "{$this->name} ({$this->interest}%)";
+        if ($activeOnly) {
+            $query->active();
+        }
+
+        return $query->get();
     }
 }
