@@ -20,6 +20,11 @@ class SaleController extends Controller
     protected $breadcrumbBilling;
     protected $breadcrumShow;
 
+    /**
+     * @method __construct
+     * @description Constructor
+     * @access public
+     */
     public function __construct()
     {
         $this->middleware('auth');
@@ -63,14 +68,6 @@ class SaleController extends Controller
                     'route' => 'admin.sales.index',
                     'title' => __('translation.sales_list')
                 ],
-                // [
-                //     'route' => 'admin.sales.show',
-                //     'title' => __('translation.invoice')
-                // ],
-                // [
-                //     'route' => 'admin.sales.payment',
-                //     'title' => __('translation.payment_details')
-                // ]
             ],
             'route1' => "admin.sales.index",
             'route1Title' => __('translation.sales_list'),
@@ -87,6 +84,13 @@ class SaleController extends Controller
     }
 
 
+    /**
+     * @method index
+     * @description Index
+     * @param $request
+     * @return mixed
+     * @access public
+     */
     public function index(Request $request)
     {
         $breadcrumb = $this->breadcrumbBilling;
@@ -150,6 +154,13 @@ class SaleController extends Controller
         return view('backend.sales.index', compact('sales', 'breadcrumb', 'paymentTypes'));
     }
 
+    /**
+     * @method paymentDetails
+     * @description Payment Details
+     * @param $saleId
+     * @return mixed
+     * @access public
+     */
     public function paymentDetails($saleId)
     {
         $sale = Sale::with([
@@ -172,10 +183,11 @@ class SaleController extends Controller
     }
 
     /**
-     * Save Credit Payment
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * @method saveCreditPayment
+     * @description Save Credit Payment
+     * @param $request
+     * @return mixed
+     * @access public
      */
     public function saveCreditPayment(Request $request)
     {
@@ -241,6 +253,13 @@ class SaleController extends Controller
      *
      * @param Request $request
      */
+    /**
+     * @method exportPdf
+     * @description Export Pdf
+     * @param $request
+     * @return mixed
+     * @access public
+     */
     public function exportPdf(Request $request)
     {
         $request->merge(['pdf' => 1]);
@@ -248,15 +267,25 @@ class SaleController extends Controller
     }
 
     /**
-     * Export CSV
-     *
-     * @param Request $request
+     * @method exportCsv
+     * @description Export Csv
+     * @param $request
+     * @return mixed
+     * @access public
      */
     public function exportCsv(Request $request)
     {
         $request->merge(['csv' => 1]);
         return $this->index($request);
     }
+
+    /**
+     * @method show
+     * @description Show
+     * @param $id
+     * @return mixed
+     * @access public
+     */
 
     public function show($sale)
     {
@@ -269,6 +298,14 @@ class SaleController extends Controller
         return view('backend.sales.show', compact('sale', 'breadcrumb', 'paymentTypes', 'paymentMethods'));
     }
 
+    /**
+     * @method payment
+     * @description Payment
+     * @param $id
+     * @return mixed
+     * @access public
+     */
+
     public function payment(Sale $sale)
     {
         $breadcrumb = $this->breadcrumShow;
@@ -277,12 +314,19 @@ class SaleController extends Controller
         return view('backend.sales.payment', compact('sale', 'breadcrumb'));
     }
 
+    /**
+     * @method printinvoice
+     * @description Print Invoice
+     * @param $id
+     * @return mixed
+     * @access public
+     */
+
     public function printinvoice($id)
     {
         $id = Settings::getDecodeCodeWithHashids($id);
         try {
             $storeDetails = Store::where('account_id', auth()->user()->account_id)->first();
-            //  $this->pr($storeDetails);
             if (empty($id)) {
                 return redirect()->route('admin.sales.index')->with('error', 'Invalid sale ID');
             }
@@ -296,182 +340,87 @@ class SaleController extends Controller
 
     }
 
-
+    /**
+     * @method sendInvoiceEmail
+     * @description Send Invoice Email
+     * @param $id
+     * @return mixed
+     * @access public
+     */
 
     public function sendInvoiceEmail(Request $request)
     {
-
         $request->validate([
             'sale_id' => 'required|integer|exists:sales,id',
         ]);
-
         try {
-
             $sale = Sale::with('items.product')->findOrFail($request->sale_id);
             $customer = Customer::find($sale->customer_id);
-
-            // ✅ Check customer + email
             if (!$customer || empty($customer->email)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Customer email not available'
-                ], 400);
+                return response()->json(['success' => false, 'message' => 'Customer email not available'], 400);
             }
-
-            // ✅ Send email
             Mail::to($customer->email)->send(new CustomerInvoiceMail($sale, $customer));
-            return response()->json([
-                'success' => true,
-                'message' => 'Invoice email sent successfully'
-            ]);
-
+            return response()->json(['success' => true, 'message' => 'Invoice email sent successfully']);
         } catch (\Exception $e) {
-
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 500);
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
-
-    public function downloadInvoice_delete($id)
-    {
-        $id = Settings::getDecodeCodeWithHashids($id);
-        try {
-            if (empty($id)) {
-                return redirect()->route('admin.sales.index')->with('error', 'Invalid sale ID');
-            }
-            $storeDetails = Store::where('account_id', auth()->user()->account_id)->first();
-            $id = $id[0];
-            $pdfHeaderdata = \Config::get('constants.downloadinvoicpdf');
-            $sale = Sale::with(['items.product', 'customer'])->findOrFail($id);
-            $customer = Customer::find($sale->customer_id);
-            $pdf = Pdf::loadView('backend.pdf.invoice', compact('sale', 'customer', 'storeDetails'));
-            $pdf = Settings::downloadpdf($pdf);
-            $fileName = $pdfHeaderdata['filename'] . '-' . $sale->invoice_no . '.pdf';
-            return $pdf->stream($fileName);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    public function downloadInvoicesss($id)
-    {
-        try {
-
-            $decoded = Settings::getDecodeCodeWithHashids($id);
-
-            if (empty($decoded)) {
-                return redirect()
-                    ->route('admin.sales.index')
-                    ->with('error', 'Invalid Sale');
-            }
-
-            $saleId = $decoded[0];
-
-            $storeDetails = [];
-
-            $sale = Sale::with([
-                'customer',
-                'items.product.category',
-                'payments',
-                'user',
-                'creditDuration'
-            ])->findOrFail($saleId);
-
-            $pdf = Pdf::loadView(
-                'backend.pdf.invoice',
-                compact(
-                    'sale',
-                    'storeDetails'
-                )
-            );
-
-            $pdf->setPaper('a4');
-
-            $pdf->setOptions([
-                'isHtml5ParserEnabled' => true,
-                'isPhpEnabled' => true,
-                'isRemoteEnabled' => true,
-                'defaultFont' => 'DejaVu Sans',
-            ]);
-
-            $pdf = Settings::downloadpdf($pdf);
-
-            return $pdf->stream(
-                'Invoice-' . $sale->invoice_no . '.pdf'
-            );
-
-        } catch (\Throwable $e) {
-
-            report($e);
-
-            return back()->with(
-                'error',
-                $e->getMessage()
-            );
-        }
-    }
+    /**
+     * @method downloadInvoice
+     * @description Download Invoice
+     * @param $id
+     * @return mixed
+     * @access public
+     */
 
     public function downloadInvoice($id)
     {
         $id = Settings::getDecodeCodeWithHashids($id);
-
         try {
-
             if (empty($id)) {
-                return redirect()
-                    ->route('admin.sales.index')
-                    ->with('error', 'Invalid Sale ID');
+                return redirect()->route('admin.sales.index')->with('error', 'Invalid Sale ID');
             }
-
             $id = $id[0];
-
-            $storeDetails = Store::where(
-                'account_id',
-                auth()->user()->account_id
-            )->first();
-
+            $storeDetails = Store::where('account_id', auth()->user()->account_id)->first();
             $pdfHeaderdata = config('constants.downloadinvoicpdf');
-
-            $sale = Sale::with([
-                'customer',
-                'items.product',
-                'payments',
-                'user',
-                'warehouse',
-                'creditDuration'
-            ])->findOrFail($id);
-
-            $pdf = Pdf::loadView(
-                'backend.pdf.invoice',
-                compact(
-                    'sale',
-                    'storeDetails'
-                )
-            );
-
+            $sale = Sale::with(['customer', 'items.product', 'payments', 'user', 'warehouse', 'creditDuration'])->findOrFail($id);
+            $pdf = Pdf::loadView('backend.pdf.invoice', compact('sale', 'storeDetails'));
             $pdf = Settings::downloadpdf($pdf);
-
-            $fileName =
-                $pdfHeaderdata['filename']
-                . '-'
-                . ($sale->invoice_no ?? $sale->id)
-                . '.pdf';
-
+            $fileName = $pdfHeaderdata['filename'] . '-' . $sale->invoice_no . '.pdf';
             return $pdf->stream($fileName);
-
         } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage(),], 500);
+        }
+    }
 
+    /**
+     * @method downloadPurchaseInvoice
+     * @description Download Purchase Invoice
+     * @param $id
+     * @return mixed
+     * @access public
+     */
+
+    public function downloadPurchaseInvoice($id)
+    {
+        $id = Settings::getDecodeCodeWithHashids($id);
+        try {
+            if (empty($id)) {
+                return redirect()->route('admin.sales.index')->with('error', 'Invalid Sale ID');
+            }
+            $id = $id[0];
+            $storeDetails = Store::where('account_id', auth()->user()->account_id)->first();
+            $pdfHeaderdata = config('constants.downloadinvoicpdf');
+            $purchase = Sale::with(['customer', 'items.product', 'payments', 'user', 'warehouse', 'creditDuration'])->findOrFail($id);
+            $pdf = Pdf::loadView('backend.pdf.purchase_invoice', compact('purchase', 'storeDetails'));
+            $pdf = Settings::downloadpdf($pdf);
+            $fileName = $pdfHeaderdata['filename'] . '-' . ($purchase->invoice_no ?? $purchase->id) . '.pdf';
+            return $pdf->stream($fileName);
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage(),
             ], 500);
         }
     }
-
-
 }

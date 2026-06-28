@@ -16,6 +16,9 @@ use Illuminate\Support\Facades\Crypt;
 use Hashids;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Lang;
+use App\Models\AccountSetting;
+use Illuminate\Support\Facades\Cache;
+
 class Settings
 {
 
@@ -511,7 +514,67 @@ class Settings
         return ucwords($str);
     }
 
+    /**
+     * Build Settings JSON
+     */
+    public static function buildSettings(Request $request): array
+    {
+        $settings = [];
 
+        foreach ($request->input('keys', []) as $index => $key) {
+
+            $key = strtolower(trim($key));
+
+            if ($key === '') {
+                continue;
+            }
+
+            // Convert spaces to underscores
+            $key = str_replace(' ', '_', $key);
+
+            // Collapse multiple underscores
+            $key = preg_replace('/_+/', '_', $key);
+
+            $settings[$key] = is_string($request->input("values.$index"))
+                ? trim($request->input("values.$index"))
+                : $request->input("values.$index");
+        }
+
+        return $settings;
+    }
+
+    /**
+     * Available Modules
+     */
+    public static function getAvailableModules(): array
+    {
+        $usedModules = AccountSetting::ofAccount()
+            ->pluck('module')
+            ->toArray();
+        return $usedModules;
+        $modules = config('constants.account_setting_modules', []);
+
+        return array_diff_key(
+            $modules,
+            array_flip($usedModules)
+        );
+    }
+    public static function getAccountSetting(string $module, string $key = null, $default = null)
+    {
+        $setting = AccountSetting::ofAccount()
+            ->where('module', $module)
+            ->first();
+
+        if (!$setting) {
+            return $default;
+        }
+
+        if (is_null($key)) {
+            return $setting->settings;
+        }
+
+        return data_get($setting->settings, $key, $default);
+    }
 }
 
 //Settings::sendSms('+2348012345678', 'Hello! Your order has been confirmed.');

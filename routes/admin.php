@@ -12,7 +12,8 @@ use App\Http\Controllers\Admin\{
     CustomerController,
     StoreController,
     CreditDurationController,
-    PaymentTypeController
+    PaymentTypeController,
+    AccountSettingController
 };
 
 Route::prefix('admin')->middleware(['auth', 'route.permission', 'subscription'])->group(function () {
@@ -149,6 +150,21 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'route.permission', 
         Route::post('/status-update', [PaymentTypeController::class, 'statusUpdate'])->name('statusUpdate');
         Route::get('/export-pdf', [PaymentTypeController::class, 'exportPdf'])->name('exportPdf');
         Route::get('/export-csv', [PaymentTypeController::class, 'exportCsv'])->name('exportCsv');
+    });
+});
+
+/*
+|--------------------------------------------------------------------------
+| Account Settings
+|--------------------------------------------------------------------------
+*/
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'route.permission', 'subscription'])->group(function () {
+    Route::prefix('account-settings')->name('account-settings.')->group(function () {
+        Route::get('/', [AccountSettingController::class, 'index'])->name('index');
+        Route::get('/create', [AccountSettingController::class, 'create'])->name('create');
+        Route::post('/', [AccountSettingController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [AccountSettingController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [AccountSettingController::class, 'update'])->name('update');
     });
 });
 
