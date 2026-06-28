@@ -70,9 +70,9 @@
                                     @foreach($products as $key => $p)
                                         <tr>
                                             <td>{{ $loop->iteration }}</td>
-                                            <td>{{ $p->category->name ?? '-' }}</td>
-                                            <td>{{ $p->name }}</td>
-                                            <td>{{ $p->description ?? '-' }}</td>
+                                            <td>{!! $p->category->name !!}</td>
+                                            <td>{!! $p->name !!}</td>
+                                            <td>{!! $p->description !!}</td>
                                             <td>{{ __('translation.currency') }} {{ $p->selling_price }}</td>
                                             <td>{!! DNS1D::getBarcodeSVG($p->barcode, 'C128') !!}</td>
                                             <td>{{ $p->sku }}</td>

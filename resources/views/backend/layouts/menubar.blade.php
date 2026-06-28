@@ -151,6 +151,7 @@
                     <h6 class="dropdown-header">@lang('translation.master_entries')</h6>
                     <a href="{{ route('admin.payment-types.index') }}" class="dropdown-item"><i data-feather="credit-card" class="menu-icon-sm"></i>@lang('translation.payment_types')</a>
                     <a href="{{ route('admin.credit-durations.index') }}" class="dropdown-item"><i data-feather="calendar" class="menu-icon-sm"></i>@lang('translation.credit_duration')</a>
+                    <a href="{{ route('admin.account-settings.index') }}" class="dropdown-item"><i data-feather="settings" class="menu-icon-sm"></i>@lang('translation.account_settings')</a>
                 </div>
             </li>
         </ul>
