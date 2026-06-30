@@ -21,10 +21,11 @@ use App\Models\SubscriptionPayment;
 use App\Helpers\Settings;
 use App\Models\DefaultSiteConfig;
 use App\Models\UserAccountSubscription;
-use App\Models\SiteConfig;
+use App\Services\StoreService;
+use App\Services\UserService;
 use DB;
 use PDF;
-use App\Services\UserService;
+
 class MyAccountController extends Controller
 {
     protected $breadcrumbAddNew;
@@ -32,10 +33,12 @@ class MyAccountController extends Controller
     protected $breadcrumbSubscribeListing;
     protected $breadcrumbChangePassword;
     protected $userService;
+    protected $storeService;
 
-    public function __construct(UserService $userService)
+    public function __construct(UserService $userService, StoreService $storeService)
     {
         $this->userService = $userService;
+        $this->storeService = $storeService;
         $this->middleware('auth');
         $this->breadcrumbAddNew = ['title' => __('translation.accounts'), 'route1' => 'administrator.account.add', 'route1Title' => __('translation.add_new_account'), 'route2' => 'administrator.account.add', 'route2Title' => __('translation.add_new_account'), 'reset_route' => 'administrator.accounts', 'reset_route_title' => __('translation.cancel')];
 
@@ -83,6 +86,100 @@ class MyAccountController extends Controller
     }
 
     public function store(Request $request)
+    {
+        DB::beginTransaction();
+
+        try {
+
+            $request->validate([
+                'first_name' => 'required',
+                'last_name' => 'required',
+                'office_phone' => 'required',
+                'cell_phone' => 'required',
+                'whatsapp_number' => 'required',
+                'nin' => 'required',
+                'local_government' => 'required',
+                'country_of_origin' => 'required',
+                'state_of_origin' => 'required',
+
+                'email' => 'required|email|max:50|unique:users,email',
+                'username' => 'required|max:20|unique:users,username',
+                'password' => 'required|confirmed|min:8',
+
+                'avatar' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+                'logo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Upload Avatar
+            |--------------------------------------------------------------------------
+            */
+
+            if ($request->hasFile('avatar')) {
+                Settings::uploadimage($request, 'avatar', 'staff');
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Create User
+            |--------------------------------------------------------------------------
+            */
+
+            $user = $this->userService->createAdmin($request);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Create Account
+            |--------------------------------------------------------------------------
+            */
+
+            $account = Account::createAccount($user, $request);
+
+            $user->update([
+                'account_id' => $account->id,
+                'designation_id' => 2,
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Create User Detail
+            |--------------------------------------------------------------------------
+            */
+
+            UserDetail::updateOrCreateDetail($user->id, $request->all());
+
+            /*
+            |--------------------------------------------------------------------------
+            | Create Default Store
+            |--------------------------------------------------------------------------
+            */
+
+            $this->storeService->create(
+                $account,
+                $user,
+                $request
+            );
+
+            DB::commit();
+
+            return Settings::roleRedirect(
+                'accounts',
+                'Account Added Successfully.'
+            );
+
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return Settings::roleRedirect(
+                'accounts',
+                $e->getMessage(),
+                'error'
+            );
+        }
+    }
+    public function store_working(Request $request)
     {
         try {
             $request->validate([
