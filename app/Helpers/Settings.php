@@ -575,6 +575,36 @@ class Settings
 
         return data_get($setting->settings, $key, $default);
     }
+
+    /*
+    @imageToBase64
+    @description convert image to base64
+    @author Manvendra Pratap Singh
+    @date 2026-07-01
+    @modified 
+    */
+    public static function imageToBase64($file): ?string
+    {
+        if (!$file || !$file->isValid()) {
+            return null;
+        }
+
+        return sprintf(
+            'data:%s;base64,%s',
+            $file->getMimeType(),
+            base64_encode(file_get_contents($file->getRealPath()))
+        );
+    }
+
+    public static function fileToDataUri($file): ?string
+    {
+        if (!$file || !$file->isValid()) {
+            return null;
+        }
+
+        return 'data:' . $file->getMimeType() .
+            ';base64,' . base64_encode(file_get_contents($file->getRealPath()));
+    }
 }
 
 //Settings::sendSms('+2348012345678', 'Hello! Your order has been confirmed.');

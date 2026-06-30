@@ -61,6 +61,7 @@
                                     <th>#</th>
                                     <th>{{ __('translation.storename') }}</th>
                                     <th>{{ __('translation.storecode') }}</th>
+                                    <th>{{ __('translation.logo') }}</th>
                                     <th>{{ __('translation.manager') }}</th>
                                     <th>{{ __('translation.email') }}</th>
                                     <th>{{ __('translation.phone') }}</th>
@@ -76,6 +77,13 @@
                                         <td>{{ $stores->firstItem() + $loop->index }}</td>
                                         <td>{{ $store->name }}</td>
                                         <td>{{ $store->code }}</td>
+                                        <td>
+                                            @if($store->logo)
+                                                <img src="{{ $store->logo }}" alt="" width="50" height="50">
+                                            @else
+                                                <span>-</span>
+                                            @endif
+                                        </td>
                                         <td>{{ $store->manager->name ?? '-' }}</td>
                                         <td>{{ $store->email }}</td>
                                         <td>{{ $store->phone }}</td>

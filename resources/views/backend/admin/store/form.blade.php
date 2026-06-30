@@ -14,7 +14,7 @@
                     </h4>
                 </div>
                 <div class="card-body">
-                    <form autocomplete="off" method="POST" id="storeform" name="storeform" action="{{ isset($store) ? route('admin.stores.update', \App\Helpers\Settings::getEncodeCode($store->id)) : route('admin.stores.store') }}" class="needs-validation" novalidate>
+                    <form enctype="multipart/form-data" autocomplete="off" method="POST" id="storeform" name="storeform" action="{{ isset($store) ? route('admin.stores.update', \App\Helpers\Settings::getEncodeCode($store->id)) : route('admin.stores.store') }}" class="needs-validation" novalidate>
                         @csrf
                         <input type="hidden" name="store_id" value="{{ isset($store) ? \App\Helpers\Settings::getEncodeCode($store->id) : '' }}">
                         <div class="row">
@@ -27,7 +27,7 @@
                             {{-- Phone --}}
                             <x-text-input name="phone" label="Phone" value="{{ old('phone', $store->phone ?? '') }}" required class="onlyinteger" />
                             {{-- Alternate Phone --}}
-                            <x-text-input name="alternate_phone" label="Alternate Phone" value="{{ old('alternate_phone', $store->alternate_phone ?? '') }}" />
+                            <x-text-input name="alternate_phone" label="Alternate Phone" value="{{ old('alternate_phone', $store->alternate_phone ?? '') }}" class="onlyinteger" maxlength="12" minlength="11" />
                             {{-- Manager --}}
                             <x-select-dropdown name="manager_id" label="Store Manager" :options="$managers" :selected="old('manager_id', $store->manager_id ?? '')" required class="managers" />
                             {{-- Local Government --}}
@@ -39,7 +39,14 @@
                             {{-- Status --}}
                             <x-select-dropdown name="status" label="{{ __('translation.status') }}" :options="config('constants.accountstatus')" :selected="isset($store) ? $store->status : 1" required class="accountstatus" />
                             {{-- Address --}}
-                            <x-textarea-input name="address" label="Address" :value="old('address', $store->address ?? '')" rows="3" :mainrows="12" required />
+                            {{-- logo --}}
+                            @if(empty($store->logo))
+                                <x-file-input name="logo" :preview="false" label="Store Logo" :value="$store->logo ?? null" accept="image/png,image/jpeg,image/webp" :mainrows="4" required />
+                            @else
+                                <x-file-input name="logo" :preview="false" label="Store Logo" :value="$store->logo ?? null" accept="image/png,image/jpeg,image/webp" :mainrows="4" />
+                            @endif
+
+                            <x-textarea-input name="address" label="Address" :value="old('address', $store->address ?? '')" rows="1" cols="50" :mainrows="8" required />
                         </div>
                         <div class="row">
                             <x-form-buttons submitText="{{ isset($store) ? 'Update' : 'Save' }}" resetText="{{ $breadcrumb['reset_route_title'] }}" url="{{ route($breadcrumb['reset_route']) }}" />

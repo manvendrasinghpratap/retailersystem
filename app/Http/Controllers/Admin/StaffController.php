@@ -105,6 +105,8 @@ class StaffController extends Controller
         }
         $userList = $userList->orderBy('id', 'desc');
         if ($request->has('pdf')) {
+            echo auth()->user()->account_id;
+            die();
             $userList = $userList->get();
             $pdfHeaderdata = \Config::get('constants.staffspdf');
             $pdf = PDF::loadView('backend.pdf.staff.staffListpdf', compact('userList', 'pdfHeaderdata', 'breadcrumb', 'staffstatus'));

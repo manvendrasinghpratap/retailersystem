@@ -73,13 +73,18 @@ class StoreController extends Controller
         ];
     }
 
-    /**
-     * Listing
-     */
+    /*
+    @store list
+    @description show store list
+    @param $request
+    @return $response
+    @author Manvendra Pratap Singh
+    @date 2026-06-30
+    @modified 
+    */
     public function index(Request $request)
     {
         $breadcrumb = $this->breadcrumbAddNew;
-
         $stores = Store::ofAccount()->latest()->active();
 
         if ($request->name) {
@@ -95,33 +100,14 @@ class StoreController extends Controller
         }
 
         if ($request->has('pdf')) {
-
             $stores = $stores->get();
-
-            $pdf = PDF::loadView(
-                'backend.pdf.store.list',
-                compact('stores', 'breadcrumb')
-            );
-
-            return Settings::downloadpdf($pdf)
-                ->stream('stores-' . date('Y-m-d') . '.pdf');
+            $pdf = PDF::loadView('backend.pdf.store.list', compact('stores', 'breadcrumb'));
+            return Settings::downloadpdf($pdf)->stream('stores-' . date('Y-m-d') . '.pdf');
         }
-
         if ($request->has('csv')) {
-
             $stores = $stores->get();
-
-            $data[] = [
-                '#',
-                'Store',
-                'Code',
-                'Phone',
-                'City',
-                'Status'
-            ];
-
+            $data[] = ['#', 'Store', 'Code', 'Phone', 'City', 'Status'];
             foreach ($stores as $key => $store) {
-
                 $data[] = [
                     $key + 1,
                     $store->name,
@@ -131,7 +117,6 @@ class StoreController extends Controller
                     $store->status ? 'Active' : 'Inactive'
                 ];
             }
-
             return Settings::downloadcsvfile(
                 $data,
                 'stores-' . date('Y-m-d') . '.csv'
@@ -187,12 +172,14 @@ class StoreController extends Controller
                 'local_government' => 'required',
                 'state' => 'required',
                 'country' => 'required',
-                'manager_id' => 'required'
+                'manager_id' => 'required',
+                'logo' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
             ]);
 
             $lastStore = Store::latest('id')->first();
             $nextNumber = $lastStore ? ($lastStore->id + 1) : 1;
             $storeCode = 'STR' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+            $storeLogo = Settings::imageToBase64($request->file('logo'));
 
             Store::create([
                 'account_id' => auth()->user()->account_id,
@@ -209,6 +196,7 @@ class StoreController extends Controller
                 'pincode' => $request->filled('pincode') ? $request->pincode : null,
                 'manager_id' => $request->filled('manager_id') ? $request->manager_id : null,
                 'status' => $request->status ?? 1,
+                'logo' => $storeLogo,
                 'created_by' => auth()->id(),
             ]);
 
@@ -253,8 +241,11 @@ class StoreController extends Controller
     public function update(Request $request)
     {
         try {
+
             $id = Settings::getDecodeCode($request->store_id);
+
             $store = Store::ofAccount()->findOrFail($id);
+
             $request->validate([
                 'name' => 'required|max:255',
                 'phone' => 'required|max:20|unique:stores,phone,' . $id,
@@ -262,26 +253,38 @@ class StoreController extends Controller
                 'local_government' => 'required',
                 'state' => 'required',
                 'country' => 'required',
-                'manager_id' => 'required'
+                'manager_id' => 'required',
+                'logo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             ]);
 
-            $store->update([
+            $data = [
                 'name' => $request->name,
-                'email' => $request->filled('email') ? $request->email : '',
-                'phone' => $request->filled('phone') ? $request->phone : '',
-                'alternate_phone' => $request->filled('alternate_phone') ? $request->alternate_phone : '',
-                'gst_number' => $request->filled('gst_number') ? $request->gst_number : '',
-                'address' => $request->filled('address') ? $request->address : '',
-                'city' => $request->filled('local_government') ? $request->local_government : null,
-                'state' => $request->filled('state') ? $request->state : null,
-                'country' => $request->filled('country') ? $request->country : null,
-                'pincode' => $request->filled('pincode') ? $request->pincode : null,
-                'manager_id' => $request->filled('manager_id') ? $request->manager_id : null,
+                'email' => $request->email ?? '',
+                'phone' => $request->phone,
+                'alternate_phone' => $request->alternate_phone ?? '',
+                'gst_number' => $request->gst_number ?? '',
+                'address' => $request->address,
+                'city' => $request->local_government,
+                'state' => $request->state,
+                'country' => $request->country,
+                'pincode' => $request->pincode,
+                'manager_id' => $request->manager_id,
                 'status' => $request->status ?? 1,
-                'updated_by' => auth()->id()
-            ]);
+                'updated_by' => auth()->id(),
+            ];
 
-            return Settings::roleRedirect('stores.index', __('translation.store_updated_successfully'));
+            // Update logo only if a new one is uploaded
+            if ($request->hasFile('logo')) {
+                $data['logo'] = Settings::imageToBase64($request->file('logo'));
+            }
+
+            $store->update($data);
+
+            return Settings::roleRedirect(
+                'stores.index',
+                __('translation.store_updated_successfully')
+            );
+
         } catch (\Exception $e) {
 
             return Settings::roleRedirect(

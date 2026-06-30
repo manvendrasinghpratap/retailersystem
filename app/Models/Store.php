@@ -22,6 +22,7 @@ class Store extends Model
         'pincode',
         'manager_id',
         'status',
+        'logo',
         'created_by',
         'updated_by',
         'is_deleted',

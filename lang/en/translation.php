@@ -158,6 +158,7 @@ return [
     'updated_at' => 'Updated At',
     'sku' => 'SKU',
     'barcode' => 'Barcode',
+    'logo' => 'Logo',
     'stock' => 'Stock',
     'low_alert' => 'Low Alert',
     'transaction' => 'Transaction',
