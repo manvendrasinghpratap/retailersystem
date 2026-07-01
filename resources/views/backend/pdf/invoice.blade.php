@@ -3,22 +3,22 @@
 
 <head>
   <meta charset="utf-8">
-  <title>{{ $storeDetails->name ?? Config::get('constants.shop_name') }} || {{ __('translation.invoice') }} </title>
+  <title>{{ $sale->store->name ?? Config::get('constants.shop_name') }} || {{ __('translation.invoice') }} </title>
   @include('backend.pdf.layouts.pdfcss')
 </head>
 
 <body>
-  <div class="watermark">{{ $storeDetails->name ?? Config::get('constants.shop_name') }}</div>
+  <div class="watermark">{{ $sale->store->name ?? Config::get('constants.shop_name') }}</div>
   <!-- HEADER -->
   <table class="header" width="100%" cellpadding="0" cellspacing="0">
     <tr>
       <!-- Company Details -->
       <td width="60%" style="vertical-align:top;">
-        <div style="font-size:22px; font-weight:bold; color:#2563eb; margin-bottom:5px;">{{ $storeDetails->name ?? Config::get('constants.shop_name') }}</div>
-        <div style="font-size:11px; color:#555; line-height:13px;"><strong>{{ __('translation.address') }}:</strong>{{ $storeDetails->address ?? '' }}<br><strong>{{ __('translation.phone') }}:</strong>{{ $storeDetails->phone ?? '' }} @if(!empty($storeDetails->alternate_phone)) || {{ $storeDetails->alternate_phone }} @endif<br>
-          @if(!empty($storeDetails->email))<strong>{{ __('translation.email') }}:</strong>{{ $storeDetails->email }}<br> @endif
+        <div style="font-size:22px; font-weight:bold; color:#2563eb; margin-bottom:5px;">{{ $sale->store->name ?? Config::get('constants.shop_name') }}</div>
+        <div style="font-size:11px; color:#555; line-height:13px;"><strong>{{ __('translation.address') }}:</strong>{{ $sale->store->address ?? '' }}<br><strong>{{ __('translation.phone') }}:</strong>{{ $sale->store->phone ?? '' }} @if(!empty($sale->store->alternate_phone)) || {{ $sale->store->alternate_phone }} @endif<br>
+          @if(!empty($sale->store->email))<strong>{{ __('translation.email') }}:</strong>{{ $sale->store->email }}<br> @endif
 
-          @if(!empty($storeDetails->website)) <strong>{{ __('translation.website') }}:</strong>{{ $storeDetails->website }} @endif
+          @if(!empty($sale->store->website)) <strong>{{ __('translation.website') }}:</strong>{{ $sale->store->website }} @endif
         </div>
       </td>
       <!-- Invoice Details -->
@@ -31,14 +31,11 @@
           </tr>
           <tr>
             <td style="padding:2px 8px;"><strong>{{ __('translation.date') }}</strong></td>
-            <td style="padding:2px 0;">
-              : {{ \Carbon\Carbon::parse($sale->created_at ?? now())->format('d M Y') }}
-            </td>
+            <td style="padding:2px 0;">: {{ \Carbon\Carbon::parse($sale->created_at ?? now())->format(Config::get('constants.dateformat.showdate')) }}</td>
           </tr>
           <tr>
             <td style="padding:2px 8px;"><strong>{{ __('translation.time') }}</strong></td>
-            <td style="padding:2px 0;">
-              : {{ \Carbon\Carbon::parse($sale->created_at ?? now())->format('h:i A') }}
+            <td style="padding:2px 0;">: {{ \Carbon\Carbon::parse($sale->created_at ?? now())->format(Config::get('constants.dateformat.showtimeAMAPM')) }}
             </td>
           </tr>
           @if(!empty($sale->user->name))
@@ -243,11 +240,11 @@
     <strong style="font-size:13px;color:#111827;">{{ __('translation.thank_you_for_your_business') }}</strong>
     <br>
     {{ __('translation.we_appreciate_your_trust_and_look_forward_to_serving_you_again') }}
-    @if(!empty($storeDetails->phone))<br><strong>{{ __('translation.contact') }}:</strong> {{ $storeDetails->phone }} @endif
-    @if(!empty($storeDetails->email)) | {{ $storeDetails->email }} @endif
-    @if(!empty($storeDetails->website))
+    @if(!empty($sale->store->phone))<br><strong>{{ __('translation.contact') }}:</strong> {{ $sale->store->phone }} @endif
+    @if(!empty($sale->store->email)) | {{ $sale->store->email }} @endif
+    @if(!empty($sale->store->website))
       <br>
-      <a href="{{ $storeDetails->website }}" style="color:#2563eb;text-decoration:none;">{{ $storeDetails->website }}</a>
+      <a href="{{ $sale->store->website }}" style="color:#2563eb;text-decoration:none;">{{ $sale->store->website }}</a>
     @endif
   </div>
 </body>

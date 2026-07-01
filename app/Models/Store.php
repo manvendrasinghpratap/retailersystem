@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use App\Helpers\Settings;
+
 
 class Store extends Model
 {
@@ -87,12 +89,8 @@ class Store extends Model
     public function scopeOfMyStore(Builder $query)
     {
         if (auth()->check() && auth()->user()->store_id) {
-            $query->where(
-                'id',
-                auth()->user()->store_id
-            );
+            $query->where('id', auth()->user()->store_id);
         }
-
         return $query;
     }
 
@@ -100,5 +98,20 @@ class Store extends Model
     {
         return $query->withoutGlobalScope('not_deleted')
             ->where('is_deleted', 1);
+    }
+
+    public static function getSelectable()
+    {
+        return self::OfAccount()->active()->get()->pluck('name', 'id');
+    }
+
+    public static function getSelectableByUser()
+    {
+        if (Settings::isAdmin()) {
+            return self::getSelectable();
+        }
+
+        return self::OfMyStore()
+            ->pluck('name', 'id');
     }
 }

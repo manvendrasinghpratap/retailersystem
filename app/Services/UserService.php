@@ -12,7 +12,8 @@ class UserService
     {
         return User::create([
             'account_id' => Auth::user()->account_id,
-            'name' => $request->suffix.' '.ucwords($request->first_name.' '.$request->last_name),
+            'store_id' => $request->store_id,
+            'name' => $request->suffix . ' ' . ucwords($request->first_name . ' ' . $request->last_name),
             'user_type_id' => \Config::get('constants.staff'),
             'email' => $request->email,
             'username' => $request->username,

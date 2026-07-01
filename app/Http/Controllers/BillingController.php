@@ -137,9 +137,6 @@ class BillingController extends Controller
 
     public function completeSale(Request $request)
     {
-        // echo '<pre>';
-        // print_r($request->all());
-        // exit;
         $request->validate([
             'items' => 'required|array|min:1',
             'items.*.id' => 'required|integer',
@@ -163,6 +160,15 @@ class BillingController extends Controller
         ]);
 
         try {
+
+            $storeId = auth()->user()->store_id ?? 0;
+
+            if ($storeId == 0) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Store not found.'
+                ]);
+            }
 
             if (
                 $request->payment_type === 'credit' &&
@@ -252,11 +258,9 @@ class BillingController extends Controller
                 */
                 $sale = Sale::create([
                     'invoice_no' => 'INV' . now()->timestamp,
-
+                    'store_id' => auth()->user()->store_id,
                     'customer_id' => $request->customer_id,
-
                     'account_id' => auth()->user()->account_id,
-
                     'subtotal' => $request->subtotal,
                     'tax' => $request->tax ?? 0,
                     'discount' => $request->discount ?? 0,
@@ -284,7 +288,8 @@ class BillingController extends Controller
                     'interest_amount' => $interestAmount,
                     'payable_amount' => $payableAmount,
 
-                    'user_id' => auth()->id(),
+                    'user_id' => auth()->id()
+
                 ]);
 
                 /*

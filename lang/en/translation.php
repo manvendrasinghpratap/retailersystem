@@ -596,7 +596,7 @@ return [
     'reason' => 'Reason',
     'reason_note' => 'Reason Note',
     'store' => 'Store',
-    'stores' => 'Stores',
+    'stores' => 'Store',
     'store_added_successfully' => 'Store Added Successfully',
     'store_updated_successfully' => 'Store Updated Successfully',
     'store_deleted_successfully' => 'Store Deleted Successfully',

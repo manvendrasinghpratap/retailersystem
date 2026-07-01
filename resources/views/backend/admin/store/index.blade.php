@@ -6,6 +6,7 @@
 @section('content')
     @include('backend.components.breadcrumb')
     {{-- FILTER SECTION --}}
+    {{------------------------
     <div class="row">
         <div class="col-12">
             <div class="card">
@@ -13,14 +14,14 @@
                     <h4 class="card-title d-inline-block">{{ __('translation.filter') }}</h4>
                     <div class="d-inline-block">
                         @include('backend.components.exportpdfcsv', [
-                            'showPdf'=> false,
-                            'pdfId' => 'downloadstorepdf',
-                            'pdfRoute' => route('admin.stores.exportPdf'),
-                            'pdfClass' => 'downloadstorepdf',
-                            'showCsv' => false,
-                            'csvId' => 'downloadstorecsv',
-                            'csvRoute' => route('admin.stores.exportCsv'),
-                            'csvClass' => 'downloadstorecsv',
+                        'showPdf'=> false,
+                        'pdfId' => 'downloadstorepdf',
+                        'pdfRoute' => route('admin.stores.exportPdf'),
+                        'pdfClass' => 'downloadstorepdf',
+                        'showCsv' => false,
+                        'csvId' => 'downloadstorecsv',
+                        'csvRoute' => route('admin.stores.exportCsv'),
+                        'csvClass' => 'downloadstorecsv',
                         ])
                     </div>
                 </div>
@@ -43,6 +44,7 @@
             </div>
         </div>
     </div>
+    ------------------------}}
 
     {{-- LISTING SECTION --}}
     <div class="row">
@@ -50,7 +52,7 @@
             <div class="card">
                 <div class="card-header">
                     <h4 class="card-title">
-                        {{ $breadcrumb['title'] ?? '' }} {{ __('translation.listing') }}
+                        {{ $breadcrumb['title'] ?? '' }} {{-- __('translation.listing') --}}
                     </h4>
                 </div>
                 <div class="card-body">
@@ -66,8 +68,8 @@
                                     <th>{{ __('translation.email') }}</th>
                                     <th>{{ __('translation.phone') }}</th>
                                     <th>{{ __('translation.address') }}</th>
-                                    <th>{{ __('translation.status') }}</th>
-                                    <th>{{ __('translation.createdat') }}</th>
+                                    <!-- <th>{{ __('translation.status') }}</th>-->
+                                    <!--<th>{{ __('translation.createdat') }}</th>-->
                                     <th>{{ __('translation.actions') }}</th>
                                 </tr>
                             </thead>
@@ -88,34 +90,11 @@
                                         <td>{{ $store->email }}</td>
                                         <td>{{ $store->phone }}</td>
                                         <td>{{ $store->address }}</td>
+                                        <!-- <td>@if($store->status) <span class="badge bg-success">{{ __('translation.active') }}</span>@else<span class="badge bg-danger">{{ __('translation.inactive') }}</span>@endif</td> -->
+                                        <!-- <td>{{ $store->created_at?->format(config('constants.dateformat.slashdmyonly')) }}</td> -->
                                         <td>
-                                            @if($store->status)
-                                                <span class="badge bg-success">
-                                                    {{ __('translation.active') }}
-                                                </span>
-                                            @else
-                                                <span class="badge bg-danger">
-                                                    {{ __('translation.inactive') }}
-                                                </span>
-                                            @endif
-                                        </td>
-
-                                        <td>{{ $store->created_at?->format(config('constants.dateformat.slashdmyonly')) }}</td>
-
-                                        <td>
-
-                                            <x-href-input
-                                                name="edit"
-                                                label="Edit"
-                                                href="{{ route('admin.stores.edit', \App\Helpers\Settings::getEncodeCode($store->id)) }}" />
-
-                                            <x-deletehref-input
-                                                name="DeleteButton"
-                                                label="Delete"
-                                                href="javascript:void(0)"
-                                                class="deleteData"
-                                                data-deleteid="{{ \App\Helpers\Settings::getEncodeCode($store->id) }}"
-                                                data-routeurl="{{ route('admin.stores.soft.delete', $store->id) }}" />
+                                            <x-href-input name="edit" label="Edit" href="{{ route('admin.stores.edit', \App\Helpers\Settings::getEncodeCode($store->id)) }}" />
+                                            <!-- <x-deletehref-input name="DeleteButton" label="Delete" href="javascript:void(0)" class="deleteData" data-deleteid="{{ \App\Helpers\Settings::getEncodeCode($store->id) }}" data-routeurl="{{ route('admin.stores.soft.delete', $store->id) }}" /> -->
                                         </td>
                                     </tr>
                                 @empty
@@ -140,21 +119,21 @@
 @endsection
 
 @section('script')
-<script>
-    $(document).ready(function () {
+    <script>
+        $(document).ready(function () {
 
-        setupPdfDownload(
-            '.downloadstorepdf',
-            'data-downloadroutepdf'
-        );
+            setupPdfDownload(
+                '.downloadstorepdf',
+                'data-downloadroutepdf'
+            );
 
-        setupPdfDownload(
-            '.downloadstorecsv',
-            'data-downloadroutepdf'
-        );
+            setupPdfDownload(
+                '.downloadstorecsv',
+                'data-downloadroutepdf'
+            );
 
-    });
+        });
 
-</script>
+    </script>
 
 @endsection

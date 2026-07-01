@@ -58,9 +58,10 @@
                                 <div class="label vital-signs">{{__('translation.designation_and_hired_information')}}</div>
                             </div>
                             <div class="row">
+                                <x-select-dropdown name="store_id" label="Store" :options="$stores ?? []" :selected="$userDetails->store_id ?? (collect($stores)->keys()->first())" class="store_id" required />
                                 <x-select-dropdown name="designation_id" label="Designation" :options="$designation ?? []" :selected="$userDetails->designation_id ?? ''" class="designation_id" required />
                                 <x-date-input name="hire_date" label="Hired Date" value="{{ $userDetails->detail->hire_date ?? \App\Helpers\Settings::getFormattedDate(date('Y-m-d')) }}" required class="flatdatepickrto hire_date" data-mindate="{{\App\Helpers\Settings::getFormattedDate(date('Y-m-d', strtotime('-60 years')) )}}" data-maxdate="{{\App\Helpers\Settings::getFormattedDate(date('Y-m-d', strtotime('+1 year')))}}" />
-                                <x-select-dropdown name="staffstatus" label="Status" :options="$staffstatus" :selected="$userDetails->is_active ?? '1'" class="staffstatus accountstatus" required />
+
                                 @if(empty($userDetails))
                                 <x-text-input name="username" label="Username" value="{{ $userDetails->username ?? '' }}" required class="username form-control" placeholder="Please Enter Username" maxlength="50" />
                                 <x-text-input name="password" label="New Password" id="password" value="{{ $userDetails->password ?? '' }}" required class="password form-control" placeholder="Please Enter password" maxlength="12" />
@@ -76,6 +77,13 @@
                                 <x-text-input name="linkedin" label="LinkedIn" value="{{ $userDetails->detail->linkedin ?? '' }}" class="" placeholder="Please Enter LinkedIn link" />
                                 <x-text-input name="instagram" label="Instagram" value="{{ $userDetails->detail->instagram ?? '' }}" class="" placeholder="Please Enter Instagram link" />
                                 <x-text-input name="pinterest" label="Pinterest" value="{{ $userDetails->detail->pinterest ?? '' }}" class="" placeholder="Please Enter Pinterest link" />
+                            </div>
+                            <div class="row">
+                                <div class="label vital-signs">{{__('translation.status')}}</div>
+                            </div>
+                            <div class="row">
+
+                                <x-select-dropdown name="staffstatus" label="Status" :options="$staffstatus" :selected="$userDetails->is_active ?? '1'" class="staffstatus accountstatus" required />
                             </div>
                             <div class="row">
                                 <div class="label vital-signs">{{__('translation.notes')}}</div>
@@ -95,5 +103,13 @@
     </div>
 @endsection
 @section('script')
-    <script src="{{ URL::asset('assets/js/staff.js') }}"></script>
+    <script>
+        validateSelect2Form('addstaffform', [
+            'designation_id',
+            'store_id',
+            'staffstatus',
+            'emergency_relationship'
+        ]);
+    </script>
+    <script src="{{ URL::asset('assets/backend/js/staff.js') }}"></script>
 @endsection

@@ -19,6 +19,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Session;
 use App\Services\UserService;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\Store;
 
 class StaffController extends Controller
 {
@@ -83,15 +84,19 @@ class StaffController extends Controller
     {
         $breadcrumb = $this->breadcrumbStaffListing;
         $designation = Designation::getSelectable();
+        $stores = Store::getSelectableByUser();
         $updatedAt = date('Y-m-d');
         $updatedAt = '';
         $staffstatus = \Config::get('constants.staffstatus');
-        $userList = User::select('*')->where('is_deleted', '0')->where('is_staff', 1)->where('designation_id', '>', 1)->where('account_id', Auth::user()->account_id);
+        $userList = User::select('*')->where('is_deleted', '0')->where('is_staff', 1)->where('designation_id', '>', 1)->ofAccount();
         if (!empty(request('staff_name'))) {
             $userList = $userList->where('name', 'LIKE', '%' . trim(request('staff_name')) . '%');
         }
         if (!empty(request('designation_id'))) {
             $userList = $userList->where('designation_id', request('designation_id'));
+        }
+        if (!empty(request('store_id'))) {
+            $userList = $userList->where('store_id', request('store_id'));
         }
         if (request('is_active') == '0') {
             $userList = $userList->where('is_active', request('is_active'));
@@ -105,11 +110,9 @@ class StaffController extends Controller
         }
         $userList = $userList->orderBy('id', 'desc');
         if ($request->has('pdf')) {
-            echo auth()->user()->account_id;
-            die();
             $userList = $userList->get();
             $pdfHeaderdata = \Config::get('constants.staffspdf');
-            $pdf = PDF::loadView('backend.pdf.staff.staffListpdf', compact('userList', 'pdfHeaderdata', 'breadcrumb', 'staffstatus'));
+            $pdf = PDF::loadView('backend.pdf.staff.staffListpdf', compact('userList', 'pdfHeaderdata', 'breadcrumb', 'staffstatus', 'stores'));
             $pdf = Settings::downloadpdf($pdf);
             $fileName = $pdfHeaderdata['filename'] . '-' . date('Y-m-d') . '.pdf';
             return $pdf->stream($fileName);
@@ -158,7 +161,7 @@ class StaffController extends Controller
         }
 
         $userList = $userList->paginate(\Config::get('constants.pagination'));
-        return view('backend.staff.index', compact("userList", "designation", "updatedAt", 'staffstatus', 'breadcrumb'));
+        return view('backend.staff.index', compact("userList", "designation", "updatedAt", 'staffstatus', 'breadcrumb', 'stores'));
     }
 
     public function exportPdf(Request $request)
@@ -200,6 +203,7 @@ class StaffController extends Controller
 
     public function create(Request $request)
     {
+        $stores = Store::getSelectableByUser();
         $submitText = 'Save';
         $breadcrumb = $this->breadcrumbAddStaff;
         $isimagechanged = 1;
@@ -210,7 +214,7 @@ class StaffController extends Controller
         $state = State::getList();
         $localGovernment = LocalGovernment::getList();
         $countries = Countries::getList();
-        return view('backend.staff.form', compact(["designation", 'suffix', 'state', 'localGovernment', 'emergecyRelationship', 'staffstatus', 'isimagechanged', 'countries', 'breadcrumb', 'submitText']));
+        return view('backend.staff.form', compact(["designation", 'suffix', 'state', 'localGovernment', 'emergecyRelationship', 'staffstatus', 'isimagechanged', 'countries', 'breadcrumb', 'submitText', 'stores']));
     }
 
     public function store(StoreStaffRequest $request)
@@ -260,6 +264,7 @@ class StaffController extends Controller
 
     public function editstaff(Request $request, $id)
     {
+        $stores = Store::getSelectableByUser();
         $breadcrumb = Settings::updateBreadcrumbRoute($this->breadcrumbAddStaff, ['route2', 'route2Title'], ['admin.staff.update', 'Update Staff']);
         $id = Settings::getDecodeCode($id);
         $isimagechanged = 0;
@@ -272,7 +277,7 @@ class StaffController extends Controller
         $state = State::getList();
         $localGovernment = LocalGovernment::getList();
         $countries = Countries::getList();
-        return view('backend.staff.form', compact(["designation", "userDetails", 'suffix', 'emergecyRelationship', 'staffstatus', 'state', 'localGovernment', 'isimagechanged', 'countries', 'breadcrumb']));
+        return view('backend.staff.form', compact(["designation", "userDetails", 'suffix', 'emergecyRelationship', 'staffstatus', 'state', 'localGovernment', 'isimagechanged', 'countries', 'breadcrumb', 'stores']));
     }
 
     public function update(UpdateStaffRequest $request)

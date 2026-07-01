@@ -381,10 +381,10 @@ class SaleController extends Controller
                 return redirect()->route('admin.sales.index')->with('error', 'Invalid Sale ID');
             }
             $id = $id[0];
-            $storeDetails = Store::where('account_id', auth()->user()->account_id)->first();
             $pdfHeaderdata = config('constants.downloadinvoicpdf');
-            $sale = Sale::with(['customer', 'items.product', 'payments', 'user', 'warehouse', 'creditDuration'])->findOrFail($id);
-            $pdf = Pdf::loadView('backend.pdf.invoice', compact('sale', 'storeDetails'));
+            $sale = Sale::with(['customer', 'items.product', 'payments', 'user', 'warehouse', 'creditDuration', 'store'])->findOrFail($id);
+            //$this->pr($sale->store);
+            $pdf = Pdf::loadView('backend.pdf.invoice', compact('sale'));
             $pdf = Settings::downloadpdf($pdf);
             $fileName = $pdfHeaderdata['filename'] . '-' . $sale->invoice_no . '.pdf';
             return $pdf->stream($fileName);

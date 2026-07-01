@@ -25,8 +25,9 @@
             <div class="card-body">
                 <form name="cartlistingform" id="cartlistingform" method="GET">
                     <div class="row">
-                        <x-text-input name="staff_name" :label="__('translation.staff_name')" :value="request('staff_name')" :placeholder="__('translation.search') . ' ' . __('translation.staff_name')" class="form-control" mainrows="3" />
+                        <x-text-input name="staff_name" :label="__('translation.staff_name')" :value="request('staff_name')" :placeholder="__('translation.search') . ' ' . __('translation.staff_name')" class="form-control" mainrows="2" />
                         <x-select-dropdown name="designation_id" label="{{ __('translation.designation') }}" :options="$designation" :selected="request('designation_id')" class="designation" mainrows="2" />
+                        <!-- <x-select-dropdown name="store_id" label="{{ __('translation.store') }}" :options="$stores" :selected="request('store_id')" class="store" mainrows="2" /> -->
                         <x-date-input name="hired_date" :label="__('translation.hired_date')" value="{{ request('hired_date') ?? ''}}" class="flatdatepickr  hired_date" data-mindate="{{\App\Helpers\Settings::getFormattedDate(date('Y-m-d', strtotime('-20 years')))}}" data-maxdate="{{\App\Helpers\Settings::getFormattedDate(date('Y-m-d', strtotime('+10 days')))}}" mainrows="2" />
                         <x-select-dropdown name="is_active" label="{{ __('translation.status') }}" :options="\Config::get('constants.accountstatus')" :selected="request('is_active')" class="is_ative form-control" mainrows="2" />
                         <x-button submitText="{{ __('translation.filter') }}" resetText="{{ __('translation.reset') }}" url="{{ route($breadcrumb['reset_route'] ?? '') }}" isbutton="1" iscancel="1" mainrows="2" />
@@ -49,6 +50,9 @@
                             <tr>
                                 <th>#</th>
                                 <th>{{__('translation.staff_name')}}</th>
+                                @if(\App\Helpers\Settings::isAdmin()) 
+                                <th>{{__('translation.store')}}</th>
+                                @endif
                                 <th>{{__('translation.email')}}</th>
                                 <th>{{__('translation.username')}}</th>
                                 <th>{{__('translation.designation')}}</th>
@@ -64,6 +68,9 @@
                                 <tr>
                                     <td>{{ ++$i }}</td>
                                     <td>{{ $user->name }}</td>
+                                    @if(\App\Helpers\Settings::isAdmin()) 
+                                    <td>{{ @$user->store->name }}</td>
+                                    @endif
                                     <td>{{ $user->email }}</td>
                                     <td><a data-id="{{ $user->id }}" data-orderid="{{ $user->id }}" data-routeurl="{{ route('admin.staff.updatepassword') }}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-original-title="Click here to Change Password" href="javascript:void(0);" class="changepassword @if (!empty($user->id)) link-danger @endif">{{ $user->username }}</a></td>
                                     <td>{{ $user->designation->name }}</td>

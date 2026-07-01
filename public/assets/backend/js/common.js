@@ -194,6 +194,14 @@ $(document).ready(function () {
         placeholder: "Select Category",
         allowClear: true
     });
+    $(".store_id").select2({
+        placeholder: "Select Store",
+        allowClear: true
+    });
+    $(".emergency_relationship").select2({
+        placeholder: "Select Relationship",
+        allowClear: true
+    });
     $(".barcode").on("input", function () {
         this.value = this.value.replace(/[^a-zA-Z0-9]/g, '');
     });

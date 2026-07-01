@@ -11,6 +11,7 @@ class Sale extends Model
     protected $fillable = [
         'invoice_no',
         'account_id',
+        'store_id',
         'customer_id',
         'subtotal',
         'tax',
@@ -107,6 +108,12 @@ class Sale extends Model
             'credit_duration_id'
         );
     }
+
+    public function store()
+    {
+        return $this->belongsTo(Store::class, 'store_id');
+    }
+
     public function customerPaymentType()
     {
         return $this->belongsTo(

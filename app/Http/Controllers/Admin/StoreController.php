@@ -33,10 +33,10 @@ class StoreController extends Controller
                     'route' => 'admin.stores.index',
                     'title' => __('translation.stores')
                 ],
-                [
-                    'route' => 'admin.stores.create',
-                    'title' => __('translation.add_store')
-                ]
+                // [
+                //     'route' => 'admin.stores.create',
+                //     'title' => __('translation.add_store')
+                // ]
             ],
             'route1' => 'admin.stores.create',
             'route1Title' => __('translation.add_store'),
@@ -57,10 +57,10 @@ class StoreController extends Controller
                     'route' => 'admin.stores.index',
                     'title' => __('translation.stores')
                 ],
-                [
-                    'route' => 'admin.stores.create',
-                    'title' => __('translation.add_store')
-                ]
+                // [
+                //     'route' => 'admin.stores.create',
+                //     'title' => __('translation.add_store')
+                // ]
             ],
             'route1' => 'admin.stores.index',
             'route1Title' => __('translation.stores'),
