@@ -14,7 +14,10 @@
     <tr>
       <!-- Company Details -->
       <td width="60%" style="vertical-align:top;">
-        <div style="font-size:22px; font-weight:bold; color:#2563eb; margin-bottom:5px;">{{ $sale->store->name ?? Config::get('constants.shop_name') }}</div>
+        @if($sale->store->logo)
+          <img src="{{$sale->store->logo}}" alt="{{ $sale->store->name ?? Config::get('constants.shop_name') }}" width="70" height="70" style="float:left;margin-right:10px" />
+        @endif
+        <div style="font-size:22px; font-weight:bold; color:#2563eb; margin-bottom:5px; float:left; margin-right:10px;">{{ $sale->store->name ?? Config::get('constants.shop_name') }}</div>
         <div style="font-size:11px; color:#555; line-height:13px;"><strong>{{ __('translation.address') }}:</strong>{{ $sale->store->address ?? '' }}<br><strong>{{ __('translation.phone') }}:</strong>{{ $sale->store->phone ?? '' }} @if(!empty($sale->store->alternate_phone)) || {{ $sale->store->alternate_phone }} @endif<br>
           @if(!empty($sale->store->email))<strong>{{ __('translation.email') }}:</strong>{{ $sale->store->email }}<br> @endif
 
