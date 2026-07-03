@@ -106,6 +106,7 @@ class BillingController extends Controller
         $product = Product::with(['stock', 'category:id,name'])
             ->where('barcode', $barcode)
             ->ofAccount() // ✅ correct usage
+            ->active()
             ->select('id', 'name', 'selling_price', 'category_id')
             ->first();
         if (!$product) {
