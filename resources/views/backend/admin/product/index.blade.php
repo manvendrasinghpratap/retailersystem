@@ -58,11 +58,11 @@
                                     <th>{{ __('translation.category')}}</th>
                                     <th>{{ __('translation.product_name')}}</th>
                                     <th>{{ __('translation.description') }}</th>
-                                    <th>{{ __('translation.currency') }} {{ __('translation.selling_price') }}</th> 
-                                    <th>{{ __('translation.barcode')}}</th>
                                     <th>{{ __('translation.sku')}}</th>
-                                    <th>Status</th>
-                                    <th>Action</th>
+                                    <th>{{ __('translation.selling_price') }}</th> 
+                                    <th>{{ __('translation.barcode')}}</th>
+                                    <th>{{ __('translation.status') }}</th>
+                                    <th>{{ __('translation.action') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -73,9 +73,9 @@
                                             <td>{!! $p->category->name !!}</td>
                                             <td>{!! $p->name !!}</td>
                                             <td>{!! $p->description !!}</td>
+                                            <td>{{ $p->sku }}</td>
                                             <td>{{ __('translation.currency') }} {{ $p->selling_price }}</td>
                                             <td>{!! DNS1D::getBarcodeSVG($p->barcode, 'C128') !!}</td>
-                                            <td>{{ $p->sku }}</td>
                                             <td>
                                                 @if($p->status == 1)
                                                     <span class="badge bg-success">{{ __('translation.active') }}</span>

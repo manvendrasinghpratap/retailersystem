@@ -40,7 +40,7 @@ class ProductController extends Controller
                     [
                         'route' => 'admin.products',
                         'title' => __('translation.brands')
-                    ], 
+                    ],
                     // use route NAME only (not route())
                     // [
                     //     'route' => $role . '.no-barcode',
@@ -98,6 +98,12 @@ class ProductController extends Controller
         });
     }
 
+    /**
+     * @description Show list of products
+     * @access      public
+     * @param       Request $request
+     * @return      View
+     */
     public function index(Request $request)
     {
         $breadcrumb = $this->breadcrumbAddNew;
@@ -170,24 +176,17 @@ class ProductController extends Controller
         $barcode = $productId = $route = $adjustment = $requisition_item_id = null;
         $masterItemName = null;
         $qty = null;
-
         if ($token) {
-
             try {
-
                 $data = Crypt::decrypt($token);
-
                 $adjustmentData = Settings::getInventoryAdjustment($data['adjustment']);
-
                 if (empty($adjustmentData['adjustment'])) {
-
                     return Settings::roleRedirect(
                         'inventory',
                         'Something went wrong!',
                         'error'
                     );
                 }
-
                 $route = $adjustmentData['route'];
                 $adjustment = $adjustmentData['adjustment'];
                 $barcode = $data['barcode'];
@@ -198,24 +197,18 @@ class ProductController extends Controller
                 // GET REQUISITION ITEM
                 // ==========================
                 $requisitionItem = RequisitionItem::with('masterItem')->find(Settings::getDecodeCode($requisition_item_id));
-
                 if ($requisitionItem) {
                     $masterItemName = $requisitionItem->masterItem->name ?? null;
                     $qty = $requisitionItem->qty;
                 }
-
             } catch (\Exception $e) {
-
                 return redirect()
                     ->route('admin.barcode')
                     ->with('error', 'Invalid link');
             }
         }
-
         $breadcrumb = $this->breadcrumbListing;
-
         $categories = Category::getCategoriesPluck();
-
         return view(
             'backend.admin.product.form',
             compact(
@@ -246,7 +239,7 @@ class ProductController extends Controller
                 ? $request->sku
                 : $prefix . '-' . time() . rand(100, 999),
         ]);
-        
+
         try {
             DB::transaction(function () use ($request) {
                 $masterItemId = Settings::getDecodeCode($request->requisition_item_id);
@@ -254,12 +247,12 @@ class ProductController extends Controller
                 $request->merge(['master_item_id' => $requisitionItem->master_item_id]);
                 $request->merge(['cost_price' => $request->selling_price,]);
                 $request->validate([
-                    'name'          => 'required|string|max:255',
+                    'name' => 'required|string|max:255',
                     'selling_price' => 'required|numeric|min:0',
-                    'cost_price'    => 'required|numeric|min:0',
-                    'status'        => 'nullable|in:0,1',
-                    'category_id'   => 'nullable|exists:categories,id',
-                    'description'   => 'nullable|string',
+                    'cost_price' => 'required|numeric|min:0',
+                    'status' => 'nullable|in:0,1',
+                    'category_id' => 'nullable|exists:categories,id',
+                    'description' => 'nullable|string',
                 ]);
 
                 // ====================================
@@ -316,15 +309,15 @@ class ProductController extends Controller
 
                     StockAdjustment::create([
                         'product_id' => $product->id,
-                        'type'       => 'add',
-                        'quantity'   => $request->quantity ?? 0,
-                        'note'       => 'Initial stock added'
+                        'type' => 'add',
+                        'quantity' => $request->quantity ?? 0,
+                        'note' => 'Initial stock added'
                     ]);
                 }
             });
-            return redirect()->route('admin.requisitions.pending.posting')->with('success', 'Product Added Successfully');           
-        } catch (\Exception $e) { 
-             return redirect()->route('admin.requisitions.pending.posting')->with('error', $e->getMessage());
+            return redirect()->route('admin.requisitions.pending.posting')->with('success', 'Product Added Successfully');
+        } catch (\Exception $e) {
+            return redirect()->route('admin.requisitions.pending.posting')->with('error', $e->getMessage());
         }
     }
 
@@ -401,9 +394,9 @@ class ProductController extends Controller
     public function getLastPrice(Request $request)
     {
         $masterItemId = $request->master_item_id;
-        $vendorId     = $request->vendor_id;
-        $warehouseId  = $request->warehouse_id;
-        $accountId    = auth()->user()->account_id;
+        $vendorId = $request->vendor_id;
+        $warehouseId = $request->warehouse_id;
+        $accountId = auth()->user()->account_id;
 
         $baseQuery = PurchaseItem::query()
             ->where('master_item_id', $masterItemId)
@@ -469,7 +462,7 @@ class ProductController extends Controller
         ]);
     }
 
-   
+
 
 
     public function search(Request $request)
@@ -503,11 +496,11 @@ class ProductController extends Controller
             $items->map(function ($item) {
 
                 return [
-                    'id'   => $item->id,
+                    'id' => $item->id,
                     'text' => $item->name
                 ];
             })
         );
     }
-    
+
 }

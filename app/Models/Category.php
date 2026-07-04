@@ -113,13 +113,13 @@ class Category extends Model
 
     public static function getCategoriesPluck()
     {
-        return Category::ofAccount()->notDeleted()->active()->pluck('name', 'id');
+        return Category::ofAccount()->active()->notDeleted()->orderBy('name', 'asc')->pluck('name', 'id');
     }
 
 
     public static function getCategories()
     {
-        return Category::ofAccount()->notDeleted()->latest();
+        return Category::ofAccount()->active()->notDeleted()->latest();
     }
 
 }
