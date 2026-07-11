@@ -19,6 +19,9 @@ class Vendor extends Model
         'phone',
         'email',
         'address',
+        'lga_id',
+        'state_id',
+        'country_id',
         'opening_balance',
         'current_balance',
         'status',
@@ -31,7 +34,7 @@ class Vendor extends Model
         'current_balance' => 'decimal:2',
         'status' => 'integer',
     ];
-    
+
     public function scopeOfAccount($query)
     {
         return $query->where('account_id', auth()->user()->account_id);
@@ -40,21 +43,21 @@ class Vendor extends Model
     public function scopeActive($query)
     {
         return $query->where('status', 1);
-    } 
+    }
 
     protected function name(): Attribute
     {
         return Attribute::make(
-            get: fn ($value) => ucwords($value),
-            set: fn ($value) => strtolower(trim($value))
+            get: fn($value) => ucwords($value),
+            set: fn($value) => strtolower(trim($value))
         );
     }
 
     protected function companyName(): Attribute
     {
         return Attribute::make(
-            get: fn ($value) => $value ? ucwords($value) : null,
-            set: fn ($value) => $value ? strtolower(trim($value)) : null
+            get: fn($value) => $value ? ucwords($value) : null,
+            set: fn($value) => $value ? strtolower(trim($value)) : null
         );
     }
 

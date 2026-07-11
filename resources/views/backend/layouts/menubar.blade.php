@@ -59,7 +59,7 @@
                     <a href="{{ route('admin.master_items.index') }}" class="dropdown-item"><i data-feather="layers" class="menu-icon-sm"></i>@lang('translation.master_items')</a>
                     <div class="dropdown-divider"></div>
                     {{-- STORAGE --}}
-                    <h6 class="dropdown-header">Storage & Stock </h6>
+                    <h6 class="dropdown-header">Inventory </h6>
                     <a href="{{ route('admin.warehouses.index') }}" class="dropdown-item"><i data-feather="archive" class="menu-icon-sm"></i>@lang('translation.warehouses')</a>
                     <a href="{{ route($role . '.inventory') }}" class="dropdown-item"><i data-feather="database" class="menu-icon-sm"></i>@lang('translation.stock_management')</a>
                     <div class="dropdown-divider"></div>
