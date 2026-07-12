@@ -25,7 +25,7 @@
                             {{-- Email --}}
                             <x-text-input name="email" label="Email" type="email" value="{{ old('email', $store->email ?? '') }}" />
                             {{-- Phone --}}
-                            <x-text-input name="phone" label="Phone" value="{{ old('phone', $store->phone ?? '') }}" required class="onlyinteger" />
+                            <x-text-input name="phone" label="Phone" value="{{ old('phone', $store->phone ?? '') }}" required class="onlyinteger" maxlength="12" minlength="11" />
                             {{-- Alternate Phone --}}
                             <x-text-input name="alternate_phone" label="Alternate Phone" value="{{ old('alternate_phone', $store->alternate_phone ?? '') }}" class="onlyinteger" maxlength="12" minlength="11" />
                             {{-- Manager --}}

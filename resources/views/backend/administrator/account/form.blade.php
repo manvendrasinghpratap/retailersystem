@@ -19,7 +19,7 @@
                             <div class="row">
                                 <x-select-dropdown name="suffix" label="Title" :options="$suffix" :selected="$accountdetails->user->detail->staff_suffix ?? 'Mr'" class="suffix" required/>
                                 <x-text-input name="first_name" label="First Name" value="{{ $accountdetails->user->detail->first_name ?? '' }}" required class="setusername "/>
-                                <x-text-input name="last_name" label="Last Name" value="{{ $accountdetails->user->detail->last_name ?? '' }}"  required />
+                                <x-text-input name="last_name" label="Last Name" value="{{ $accountdetails->user->detail->last_name ?? '' }}"  required /> 
                                 <x-text-input name="office_phone" label="Office Phone" value="{{ $accountdetails->user->detail->office_phone ?? '' }}" required class="onlyinteger phonenumber nocutcopypaste"/>
                                 <x-text-input name="cell_phone" label="Cell Phone" value="{{ $accountdetails->user->detail->cell_phone ?? '' }}"  required id="cell_phone" class="onlyinteger phonenumber nocutcopypaste setusername"/>
                                 <x-text-input name="whatsapp_number" label="WhatsApp Number" value="{{ $accountdetails->user->detail->whatsapp_number ?? '' }}"  required id="whatsapp_number" class="onlyinteger phonenumber nocutcopypaste"/>
