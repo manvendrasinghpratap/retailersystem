@@ -26,9 +26,9 @@
                                 <x-email-input name="email" label="Email Address" value="{{ $accountdetails->user->email ?? '' }}" required/>
                                 <x-text-input name="nin" label="National Identification Number" value="{{ $accountdetails->user->detail->nin ?? '' }}"  required  class="onlyinteger phonenumber nocutcopypaste"/>
                                 <x-text-input name="street_address" label="Address" value="{{ $accountdetails->user->detail->street_address ?? '' }}" />
-                                <x-select-dropdown name="local_government" label="Local Government" :options="$localGovernment" :selected="$accountdetails->user->detail->local_government ?? ''" required class="local_government"/>
-                                <x-select-dropdown name="country_of_origin" label="Country Of Origin" :options="$countries" :selected="$accountdetails->user->detail->country_of_origin ?? 'Nigeria'" class="country" required/>
+                                <x-select-dropdown name="local_government" label="Local Government" :options="$localGovernment" :selected="$accountdetails->user->detail->local_government ?? 'Aba North'" required class="local_government"/>
                                 <x-select-dropdown name="state_of_origin" label="State Of Origin" :options="$state" :selected="$accountdetails->user->detail->state_of_origin ?? 'Lagos'" class="state" required/>
+                                <x-select-dropdown name="country_of_origin" label="Country Of Origin" :options="$countries" :selected="$accountdetails->user->detail->country_of_origin ?? 'Nigeria'" class="country" required/>
                             </div>
                             @if($route == 'add')
                             <div class="row">

@@ -70,13 +70,13 @@ class ProductController extends Controller
                         'route' => 'admin.dashboard',
                         'title' => __('translation.dashboard')
                     ],
-                    // use route NAME only (not route())
+                    // use route NAME only (not route()) 
                     [
-                        'route' => $role . '.no-barcode',
+                        'route' => 'admin.requisitions.pending.posting',
                         'title' => __('translation.add_product_without_barcode')
                     ],
                     [
-                        'route' => $role . '.barcode',
+                        'route' => 'admin.requisitions.pending.posting',
                         'title' => __('translation.add_edit_product')
                     ],
 

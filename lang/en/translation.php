@@ -685,5 +685,7 @@ return [
     'edit_setting' => 'Edit Setting',
     'select_module' => 'Select Module',
     'select_setting' => 'Select Setting',
-
+    'Savepayment' => 'Save Payment',
+    'paynow' => 'Pay Now',
+    'no_stores_available' => 'No Stores Available'
 ];

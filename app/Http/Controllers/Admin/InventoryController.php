@@ -79,12 +79,9 @@ class InventoryController extends Controller
                         'title' => __('translation.dashboard')
                     ],
                     // use route NAME only (not route())
+
                     [
-                        'route' => $role . '.no-barcode',
-                        'title' => __('translation.add_product_without_barcode')
-                    ],
-                    [
-                        'route' => $role . '.barcode',
+                        'route' => 'admin.requisitions.pending.posting',
                         'title' => __('translation.add_stock')
                     ],
                     [
