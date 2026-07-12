@@ -95,7 +95,7 @@ class SaleController extends Controller
     {
         $breadcrumb = $this->breadcrumbBilling;
         $paymentTypes = PaymentType::getSelectable();
-        $query = Sale::with('user', 'payments')->visibleToUser();
+        $query = Sale::with('user', 'payments')->visibleToUser()->ofAccount();
 
         // Filter by date
         $query = Settings::applyDateRange($query, $request, 'created_at', true);

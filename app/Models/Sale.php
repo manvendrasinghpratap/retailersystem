@@ -122,4 +122,11 @@ class Sale extends Model
             'short_name'
         );
     }
+    public function scopeOfAccount($query)
+    {
+        if (auth()->check() && auth()->user()->account_id) {
+            return $query->where('account_id', auth()->user()->account_id);
+        }
+        return $query;
+    }
 }
