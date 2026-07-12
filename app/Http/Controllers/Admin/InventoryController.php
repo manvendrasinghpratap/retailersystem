@@ -14,6 +14,7 @@ use Auth;
 use App\Models\Warehouse;
 use App\Models\Store;
 use App\Models\RequisitionItem;
+use Illuminate\Support\Facades\Route;
 
 class InventoryController extends Controller
 {
@@ -23,6 +24,7 @@ class InventoryController extends Controller
 
     public function __construct()
     {
+        // echo Route::currentRouteName();   die();
         $this->middleware('auth');
 
         $this->middleware(function ($request, $next) {
@@ -37,27 +39,32 @@ class InventoryController extends Controller
                         'route' => 'admin.dashboard',
                         'title' => __('translation.dashboard')
                     ],
+                    [
+                        'route' => 'admin.inventory',
+                        'title' => __('translation.stock_management')
+                    ],
+
                     // use route NAME only (not route())
                     // [
                     //     'route' => $role . '.no-barcode',
                     //     'title' => __('translation.add_product_without_barcode')
                     // ],
-                    [
-                        'route' => 'admin.requisitions.pending.posting',
-                        'title' => __('translation.add_stock')
-                    ],
-                    [
-                        'route' => $role . '.return-barcode',
-                        'title' => __('translation.return_stock')
-                    ],
-                    [
-                        'route' => $role . '.damage-barcode',
-                        'title' => __('translation.damage_stock')
-                    ],
-                    [
-                        'route' => $role . '.deduct-barcode',
-                        'title' => __('translation.deduct_stock')
-                    ],
+                    // [
+                    //     'route' => 'admin.requisitions.pending.posting',
+                    //     'title' => __('translation.add_stock')
+                    // ],
+                    // [
+                    //     'route' => $role . '.return-barcode',
+                    //     'title' => __('translation.return_stock')
+                    // ],
+                    // [
+                    //     'route' => $role . '.damage-barcode',
+                    //     'title' => __('translation.damage_stock')
+                    // ],
+                    // [
+                    //     'route' => $role . '.deduct-barcode',
+                    //     'title' => __('translation.deduct_stock')
+                    // ],
                 ],
 
                 'route1' => "admin.inventory.manage/291752",

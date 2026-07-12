@@ -687,5 +687,20 @@ return [
     'select_setting' => 'Select Setting',
     'Savepayment' => 'Save Payment',
     'paynow' => 'Pay Now',
-    'no_stores_available' => 'No Stores Available'
+    'no_stores_available' => 'No Stores Available',
+    'qty_in_stock' => 'Qty in Stock',
+    'staff_reports' => 'Staff Reports',
+    'sales_reports' => 'Sales Reports',
+    'external_contacts' => 'External Contacts',
+    'internal_users' => 'Internal Users',
+    'marketing' => 'Marketing',
+    'sales' => 'Sales',
+    'stock_adjustments' => 'Stock Adjustments',
+    'stock_operations' => 'Stock Operations',
+    'purchasing' => 'Purchasing',
+    'inventory_requests' => 'Inventory Requests',
+    'storage' => 'Storage',
+    'product_setup' => 'Product Setup',
+    'purchase_returns' => 'Purchase Returns',
+    'business_partners' => 'Business Partners'
 ];

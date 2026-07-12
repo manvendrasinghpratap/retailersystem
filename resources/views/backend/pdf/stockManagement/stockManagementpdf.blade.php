@@ -9,9 +9,9 @@
                 <th>{{ __('translation.product_name')}}</th>
                 <th>{{ __('translation.sku')}}</th>
                 <th>{{ __('translation.barcode')}}</th>
-                <th>{{ __('translation.stock')}}</th>
-                <th>{{ __('translation.low_alert')}}</th>
-                <th>{{ __('translation.status')}}</th>
+                <th>{{ __('translation.qty_in_stock')}}</th>
+                <!-- <th>{{ __('translation.low_alert')}}</th> -->
+                <!-- <th>{{ __('translation.status')}}</th> -->
             </tr>
         </thead>
 
@@ -24,8 +24,8 @@
                     <td>{{ $stock->product->sku ?? '' }}</td>
                     <td><img src="data:image/png;base64,{{ DNS1D::getBarcodePNG($stock->product->barcode, 'C128') }}" style="width:120px; height:40px;" /><br>{{$stock->product->barcode}}</td>
                     <td>{{ $stock->stock }}</td>
-                    <td>{{ $stock->low_stock_alert }}</td>
-                    <td>{{ $stock->isLowStock() ? __('translation.low_stock') : __('translation.normal_stock') }}</td>
+                    <!-- <td>{{ $stock->low_stock_alert }}</td> -->
+                    <!-- <td>{{ $stock->isLowStock() ? __('translation.low_stock') : __('translation.normal_stock') }}</td> -->
                 </tr>
             @empty
                 <tr>

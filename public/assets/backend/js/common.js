@@ -202,6 +202,10 @@ $(document).ready(function () {
         placeholder: "Select Relationship",
         allowClear: true
     });
+    $(".reason").select2({
+        placeholder: "Select Reason",
+        allowClear: true
+    });
     $(".barcode").on("input", function () {
         this.value = this.value.replace(/[^a-zA-Z0-9]/g, '');
     });

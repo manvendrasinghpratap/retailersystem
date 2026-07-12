@@ -76,6 +76,39 @@
 
 @section('script')
     <script>
-        validateSelect2Form('returnWarehouseForm', ['store_id', 'warehouse_id', 'reason_id']);
+        $(document).ready(function () {
+
+            validateSelect2Form('returnWarehouseForm', ['store_id', 'warehouse_id', 'reason_id']);
+            $('#returnWarehouseForm').on('submit', function (e) {
+                e.preventDefault();
+                let form = this;
+                let submitBtn = $(form).find('button[type="submit"]');
+                // Prevent multiple clicks
+                if (submitBtn.prop('disabled')) {
+                    return false;
+                }
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: 'Do you want to submit this transaction?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, Submit',
+                    cancelButtonText: 'Cancel',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        submitBtn.prop('disabled', true);
+                        submitBtn.html(
+                            '<span class="spinner-border spinner-border-sm me-1"></span> Processing...'
+                        );
+                        form.submit();
+                    }
+                });
+            });
+
+        });
     </script>
 @endsection

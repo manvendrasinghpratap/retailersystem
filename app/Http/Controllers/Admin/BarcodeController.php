@@ -26,7 +26,7 @@ class BarcodeController extends Controller
             $role = Settings::getUserRole(); // admin / staff / etc.
 
             $this->breadcrumbBarcodeReader = [
-                'title' => __('translation.stock_management'),
+                'title' => __('translation.stock_adjustments'),
 
                 'breadcrumb' => [
                     [
@@ -38,10 +38,10 @@ class BarcodeController extends Controller
                     //     'route' => $role . '.no-barcode',
                     //     'title' => __('translation.add_product_without_barcode')
                     // ],
-                    [
-                        'route' => 'admin.requisitions.pending.posting',
-                        'title' => __('translation.add_stock')
-                    ],
+                    // [
+                    //     'route' => 'admin.requisitions.pending.posting',
+                    //     'title' => __('translation.add_stock')
+                    // ],
                     // [
                     //     'route' => 'admin.sales-barcode',
                     //     'title' => __('translation.sale_stock')
@@ -81,7 +81,7 @@ class BarcodeController extends Controller
     public function nobarcode(Request $request)
     {
         $requisition_item_id = '';
-        if($request->has('requisition_item_id')){
+        if ($request->has('requisition_item_id')) {
             $requisition_item_id = $request->requisition_item_id;
         }
         $adjustmentData = Settings::getEncodeCode(1);
@@ -121,7 +121,7 @@ class BarcodeController extends Controller
             'routeName' => ['required', 'string'],
         ]);
         $requisition_item_id = '';
-        if($request->has('requisition_item_id')){
+        if ($request->has('requisition_item_id')) {
             $requisition_item_id = $request->requisition_item_id;
         }
         $barcode = trim($validated['barcode']);
