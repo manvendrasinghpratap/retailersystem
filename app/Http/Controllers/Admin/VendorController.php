@@ -138,7 +138,9 @@ class VendorController extends Controller
                 'vendor_code' => 'VEN' . rand(10000, 99999),
                 'name' => $request->name,
                 'company_name' => $request->company_name,
+                'website' => $request->website,
                 'phone' => $request->phone,
+                'whatsapp_number' => $request->whatsapp_number,
                 'email' => $request->email,
                 'address' => $request->address,
                 'lga_id' => $request->lga_id,
@@ -147,6 +149,7 @@ class VendorController extends Controller
                 'opening_balance' => $openingBalance,
                 'current_balance' => $openingBalance,
                 'status' => $request->status ?? 1,
+                'comment' => $request->comment,
                 'created_by' => auth()->id(),
             ]);
 
@@ -166,7 +169,7 @@ class VendorController extends Controller
 
         return Settings::roleRedirect(
             'vendors.index',
-            'Vendor Added Successfully.'
+            'Supplier Added Successfully.'
         );
     }
 
@@ -209,19 +212,22 @@ class VendorController extends Controller
         $vendor->update([
             'name' => $request->name,
             'company_name' => $request->company_name,
+            'website' => $request->website,
             'phone' => $request->phone,
+            'whatsapp_number' => $request->whatsapp_number,
             'email' => $request->email,
             'address' => $request->address,
             'lga_id' => $request->lga_id,
             'state_id' => $request->state_id,
             'country_id' => $request->country_id,
             'status' => $request->status ?? 1,
+            'comment' => $request->comment,
             'updated_by' => auth()->id(),
         ]);
 
         return Settings::roleRedirect(
             'vendors.index',
-            'Vendor Updated Successfully.'
+            'Supplier Details Updated Successfully.'
         );
     }
 

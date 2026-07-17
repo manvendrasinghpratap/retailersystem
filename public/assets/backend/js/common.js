@@ -89,8 +89,8 @@ $(document).ready(function () {
         placeholder: "Select Title",
         allowClear: true
     });
-    $(".vendor").select2({
-        placeholder: "Select Vendor",
+    $(".supplier").select2({
+        placeholder: "Select Supplier",
         allowClear: true
     });
     $(".warehouse").select2({

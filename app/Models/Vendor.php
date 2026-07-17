@@ -16,7 +16,9 @@ class Vendor extends Model
         'vendor_code',
         'name',
         'company_name',
+        'website',
         'phone',
+        'whatsapp_number',
         'email',
         'address',
         'lga_id',
@@ -25,6 +27,7 @@ class Vendor extends Model
         'opening_balance',
         'current_balance',
         'status',
+        'comment',
         'created_by',
         'updated_by',
     ];
