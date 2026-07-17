@@ -345,12 +345,13 @@
                 <h5 class="modal-title">{{ __('translation.add_new_master_item') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form id="masterItemForm" method="POST">
+            <form id="masterItemForm" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-body">
                     <div class="row">
-                        <x-text-input name="name" label="Name" value="{{ $item->name ?? '' }}" required mainrows="6" />
-                        <x-text-input name="description" label="Description" value="{{ $item->description ?? '' }}" mainrows="6" />
+                        <x-text-input name="name" label="Name" value="{{ $item->name ?? '' }}" required />
+                        <x-text-input name="description" label="Description" value="{{ $item->description ?? '' }}" mainrows="4" />
+                        <x-file-input name="image" :preview="false" label="Product Image" :value="$item->image ?? null" accept="image/png,image/jpeg,image/webp" :mainrows="4" />
                         <input type="text" name="status" value="1" required hidden="true" />
                     </div>
                 </div>

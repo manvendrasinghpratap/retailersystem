@@ -1,0 +1,447 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FileZilla3 version="3.69.6" platform="windows">
+	<Servers>
+		<Server>
+			<Host>havanabakeryshop.com</Host>
+			<Port>21</Port>
+			<Protocol>0</Protocol>
+			<Type>0</Type>
+			<User>admin_bakery_shop_developer</User>
+			<Pass encoding="base64">YmFrZXJ5X3Nob3BfZGV2ZWxvcGVy</Pass>
+			<Logontype>1</Logontype>
+			<PasvMode>MODE_DEFAULT</PasvMode>
+			<EncodingType>Auto</EncodingType>
+			<BypassProxy>0</BypassProxy>
+			<Name>bakery_shop_developer</Name>
+			<Comments>havanabakeryshop.com
+admin_bakery_shop_developer
+bakery_shop_developer
+
+https://167.99.119.233:8090/base/
+iy6pIyasUveplA31</Comments>
+			<LocalDir>D:\MAMP\htdocs\havanabakeryshop</LocalDir>
+			<RemoteDir>1 0 11 public_html</RemoteDir>
+			<SyncBrowsing>1</SyncBrowsing>
+			<DirectoryComparison>0</DirectoryComparison>
+		</Server>
+		<Server>
+			<Host>143.198.174.10</Host>
+			<Port>22</Port>
+			<Protocol>1</Protocol>
+			<Type>0</Type>
+			<User>root</User>
+			<Pass encoding="base64">TWFudmVuZHJhQDAwN0RP</Pass>
+			<Logontype>1</Logontype>
+			<EncodingType>Auto</EncodingType>
+			<BypassProxy>0</BypassProxy>
+			<Name>bookedup.info</Name>
+			<Comments>Manvendra@007DO</Comments>
+			<LocalDir>D:\MAMP\htdocs\bookedup</LocalDir>
+			<RemoteDir>1 0 3 var 3 www 4 html</RemoteDir>
+			<SyncBrowsing>0</SyncBrowsing>
+			<DirectoryComparison>0</DirectoryComparison>
+		</Server>
+		<Server>
+			<Host>209.97.144.37</Host>
+			<Port>21</Port>
+			<Protocol>0</Protocol>
+			<Type>0</Type>
+			<User>admin_jchchat</User>
+			<Pass encoding="base64">dEJtTWhKdGt6amphbjNxTw==</Pass>
+			<Logontype>1</Logontype>
+			<PasvMode>MODE_DEFAULT</PasvMode>
+			<EncodingType>Auto</EncodingType>
+			<BypassProxy>0</BypassProxy>
+			<Name>cat3-cyberpanel</Name>
+			<Comments>tBmMhJtkzjjan3qO
+209.97.144.37
+admin_jchchat</Comments>
+			<Colour>6</Colour>
+			<LocalDir>D:\MAMP\htdocs\cat3</LocalDir>
+			<RemoteDir>1 0 11 public_html 4 cat3</RemoteDir>
+			<SyncBrowsing>1</SyncBrowsing>
+			<DirectoryComparison>0</DirectoryComparison>
+		</Server>
+		<Server>
+			<Host>ftp.jchnow.com</Host>
+			<Port>21</Port>
+			<Protocol>0</Protocol>
+			<Type>0</Type>
+			<User>developersd@jchnow.com</User>
+			<Pass encoding="base64">MHN5Vy11fX0wZmxh</Pass>
+			<Logontype>1</Logontype>
+			<PasvMode>MODE_DEFAULT</PasvMode>
+			<EncodingType>Auto</EncodingType>
+			<BypassProxy>0</BypassProxy>
+			<Name>developersd@jchnow.com</Name>
+			<Comments>FTP Username: developersd@jchnow.com
+FTP server: ftp.jchnow.com
+FTP &amp; explicit FTPS port:  21
+0syW-u}}0fla</Comments>
+			<LocalDir>D:\Ampps\www\cat3\</LocalDir>
+			<RemoteDir>1 0 4 cat3</RemoteDir>
+			<SyncBrowsing>0</SyncBrowsing>
+			<DirectoryComparison>0</DirectoryComparison>
+		</Server>
+		<Server>
+			<Host>45.55.56.169</Host>
+			<Port>21</Port>
+			<Protocol>0</Protocol>
+			<Type>0</Type>
+			<User>admin_developer</User>
+			<Pass encoding="base64">UGVBaTlkYUhxSVBCRTZwMg==</Pass>
+			<Logontype>1</Logontype>
+			<PasvMode>MODE_DEFAULT</PasvMode>
+			<EncodingType>Auto</EncodingType>
+			<BypassProxy>0</BypassProxy>
+			<Name>Havanainnsuite</Name>
+			<Comments>PeAi9daHqIPBE6p2
+admin_developer
+45.55.56.169</Comments>
+			<Colour>2</Colour>
+			<LocalDir>D:\MAMP\htdocs\havanainnsuites</LocalDir>
+			<RemoteDir>1 0 11 public_html</RemoteDir>
+			<SyncBrowsing>1</SyncBrowsing>
+			<DirectoryComparison>0</DirectoryComparison>
+		</Server>
+		<Server>
+			<Host>142.93.51.210</Host>
+			<Port>21</Port>
+			<Protocol>0</Protocol>
+			<Type>0</Type>
+			<User>admin_havanaworlds</User>
+			<Pass encoding="base64">NXNCYnhLOXJGMno5SHY5RA==</Pass>
+			<Logontype>1</Logontype>
+			<PasvMode>MODE_DEFAULT</PasvMode>
+			<EncodingType>Auto</EncodingType>
+			<BypassProxy>0</BypassProxy>
+			<Name>havanaworlds</Name>
+			<Comments>https://havanaworlds.com/havanaworlds
+
+admin_havanaworlds
+5sBbxK9rF2z9Hv9D</Comments>
+			<LocalDir>D:\MAMP\htdocs\havanaworlds</LocalDir>
+			<RemoteDir>1 0 11 public_html</RemoteDir>
+			<SyncBrowsing>0</SyncBrowsing>
+			<DirectoryComparison>0</DirectoryComparison>
+		</Server>
+		<Server>
+			<Host>45.55.42.82</Host>
+			<Port>21</Port>
+			<Protocol>0</Protocol>
+			<Type>0</Type>
+			<User>jchchat</User>
+			<Pass encoding="base64">aDU3UDQ4cip2</Pass>
+			<Logontype>1</Logontype>
+			<PasvMode>MODE_DEFAULT</PasvMode>
+			<EncodingType>Auto</EncodingType>
+			<BypassProxy>0</BypassProxy>
+			<Name>jchcat</Name>
+			<Comments>jchchat
+
+h57P48r*v</Comments>
+			<Colour>7</Colour>
+			<LocalDir>D:\MAMP\htdocs\cat3\</LocalDir>
+			<RemoteDir>1 0 8 httpdocs 4 cat3</RemoteDir>
+			<SyncBrowsing>0</SyncBrowsing>
+			<DirectoryComparison>0</DirectoryComparison>
+		</Server>
+		<Server>
+			<Host>ftp.jchnow.com</Host>
+			<Port>21</Port>
+			<Protocol>0</Protocol>
+			<Type>0</Type>
+			<User>manvendra@jchnow.com</User>
+			<Pass encoding="base64">MHN5Vy11fX0wZmxh</Pass>
+			<Logontype>1</Logontype>
+			<PasvMode>MODE_DEFAULT</PasvMode>
+			<EncodingType>Auto</EncodingType>
+			<BypassProxy>0</BypassProxy>
+			<Name>manvendra@jchnow.com</Name>
+			<Comments>0syW-u}}0fla</Comments>
+			<SyncBrowsing>0</SyncBrowsing>
+			<DirectoryComparison>0</DirectoryComparison>
+		</Server>
+		<Server>
+			<Host>146.190.161.87</Host>
+			<Port>21</Port>
+			<Protocol>0</Protocol>
+			<Type>0</Type>
+			<User>mccs_dev</User>
+			<Pass encoding="base64">MWk1ZV5sUjU2</Pass>
+			<Logontype>1</Logontype>
+			<PasvMode>MODE_DEFAULT</PasvMode>
+			<EncodingType>Auto</EncodingType>
+			<BypassProxy>0</BypassProxy>
+			<Name>MCCS</Name>
+			<Comments>mccs_dev
+1i5e^lR56
+146.190.161.87</Comments>
+			<LocalDir>D:\MAMP\htdocs\mccs</LocalDir>
+			<SyncBrowsing>0</SyncBrowsing>
+			<DirectoryComparison>0</DirectoryComparison>
+		</Server>
+		<Server>
+			<Host>146.190.152.33</Host>
+			<Port>21</Port>
+			<Protocol>0</Protocol>
+			<Type>0</Type>
+			<User>admin_manvendra</User>
+			<Pass encoding="base64">Zy1CZEEqQWl0LSFIaGc2dg==</Pass>
+			<Logontype>1</Logontype>
+			<PasvMode>MODE_DEFAULT</PasvMode>
+			<EncodingType>Auto</EncodingType>
+			<BypassProxy>0</BypassProxy>
+			<Name>Retailer System</Name>
+			<Comments>g-BdA*Ait-!Hhg6v
+
+admin_manvendra</Comments>
+			<LocalDir>D:\MAMP\htdocs\retailersystem</LocalDir>
+			<RemoteDir>1 0 11 public_html</RemoteDir>
+			<SyncBrowsing>1</SyncBrowsing>
+			<DirectoryComparison>1</DirectoryComparison>
+		</Server>
+		<Server>
+			<Host>146.190.152.33</Host>
+			<Port>21</Port>
+			<Protocol>0</Protocol>
+			<Type>0</Type>
+			<User>admin_developer</User>
+			<Pass encoding="base64">bGV6ZEE4QktAQVBpaExicQ==</Pass>
+			<Logontype>1</Logontype>
+			<PasvMode>MODE_DEFAULT</PasvMode>
+			<EncodingType>Auto</EncodingType>
+			<BypassProxy>0</BypassProxy>
+			<Name>retailersystem</Name>
+			<Comments>lezdA8BK@APihLbq</Comments>
+			<LocalDir>D:\MAMP\htdocs\retailersystem</LocalDir>
+			<RemoteDir>1 0 11 public_html</RemoteDir>
+			<SyncBrowsing>1</SyncBrowsing>
+			<DirectoryComparison>0</DirectoryComparison>
+		</Server>
+		<Server>
+			<Host>ftp.sps-academy.co.in</Host>
+			<Port>21</Port>
+			<Protocol>0</Protocol>
+			<Type>0</Type>
+			<User>manvendra@sps-academy.co.in</User>
+			<Pass encoding="base64">Ql8lWk9VY184Rz11</Pass>
+			<Logontype>1</Logontype>
+			<PasvMode>MODE_DEFAULT</PasvMode>
+			<EncodingType>Auto</EncodingType>
+			<BypassProxy>0</BypassProxy>
+			<Name>sps-academy.co.in</Name>
+			<Comments>B_%ZOUc_8G=u
+manvendra@sps-academy.co.in</Comments>
+			<Colour>2</Colour>
+			<LocalDir>D:\MAMP\htdocs\management-sp-acedemy</LocalDir>
+			<RemoteDir>1 0 28 paisatrack.sps-academy.co.in</RemoteDir>
+			<SyncBrowsing>1</SyncBrowsing>
+			<DirectoryComparison>0</DirectoryComparison>
+		</Server>
+		<Server>
+			<Host>161.35.97.234</Host>
+			<Port>21</Port>
+			<Protocol>0</Protocol>
+			<Type>0</Type>
+			<User>admin_havana_staging</User>
+			<Pass encoding="base64">YjB0OEEyYkglLW4hak0leg==</Pass>
+			<Logontype>1</Logontype>
+			<PasvMode>MODE_DEFAULT</PasvMode>
+			<EncodingType>Auto</EncodingType>
+			<BypassProxy>0</BypassProxy>
+			<Name>Staging-Havana</Name>
+			<Comments>admin_havana_staging
+b0t8A2bH%-n!jM%z
+b0t8A2bH%-n!jM%z
+161.35.97.234</Comments>
+			<Colour>7</Colour>
+			<LocalDir>D:\MAMP\htdocs\havanainnsuites</LocalDir>
+			<RemoteDir>1 0 11 public_html 15 havanainnsuites</RemoteDir>
+			<SyncBrowsing>1</SyncBrowsing>
+			<DirectoryComparison>0</DirectoryComparison>
+		</Server>
+		<Server>
+			<Host>147.182.222.7</Host>
+			<Port>21</Port>
+			<Protocol>0</Protocol>
+			<Type>0</Type>
+			<User>admin_vintagesystem</User>
+			<Pass encoding="base64">TWFudmVuZHJhQDAwN0RP</Pass>
+			<Logontype>1</Logontype>
+			<PasvMode>MODE_DEFAULT</PasvMode>
+			<EncodingType>Auto</EncodingType>
+			<BypassProxy>0</BypassProxy>
+			<Name>VintageSystems</Name>
+			<Comments>https://147.182.222.7:8090/base/
+admin_vintagesystem
+Manvendra@007DO</Comments>
+			<LocalDir>D:\MAMP\htdocs\VintageHub\</LocalDir>
+			<RemoteDir>1 0 11 public_html</RemoteDir>
+			<SyncBrowsing>1</SyncBrowsing>
+			<DirectoryComparison>0</DirectoryComparison>
+		</Server>
+	</Servers>
+	<Settings>
+		<Setting name="Use Pasv mode">1</Setting>
+		<Setting name="Limit local ports">0</Setting>
+		<Setting name="Limit ports low">6000</Setting>
+		<Setting name="Limit ports high">7000</Setting>
+		<Setting name="Limit ports offset">0</Setting>
+		<Setting name="External IP mode">0</Setting>
+		<Setting name="External IP" />
+		<Setting name="External address resolver">http://ip.filezilla-project.org/ip.php</Setting>
+		<Setting name="Last resolved IP" />
+		<Setting name="No external ip on local conn">1</Setting>
+		<Setting name="Pasv reply fallback mode">0</Setting>
+		<Setting name="Timeout">20</Setting>
+		<Setting name="Logging Debug Level">0</Setting>
+		<Setting name="Logging Raw Listing">0</Setting>
+		<Setting name="Allow transfermode fallback">1</Setting>
+		<Setting name="Reconnect count">2</Setting>
+		<Setting name="Reconnect delay">5</Setting>
+		<Setting name="Enable speed limits">0</Setting>
+		<Setting name="Speedlimit inbound">1000</Setting>
+		<Setting name="Speedlimit outbound">100</Setting>
+		<Setting name="Speedlimit burst tolerance">0</Setting>
+		<Setting name="Preallocate space">0</Setting>
+		<Setting name="View hidden files">0</Setting>
+		<Setting name="Preserve timestamps">0</Setting>
+		<Setting name="Socket recv buffer size (v2)">4194304</Setting>
+		<Setting name="Socket send buffer size (v2)">262144</Setting>
+		<Setting name="FTP Keep-alive commands">0</Setting>
+		<Setting name="FTP Proxy type">0</Setting>
+		<Setting name="FTP Proxy host" />
+		<Setting name="FTP Proxy user" />
+		<Setting name="FTP Proxy password" />
+		<Setting name="FTP Proxy login sequence" />
+		<Setting name="SFTP keyfiles" platform="win" />
+		<Setting name="SFTP compression">0</Setting>
+		<Setting name="Proxy type">0</Setting>
+		<Setting name="Proxy host" />
+		<Setting name="Proxy port">0</Setting>
+		<Setting name="Proxy user" />
+		<Setting name="Proxy password" />
+		<Setting name="Logging file" platform="win" />
+		<Setting name="Logging filesize limit">10</Setting>
+		<Setting name="Size format">0</Setting>
+		<Setting name="Size thousands separator">1</Setting>
+		<Setting name="Size decimal places">1</Setting>
+		<Setting name="TCP Keepalive Interval">15</Setting>
+		<Setting name="Cache TTL">600</Setting>
+		<Setting name="Minimum TLS Version">2</Setting>
+		<Setting name="Update Check">1</Setting>
+		<Setting name="Update Check Interval">7</Setting>
+		<Setting name="Update Check Check Beta">0</Setting>
+		<Setting name="Kiosk mode">0</Setting>
+		<Setting name="Master password encryptor" />
+		<Setting name="Trust system trust store">0</Setting>
+		<Setting name="Ascii Binary mode">0</Setting>
+		<Setting name="Auto Ascii files">ac|am|asp|bat|c|cfm|cgi|conf|cpp|css|dhtml|diff|diz|h|hpp|htm|html|in|inc|java|js|jsp|lua|m4|mak|md5|nfo|nsh|nsi|pas|patch|pem|php|phtml|pl|po|pot|py|qmail|sh|sha1|sha256|sha512|shtml|sql|svg|tcl|tpl|txt|vbs|xhtml|xml|xrc</Setting>
+		<Setting name="Auto Ascii no extension">1</Setting>
+		<Setting name="Auto Ascii dotfiles">1</Setting>
+		<Setting name="Comparison threshold">1</Setting>
+		<Setting name="Cache directory" platform="win" />
+		<Setting name="Language Code" />
+		<Setting name="Concurrent download limit">0</Setting>
+		<Setting name="Concurrent upload limit">0</Setting>
+		<Setting name="Show debug menu">0</Setting>
+		<Setting name="File exists action download">0</Setting>
+		<Setting name="File exists action upload">0</Setting>
+		<Setting name="Allow ascii resume">0</Setting>
+		<Setting name="Onetime Dialogs" />
+		<Setting name="Show Tree Local">1</Setting>
+		<Setting name="Show Tree Remote">1</Setting>
+		<Setting name="File Pane Layout">0</Setting>
+		<Setting name="File Pane Swap">0</Setting>
+		<Setting name="Filelist directory sort">0</Setting>
+		<Setting name="Filelist name sort">0</Setting>
+		<Setting name="Queue successful autoclear">0</Setting>
+		<Setting name="Show message log">1</Setting>
+		<Setting name="Comparison mode">1</Setting>
+		<Setting name="Icon scale">125</Setting>
+		<Setting name="Timestamp in message log">0</Setting>
+		<Setting name="Filelist status bar">1</Setting>
+		<Setting name="Filter toggle state">0</Setting>
+		<Setting name="Show quickconnect bar">1</Setting>
+		<Setting name="Messagelog position">0</Setting>
+		<Setting name="File doubleclick action">0</Setting>
+		<Setting name="Dir doubleclick action">0</Setting>
+		<Setting name="Minimize to tray">0</Setting>
+		<Setting name="Search column widths" />
+		<Setting name="Search column shown" />
+		<Setting name="Search column order" />
+		<Setting name="Comparison hide identical">0</Setting>
+		<Setting name="Search sort order" />
+		<Setting name="Edit track local">1</Setting>
+		<Setting name="Prevent idle sleep">1</Setting>
+		<Setting name="Filteredit window size" />
+		<Setting name="Enable invalid char filter">1</Setting>
+		<Setting name="Invalid char replace">_</Setting>
+		<Setting name="Edit status dialog size" />
+		<Setting name="Display current speed">0</Setting>
+		<Setting name="Toolbar hidden">0</Setting>
+		<Setting name="Strip VMS revisions">0</Setting>
+		<Setting name="Startup action">0</Setting>
+		<Setting name="Queue completion action">1</Setting>
+		<Setting name="Queue completion command" />
+		<Setting name="Drag and Drop disabled">0</Setting>
+		<Setting name="Disable update footer">0</Setting>
+		<Setting name="Highest shown overlay id">0</Setting>
+		<Setting name="Prompt password save">0</Setting>
+		<Setting name="Local filelist shown columns">1111</Setting>
+		<Setting name="Local filelist column order">0,1,2,3</Setting>
+		<Setting name="Remote filelist column order">0,1,2,3,4,5</Setting>
+		<Setting name="Local filelist colwidths">428 80 120 237</Setting>
+		<Setting name="Number of Transfers">10</Setting>
+		<Setting name="Time Format">0</Setting>
+		<Setting name="Date Format">0</Setting>
+		<Setting name="Always use default editor">1</Setting>
+		<Setting name="Directory listing item limit">10000000</Setting>
+		<Setting name="Default editor" platform="win">2"C:\Program Files\Notepad++\notepad++.exe"</Setting>
+		<Setting name="File associations (v2)" platform="win" />
+		<Setting name="Already connected choice">0</Setting>
+		<Setting name="Queue column widths">706 222 729 80 280 150</Setting>
+		<Setting name="Search window size">0 74 139 1750 674 </Setting>
+		<Setting name="Show queue">1</Setting>
+		<Setting name="Remote recursive operation list refresh">0</Setting>
+		<Setting name="Icon theme">default</Setting>
+		<Setting name="Persistent Choices">1</Setting>
+		<Setting name="Resolve local symlinks" platform="win">1</Setting>
+		<Setting name="Remote filelist shown columns">111100</Setting>
+		<Setting name="Window position and size">1 715 12 1163 367 </Setting>
+		<Setting name="Greeting version">3.69.6</Setting>
+		<Setting name="Greeting resources" />
+		<Setting name="Site Manager position">0 315 127 1268 697 </Setting>
+		<Setting name="Last automatic update version">3.69.6</Setting>
+		<Setting name="Splitter positions (v2)">122 -256 500000000 100 100 500000000</Setting>
+		<Setting name="Remote filelist colwidths">391 103 133 265 80 85</Setting>
+		<Setting name="Local filelist sortorder">1 3</Setting>
+		<Setting name="Remote filelist sortorder">1 3</Setting>
+		<Setting name="Tab data" sensitive="1">
+			<Tabs>
+				<Tab connected="1" selected="1">
+					<Host>143.198.174.10</Host>
+					<Port>22</Port>
+					<Protocol>1</Protocol>
+					<Type>0</Type>
+					<User>root</User>
+					<Pass encoding="base64">TWFudmVuZHJhQDAwN0RP</Pass>
+					<Logontype>1</Logontype>
+					<EncodingType>Auto</EncodingType>
+					<BypassProxy>0</BypassProxy>
+					<Name>bookedup.info</Name>
+					<Site>0/bookedup.info</Site>
+					<RemotePath>1 0 3 var 3 www 4 html 9 resources 5 views 5 theme</RemotePath>
+					<LocalPath>D:\MAMP\htdocs\bookedup\resources\views\theme\</LocalPath>
+				</Tab>
+			</Tabs>
+		</Setting>
+		<Setting name="Sitemanager last selected">0/Retailer System</Setting>
+		<Setting name="Last automatic update check">2026-07-11 13:38:17</Setting>
+		<Setting name="Update Check New Version" platform="win">nightly 2026-07-11 https://filezilla-project.org/nightlies/2026-07-11/win64/FileZilla_3_setup.exe 12726728 sha512 efa40d8a4d6b76f34d6d66d4500636f55172a723095bc4ae0ee284b687adbb5e297021054edf78a1c5319d8897467e3ba563128f60f0a52225a100fe6d0f3418 sig:ofrSoWa7IfSMuFptXcXg5OQT+Tnhr+//vP91R92mHpUcULgXiKwndtJOrnEvNvuU2Vp5xxhYucsi5Wzn28zOAQ
+release 3.69.6 https://dl2.cdn.filezilla-project.org/FileZilla_3.69.6_win64-setup.exe 12742752 sha512 06d5ccefbfe628e25f106ba8a851a0e1b193e59697bac07e4c11092b21c0e7c5cb992db00e7ecc248dee635c564fef9641a9657c453fbb7adc8366c070beaf25 sig:6SztyW401NgM51TtIYcO9v8IdKtXHb/PvkZc1s0XczTdr3A9fa/64UqeVAwBY72jbqyYgaNf2bAK+olXeRPuAQ
+</Setting>
+	</Settings>
+	<Queue />
+</FileZilla3>

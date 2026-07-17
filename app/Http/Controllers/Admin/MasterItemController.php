@@ -36,37 +36,35 @@ class MasterItemController extends Controller
     {
         $breadcrumb = $this->breadcrumb;
         $items = MasterItem::account()->where('is_deleted', 0)
-        ->when($request->filled('item_name'), function ($q) use ($request) {
-            $search = trim($request->item_name);
-            $q->where(function ($sub) use ($search) {
-                $sub->where('name', 'LIKE', "%$search%")
-                ->orWhere('code', 'LIKE', "%$search%")
-                ->orWhere('description', 'LIKE', "%$search%");
-        });
-    })
-    ->when($request->filled('status'), function ($q) use ($request) {
-        $q->where('status', $request->status);
-    })
-    ->latest()
-    ->paginate(config('constants.pagination'));
-    
-    return view('backend.admin.master_items.index', compact('items', 'breadcrumb'));
+            ->when($request->filled('item_name'), function ($q) use ($request) {
+                $search = trim($request->item_name);
+                $q->where(function ($sub) use ($search) {
+                    $sub->where('name', 'LIKE', "%$search%")
+                        ->orWhere('code', 'LIKE', "%$search%")
+                        ->orWhere('description', 'LIKE', "%$search%");
+                });
+            })
+            ->when($request->filled('status'), function ($q) use ($request) {
+                $q->where('status', $request->status);
+            })
+            ->latest()
+            ->paginate(config('constants.pagination'));
+
+        return view('backend.admin.master_items.index', compact('items', 'breadcrumb'));
 
     }
 
     public function create()
     {
-        return view('backend.admin.master_items.form', [
-            'breadcrumb' => $this->breadcrumb
-        ]);
+        return view('backend.admin.master_items.form', ['breadcrumb' => $this->breadcrumb]);
     }
 
     public function storeAjax(Request $request)
-    { 
+    {
         $request->validate([
-            'name' => 'required|string|max:255'
+            'name' => 'required|string|max:255',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
-
         $item = MasterItem::account()->where('name', $request->name)->first();
         if ($item) {
             return response()->json([
@@ -74,20 +72,24 @@ class MasterItemController extends Controller
                 'message' => 'Item name already exists!'
             ]);
         }
-
+        $imageName = null;
+        if ($request->hasFile('image')) {
+            $imageName = Settings::uploadimage($request, 'image', 'master_item');
+        }
         $item = MasterItem::create([
-            'name'        => $request->name,
-            'code'        => $request->code,
+            'name' => $request->name,
+            'code' => $request->code,
             'description' => $request->description,
-            'status'      => $request->status,
-            'account_id'  => auth()->user()->account_id,
-            'created_by'  => auth()->id(),
+            'status' => $request->status,
+            'image' => $imageName,
+            'account_id' => auth()->user()->account_id,
+            'created_by' => auth()->id(),
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Item added successfully',
-            'data'    => $item
+            'data' => $item
         ]);
     }
 
@@ -96,17 +98,24 @@ class MasterItemController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'status' => 'required|boolean',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
         try {
+            $imageName = null;
+            // Upload Image
+            if ($request->hasFile('image')) {
+                $imageName = Settings::uploadimage($request, 'image', 'master_item');
+            }
 
             MasterItem::create([
-                'name'        => $request->name,
-                'code'        => $request->code,
+                'name' => $request->name,
+                'code' => $request->code,
                 'description' => $request->description,
-                'status'      => $request->status,
-                'account_id'  => auth()->user()->account_id,
-                'created_by'  => auth()->id(),
+                'image' => $imageName,
+                'status' => $request->status,
+                'account_id' => auth()->user()->account_id,
+                'created_by' => auth()->id(),
             ]);
 
             return redirect()
@@ -145,34 +154,43 @@ class MasterItemController extends Controller
     public function update(Request $request)
     {
         $id = Settings::getDecodeCode($request->id);
-
         $item = MasterItem::account()->findOrFail($id);
-
         $request->validate([
             'name' => 'required'
         ]);
-
-        $item->update($request->only([
-            'name','code','description','status'
-        ]));
+        $imagePath = $item->image;
+        if ($request->hasFile('image')) {
+            $imagePath = Settings::uploadimage(
+                $request,
+                'image',
+                'master_item',
+                $item->image
+            );
+        }
+        $item->update([
+            'name' => $request->name,
+            'description' => $request->description,
+            'status' => $request->status,
+            'image' => $imagePath
+        ]);
 
         return Settings::roleRedirect('master_items.index', 'Item Updated Successfully');
     }
 
     public function delete(Request $request)
-        {
-            $id = Settings::getDecodeCode($request->id);
+    {
+        $id = Settings::getDecodeCode($request->id);
 
-            $item = MasterItem::account()
-                ->where('id', $id)
-                ->first();
+        $item = MasterItem::account()
+            ->where('id', $id)
+            ->first();
 
-            $deleted = $item ? $item->delete() : false;
+        $deleted = $item ? $item->delete() : false;
 
-            return response()->json([
-                'success' => $deleted ? true : false
-            ]);
-        }
+        return response()->json([
+            'success' => $deleted ? true : false
+        ]);
+    }
 
     public function search(Request $request)
     {
@@ -181,8 +199,8 @@ class MasterItemController extends Controller
         $products = MasterItem::account()->where('is_deleted', 0)->orderBy('name', 'asc')
             ->where(function ($q2) use ($query) {
                 $q2->where('name', 'LIKE', "%$query%")
-                ->orWhere('code', 'LIKE', "%$query%")
-                ->orWhere('description', 'LIKE', "%$query%");
+                    ->orWhere('code', 'LIKE', "%$query%")
+                    ->orWhere('description', 'LIKE', "%$query%");
             })
             ->limit(20)
             ->get();

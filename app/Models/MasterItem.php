@@ -20,6 +20,7 @@ class MasterItem extends Model
         'code',
         'description',
         'status',
+        'image',
         'created_by',
     ];
 
@@ -58,8 +59,8 @@ class MasterItem extends Model
     protected function name(): Attribute
     {
         return Attribute::make(
-            get: fn ($value) => ucwords($value),
-            set: fn ($value) => strtolower(trim($value))
+            get: fn($value) => ucwords($value),
+            set: fn($value) => strtolower(trim($value))
         );
     }
 

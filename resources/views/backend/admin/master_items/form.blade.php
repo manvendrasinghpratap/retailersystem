@@ -6,27 +6,30 @@
 @section('content')
     @include('backend.components.breadcrumb')
 
-<div class="card">
-    <div class="card-header">
-        <h4 class="card-title">
-            {{ request()->route()->getName() == 'admin.master_items.create' ? $breadcrumb['route1Title'] : ($breadcrumb['route3Title'])}}
-        </h4>
-    </div>
+    <div class="card">
+        <div class="card-header">
+            <h4 class="card-title">
+                {{ request()->route()->getName() == 'admin.master_items.create' ? $breadcrumb['route1Title'] : ($breadcrumb['route3Title'])}}
+            </h4>
+        </div>
 
-    <div class="card-body">
-        <form method="POST" action="{{ request()->route()->getName() == 'admin.master_items.create' ? route('admin.master_items.store') : route('admin.master_items.update') }}" enctype="multipart/form-data" class="needs-validation" novalidate>
-            @csrf
-            <input type="hidden" name="id" value="{{ isset($item) ? \App\Helpers\Settings::getEncodeCode($item->id) : '' }}">
-            <div class="row">
-                <x-text-input name="name" label="Name" value="{{ $item->name ?? '' }}" required />
-                <x-text-input name="description" label="Description" value="{{ $item->description ?? '' }}" mainrows="4" />
-                <x-select-dropdown name="status" label="Status" :options="\Config::get('constants.accountstatus')" :selected="isset($item) ? $item->status : 1" class="accountstatus" />
-            </div>
-            <div class="row">
-                <x-form-buttons submitText="{{ isset($item) ? 'Update' : 'Save' }}" resetText="{{ $breadcrumb['reset_route_title'] }}" url="{{ route($breadcrumb['reset_route']) }}" />
-            </div>
-        </form>
+        <div class="card-body">
+            <form method="POST" action="{{ request()->route()->getName() == 'admin.master_items.create' ? route('admin.master_items.store') : route('admin.master_items.update') }}" enctype="multipart/form-data" class="needs-validation" novalidate>
+                @csrf
+                <input type="hidden" name="id" value="{{ isset($item) ? \App\Helpers\Settings::getEncodeCode($item->id) : '' }}">
+                <div class="row">
+                    <x-text-input name="name" label="Name" value="{{ $item->name ?? '' }}" required />
+                    <x-text-input name="description" label="Description" value="{{ $item->description ?? '' }}" mainrows="4" />
+                    {{-- Image Upload --}}
+                    <x-file-input name="image" :preview="false" label="Product Image" :value="$item->image ?? null" accept="image/png,image/jpeg,image/webp" :mainrows="4" />
 
+                    <x-select-dropdown name="status" label="Status" :options="\Config::get('constants.accountstatus')" :selected="isset($item) ? $item->status : 1" class="accountstatus" required />
+                </div>
+                <div class="row">
+                    <x-form-buttons submitText="{{ isset($item) ? 'Update' : 'Save' }}" resetText="Cancel" url="{{ route($breadcrumb['reset_route']) }}" />
+                </div>
+            </form>
+
+        </div>
     </div>
-</div>
 @endsection

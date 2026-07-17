@@ -52,6 +52,7 @@
                             <thead>
                                 <tr>
                                 <th>#</th>
+                                <th>{{ __('translation.image') }}</th>
                                 <th>{{ __('translation.name') }}</th>
                                 <th>{{ __('translation.code') }}</th>
                                 <th>{{ __('translation.description') }}</th>
@@ -63,6 +64,9 @@
                             @foreach($items as $item)
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
+                                <td>
+                                    <img src="{{ (!empty($item->image) && file_exists(public_path('uploads/master_item/small/' . $item->image))) ? asset('uploads/master_item/small/' . $item->image) : asset('assets/images/no-image.png') }}" width="80" height="60" alt="Master Item Image">
+                                </td>
                                 <td>{{ $item->name }}</td>
                                 <td>{{ $item->code }}</td>
                                 <td>{{ $item->description }}</td>
