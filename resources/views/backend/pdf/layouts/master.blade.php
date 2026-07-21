@@ -18,18 +18,27 @@
 
 <body>
   <div class="report-header">
-    <div> @include('backend.pdf.datalogo') </div>
-    <h1>{{\Config::get('constants.shopname')}}</h1>
+    @if(isset(auth()->user()->store) && auth()->user()->store->logo)
+      <img src="{{auth()->user()->store->logo}}" alt="{{ auth()->user()->store->name ?? Config::get('constants.shop_name') }}" width="70" height="70" style="float:left;margin-right:10px" />
+    @else
+      <div> @include('backend.pdf.datalogo') </div>
+    @endif
+    <h1>{{ auth()->user()->store->name ?? Config::get('constants.shop_name') }}</h1>
     <!-- <p>{{\Config::get('constants.slogan')}}</p> -->
     <p><strong>{!! (!empty($pdfHeaderdata) && (array_key_exists('heading', $pdfHeaderdata))) ? $pdfHeaderdata['heading'] : '' !!}</strong> — {{\App\Helpers\Settings::getFormattedDate(date('Y-m-d'))}} </p>
-    <p> {{\Config::get('constants.phonenumber')}} | {{\Config::get('constants.website')}}</p>
+    <p> {{ auth()->user()->store->phone ?? '' }} @if(!empty(auth()->user()->store->alternate_phone)) || {{ auth()->user()->store->alternate_phone }} @endif</p>
+    @if(!empty(auth()->user()->store->website))
+    <p>{{ auth()->user()->store->website }}</p> @endif
+    @if(!empty(auth()->user()->store->address))
+    <p>{{ auth()->user()->store->address }}</p> @endif
   </div>
   <main>
     @yield('content')
   </main>
   <div class="footer">
-    <!-- <p>{{\Config::get('constants.slogan')}}</p> -->
-    <p> {{\Config::get('constants.phonenumber')}} | {{\Config::get('constants.website')}}</p>
+    <p> {{ auth()->user()->store->phone ?? '' }} @if(!empty(auth()->user()->store->alternate_phone)) || {{ auth()->user()->store->alternate_phone }} @endif </p>
+    @if(!empty(auth()->user()->store->website))
+    <p>{{ auth()->user()->store->website }}</p> @endif
   </div>
 
 </body>

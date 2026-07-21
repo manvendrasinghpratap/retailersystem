@@ -228,5 +228,6 @@ require __DIR__ . '/acl.php';
 require __DIR__ . '/attendance.php';
 require __DIR__ . '/warehouse.php';
 require __DIR__ . '/masteritem.php';
+require __DIR__ . '/sessionout.php';
 
 

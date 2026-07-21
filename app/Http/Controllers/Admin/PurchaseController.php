@@ -51,7 +51,7 @@ class PurchaseController extends Controller
     {
         $date = date('Y-m-d');
         $breadcrumb = $this->breadcrumb;
-        $vendors = Vendor::ofAccount()->active()->orderBy('name', 'asc')->pluck('name', 'id');
+        $vendors = Vendor::ofAccount()->active()->orderBy('company_name', 'asc')->pluck('company_name', 'id');
         $warehouses = Warehouse::ofAccount()->active()->orderBy('name', 'asc')->pluck('name', 'id');
 
         $query = Purchase::with(['vendor', 'warehouse'])->ofAccount()->active();
@@ -59,11 +59,13 @@ class PurchaseController extends Controller
         if ($request->purchase_no) {
             $query->where('purchase_no', 'LIKE', '%' . trim($request->purchase_no) . '%');
         }
-
+        if ($request->warehouse_id) {
+            $query->where('warehouse_id', $request->warehouse_id);
+        }
         if ($request->vendor_id) {
             $query->where('vendor_id', $request->vendor_id);
         }
-        $query = Settings::applyDateRange($query,$request, 'created_at', true); 
+        $query = Settings::applyDateRange($query, $request, 'created_at', true);
 
         // PDF Export
         if ($request->has('pdf')) {
@@ -106,7 +108,7 @@ class PurchaseController extends Controller
     {
         $vendors = Vendor::ofAccount()->active()->orderBy('name', 'asc')->pluck('name', 'id');
         $warehouses = Warehouse::ofAccount()->active()->orderBy('name', 'asc')->pluck('name', 'id');
-        
+
         return view('backend.admin.purchase.form', [
             'breadcrumb' => $this->breadcrumb,
             'vendors' => $vendors,
@@ -159,20 +161,20 @@ class PurchaseController extends Controller
                 $totalAmount = 0;
 
                 foreach ($validated['items'] as $item) {
-                    $totalAmount += ((float)$item['qty'] * (float)$item['price']);
+                    $totalAmount += ((float) $item['qty'] * (float) $item['price']);
                 }
 
                 // ============================
                 // ✅ CREATE PURCHASE
                 // ============================
                 $purchase = Purchase::create([
-                    'account_id'   => $accountId,
-                    'vendor_id'    => $validated['vendor_id'],
+                    'account_id' => $accountId,
+                    'vendor_id' => $validated['vendor_id'],
                     'warehouse_id' => $validated['warehouse_id'],
-                    'purchase_no'  => $purchaseNo,
-                    'total'        => $totalAmount,
-                    'status'       => 1,
-                    'created_by'   => auth()->id()
+                    'purchase_no' => $purchaseNo,
+                    'total' => $totalAmount,
+                    'status' => 1,
+                    'created_by' => auth()->id()
                 ]);
 
                 $stockService = app(StockService::class);
@@ -183,26 +185,26 @@ class PurchaseController extends Controller
                 foreach ($validated['items'] as $item) {
 
                     $masterItemId = $item['product_id'];
-                    $qty   = (float)$item['qty'];
-                    $price = (float)$item['price'];
+                    $qty = (float) $item['qty'];
+                    $price = (float) $item['price'];
 
                     PurchaseItem::create([
-                        'purchase_id'   => $purchase->id,
-                        'master_item_id'=> $masterItemId, // ✅ IMPORTANT CHANGE
-                        'quantity'      => $qty,
-                        'cost_price'    => $price,
-                        'total'         => $qty * $price
+                        'purchase_id' => $purchase->id,
+                        'master_item_id' => $masterItemId, // ✅ IMPORTANT CHANGE
+                        'quantity' => $qty,
+                        'cost_price' => $price,
+                        'total' => $qty * $price
                     ]);
 
                     // ✅ STOCK IN
                     $stockService->moveStock([
-                        'account_id'   => $accountId,
+                        'account_id' => $accountId,
                         'warehouse_id' => $validated['warehouse_id'],
-                        'product_id'   => $masterItemId, // (can rename later internally)
-                        'type'         => 2, // Purchase IN
-                        'qty'          => $qty,
+                        'product_id' => $masterItemId, // (can rename later internally)
+                        'type' => 2, // Purchase IN
+                        'qty' => $qty,
                         'reference_id' => $purchase->id,
-                        'remarks'      => 'Purchase Entry #' . $purchaseNo
+                        'remarks' => 'Purchase Entry #' . $purchaseNo
                     ]);
                 }
 
@@ -216,14 +218,14 @@ class PurchaseController extends Controller
 
                 // ✅ Ledger Entry
                 VendorLedger::create([
-                    'account_id'   => $accountId,
-                    'vendor_id'    => $vendor->id,
-                    'type'         => 2,
+                    'account_id' => $accountId,
+                    'vendor_id' => $vendor->id,
+                    'type' => 2,
                     'reference_id' => $purchase->id,
-                    'debit'        => $totalAmount,
-                    'credit'       => 0,
-                    'balance'      => $newBalance,
-                    'remarks'      => 'Purchase #' . $purchaseNo
+                    'debit' => $totalAmount,
+                    'credit' => 0,
+                    'balance' => $newBalance,
+                    'remarks' => 'Purchase #' . $purchaseNo
                 ]);
 
                 // ✅ Update Vendor
@@ -241,7 +243,7 @@ class PurchaseController extends Controller
     }
 
 
-    
+
     /*
     |--------------------------------------------------------------------------
     | SHOW
@@ -264,15 +266,15 @@ class PurchaseController extends Controller
     */
 
     public function viewAjax($id)
-        {
-            $id = Settings::getDecodeCode($id);
+    {
+        $id = Settings::getDecodeCode($id);
 
-            $purchase = Purchase::with(['items.product', 'vendor', 'warehouse'])
-                ->where('account_id', auth()->user()->account_id)
-                ->findOrFail($id);
+        $purchase = Purchase::with(['items.product', 'vendor', 'warehouse'])
+            ->where('account_id', auth()->user()->account_id)
+            ->findOrFail($id);
 
-            return view('backend.admin.purchase._view', compact('purchase'));
-        }
+        return view('backend.admin.purchase._view', compact('purchase'));
+    }
 
     /*
     |--------------------------------------------------------------------------
@@ -348,13 +350,13 @@ class PurchaseController extends Controller
                 // =========================
                 foreach ($purchase->items as $item) {
                     $stockService->moveStock([
-                        'account_id'     => $purchase->account_id,
-                        'warehouse_id'   => $purchase->warehouse_id,
+                        'account_id' => $purchase->account_id,
+                        'warehouse_id' => $purchase->warehouse_id,
                         'master_item_id' => $item->master_item_id,
-                        'type'           => 3,
-                        'qty'            => -$item->quantity,
-                        'reference_id'   => $purchase->id,
-                        'remarks'        => 'Cancel Purchase #' . $purchase->purchase_no
+                        'type' => 3,
+                        'qty' => -$item->quantity,
+                        'reference_id' => $purchase->id,
+                        'remarks' => 'Cancel Purchase #' . $purchase->purchase_no
                     ]);
                 }
 
@@ -374,17 +376,17 @@ class PurchaseController extends Controller
                 // 3. LEDGER ENTRY (REVERSAL)
                 // =========================
                 VendorLedger::create([
-                    'account_id'   => $purchase->account_id,
-                    'vendor_id'    => $vendor->id,
+                    'account_id' => $purchase->account_id,
+                    'vendor_id' => $vendor->id,
 
                     // ✅ correct type
-                   'type' => 3, /// purchase cancel coming from types table purshase_cancel type id is 3
+                    'type' => 3, /// purchase cancel coming from types table purshase_cancel type id is 3
 
                     'reference_id' => $purchase->id,
-                    'debit'        => 0,
-                    'credit'       => $purchase->total,
-                    'balance'      => $newBalance,
-                    'remarks'      => 'Cancel Purchase #' . $purchase->purchase_no
+                    'debit' => 0,
+                    'credit' => $purchase->total,
+                    'balance' => $newBalance,
+                    'remarks' => 'Cancel Purchase #' . $purchase->purchase_no
                 ]);
 
                 // =========================

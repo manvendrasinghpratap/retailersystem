@@ -11,12 +11,8 @@
     <div class="row">
         <div class="col-12">
             <div class="card">
-
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h4 class="card-title d-inline-block">
-                        {{ __('translation.filter') }}
-                    </h4>
-
+                    <h4 class="card-title d-inline-block">{{ __('translation.filter') }}</h4>
                     <div class="d-inline-block">
                         @include('backend.components.exportpdfcsv', [
                             'pdfId' => 'downloadvendorpdf',
@@ -29,13 +25,13 @@
                         ])
                     </div>
                 </div>
-
                 <div class="card-body">
                     <form method="GET">
                         <div class="row">
-                            <x-text-input name="name" label="{{ __('translation.vendor_name') }}" value="{{ request()->get('name') ?? '' }}" mainrows="3" />
-                            <x-text-input name="phone" label="{{ __('translation.phone') }}" value="{{ request()->get('phone') ?? '' }}" mainrows="3" class="onlyinteger" />
-                            <x-select-dropdown name="status" label="{{ __('translation.status') }}" :options="config('constants.accountstatus')" :selected="request()->get('status') ?? ''" mainrows="2" />
+                            <x-text-input name="company_name" label="{{ __('translation.company_name') }}" value="{{ request()->company_name ?? '' }}" mainrows="2" />
+                            <x-text-input name="vendor_name" label="{{ __('translation.vendor_name') }}" value="{{ request()->vendor_name ?? '' }}" mainrows="2" />
+                            <x-text-input name="phone" label="{{ __('translation.phone') }}" value="{{ request()->phone ?? '' }}" mainrows="2" class="onlyinteger" />
+                            <x-select-dropdown name="status" label="{{ __('translation.status') }}" :options="config('constants.accountstatus')" :selected="request()->status ?? ''" class="accountstatus" mainrows="2" />
                             <div class="col-xl-2 col-md-2">
                                 <div class="form-group mb-3">
                                     <label class="d-inline-block w-100">&nbsp;</label>
@@ -71,8 +67,8 @@
                                 <tr>
                                     <th>#</th>
                                     <th>{{ __('translation.vendor_code') }}</th>
-                                    <th>{{ __('translation.vendor_name') }}</th>
                                     <th>{{ __('translation.company_name') }}</th>
+                                    <th>{{ __('translation.vendor_name') }}</th>
                                     <th>{{ __('translation.phone') }}</th>
                                     <th>{{ __('translation.email') }}</th>
                                     <th>{{ __('translation.opening_balance') }}</th>
@@ -87,27 +83,17 @@
                                         <tr>
                                             <td>{{ $loop->iteration }}</td>
                                             <td>{{ $vendor->vendor_code }}</td>
-                                            <td>{{ $vendor->name }}</td>
                                             <td>{{ $vendor->company_name }}</td>
+                                            <td>{{ $vendor->name }}</td>
                                             <td>{{ $vendor->phone }}</td>
                                             <td>{{ $vendor->email }}</td>
-                                            <td>
-                                                {{ __('translation.currency') }}
-                                                {{ number_format($vendor->opening_balance, 2) }}
-                                            </td>
-                                            <td>
-                                                {{ __('translation.currency') }}
-                                                {{ number_format($vendor->current_balance, 2) }}
-                                            </td>
+                                            <td>{{ __('translation.currency') }} {{ number_format($vendor->opening_balance, 2) }}</td>
+                                            <td>{{ __('translation.currency') }} {{ number_format($vendor->current_balance, 2) }}</td>
                                             <td>
                                                 @if($vendor->status == 1)
-                                                    <span class="badge bg-success">
-                                                        {{ __('translation.active') }}
-                                                    </span>
+                                                    <span class="badge bg-success">{{ __('translation.active') }}</span>
                                                 @else
-                                                    <span class="badge bg-danger">
-                                                        {{ __('translation.inactive') }}
-                                                    </span>
+                                                    <span class="badge bg-danger">{{ __('translation.inactive') }}</span>
                                                 @endif
                                             </td>
                                             <td>
@@ -120,18 +106,14 @@
                                     @endforeach
                                 @else
                                     <tr>
-                                        <td colspan="10" class="text-center">
-                                            {{ __('translation.no_data_found') }}
-                                        </td>
+                                        <td colspan="10" class="text-center">{{ __('translation.no_data_found') }}</td>
                                     </tr>
                                 @endif
                             </tbody>
                         </table>
                     </div>
                     @if(!empty($vendors) && $vendors->count() > 0)
-                        <div class="right user-navigation">
-                            {!! $vendors->appends(request()->input())->links() !!}
-                        </div>
+                        <div class="right user-navigation">{!! $vendors->appends(request()->input())->links() !!}</div>
                     @endif
                 </div>
             </div>

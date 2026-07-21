@@ -1180,3 +1180,9 @@ select:focus:invalid {
     align-items: center;
     justify-content: center;
 }
+
+.navbar-brand-box {
+    justify-content: center;
+    width: 100% !important;
+    margin: auto !important;
+}

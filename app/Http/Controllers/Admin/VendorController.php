@@ -63,8 +63,12 @@ class VendorController extends Controller
 
         $vendors = Vendor::ofAccount();
 
-        if ($request->name) {
-            $vendors->where('name', 'like', '%' . trim($request->name) . '%');
+        if ($request->vendor_name) {
+            $vendors->where('name', 'like', '%' . trim($request->vendor_name) . '%');
+        }
+
+        if ($request->company_name) {
+            $vendors->where('company_name', 'like', '%' . trim($request->company_name) . '%');
         }
 
         if ($request->phone) {
