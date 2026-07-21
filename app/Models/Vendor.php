@@ -83,4 +83,8 @@ class Vendor extends Model
     {
         $this->decrement('current_balance', $amount);
     }
+    public function scopeSort($query)
+    {
+        return $query->orderBy('name');
+    }
 }

@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Warehouse;
 use App\Models\ProductStock;
 use App\Models\MasterItem;
-use App\Models\Product;
 use App\Models\StockTransfer;
 use App\Models\StockTransferItem;
 use App\Helpers\Settings;

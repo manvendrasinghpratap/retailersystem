@@ -63,16 +63,16 @@ class Warehouse extends Model
     protected function name(): Attribute
     {
         return Attribute::make(
-            get: fn ($value) => $value ? ucwords($value) : null,
-            set: fn ($value) => $value ? strtolower(trim($value)) : null
+            get: fn($value) => $value ? ucwords($value) : null,
+            set: fn($value) => $value ? strtolower(trim($value)) : null
         );
     }
 
     protected function managerName(): Attribute
     {
         return Attribute::make(
-            get: fn ($value) => $value ? ucwords($value) : null,
-            set: fn ($value) => $value ? strtolower(trim($value)) : null
+            get: fn($value) => $value ? ucwords($value) : null,
+            set: fn($value) => $value ? strtolower(trim($value)) : null
         );
     }
 
@@ -151,5 +151,9 @@ class Warehouse extends Model
             'account_id',
             auth()->user()->account_id
         );
+    }
+    public function scopeSort($query)
+    {
+        return $query->orderBy('name');
     }
 }

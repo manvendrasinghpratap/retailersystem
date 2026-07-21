@@ -14,6 +14,7 @@ class StockReturnItem extends Model
         'qty',
         'price',
         'total',
+        'reason'
     ];
 
     /*

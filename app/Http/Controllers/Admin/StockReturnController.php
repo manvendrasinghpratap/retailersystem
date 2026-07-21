@@ -91,9 +91,9 @@ class StockReturnController extends Controller
     {
         $this->breadcrumb['route1Title'] = 'Create Stock Return';
 
-        $vendors = Vendor::ofAccount()->active()->pluck('name', 'id');
+        $vendors = Vendor::ofAccount()->active()->pluck('name', 'id')->sort();
         $products = Product::ofAccount()->active()->pluck('name', 'id');
-        $warehouses = Warehouse::ofAccount()->active()->pluck('name', 'id');
+        $warehouses = Warehouse::ofAccount()->active()->pluck('name', 'id')->sort();
 
         return view('backend.admin.stock_return.form', [
             'breadcrumb' => $this->breadcrumb,
@@ -125,6 +125,7 @@ class StockReturnController extends Controller
                 'items.*.qty' => 'required|numeric|min:0.01',
 
                 'items.*.price' => 'required|numeric|min:0.01',
+                'items.*.reason' => 'nullable|string|max:500',
             ]);
 
             DB::transaction(function () use ($validated) {
@@ -203,45 +204,32 @@ class StockReturnController extends Controller
                 // PROCESS ITEMS
                 // =========================
                 foreach ($validated['items'] as $item) {
-
                     $qty = $item['qty'];
-
                     $price = $item['price'];
-
                     // =====================
                     // SAVE RETURN ITEM
                     // =====================
                     StockReturnItem::create([
-
                         'return_id' => $return->id,
-
                         'master_item_id' => $item['master_item_id'],
-
                         'qty' => $qty,
-
                         'price' => $price,
-
-                        'total' => $qty * $price
+                        'total' => $qty * $price,
+                        'reason' => $item['reason']
                     ]);
 
                     // =====================
                     // STOCK OUT
                     // =====================
                     $stockService->moveStock([
-
                         'account_id' => $accountId,
-
                         'warehouse_id' => $validated['warehouse_id'],
-
                         'master_item_id' => $item['master_item_id'],
-
                         'type' => 5, // stock return
 
                         // IMPORTANT
                         'qty' => -$qty,
-
                         'reference_id' => $return->id,
-
                         'remarks' => 'Stock Return #' . $returnNo
                     ]);
                 }

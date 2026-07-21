@@ -2,7 +2,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-
+use Illuminate\Database\Eloquent\Casts\Attribute;
 class PurchaseItem extends Model
 {
     protected $fillable = [
@@ -19,13 +19,20 @@ class PurchaseItem extends Model
     }
 
     public function masterItem()
-{
-    return $this->belongsTo(MasterItem::class, 'master_item_id');
-}
+    {
+        return $this->belongsTo(MasterItem::class, 'master_item_id');
+    }
 
     public function purchase()
     {
         return $this->belongsTo(Purchase::class);
+    }
+    protected function quantity(): Attribute
+    {
+        return Attribute::make(
+            get: fn($value) => (int) $value,
+            set: fn($value) => (int) $value,
+        );
     }
 
 }

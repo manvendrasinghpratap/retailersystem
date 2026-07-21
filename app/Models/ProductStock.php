@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class ProductStock extends Model
 {
@@ -33,5 +34,12 @@ class ProductStock extends Model
     public function masterItem()
     {
         return $this->belongsTo(MasterItem::class);
+    }
+    protected function stock(): Attribute
+    {
+        return Attribute::make(
+            get: fn($value) => (int) $value,
+            set: fn($value) => (int) $value,
+        );
     }
 }

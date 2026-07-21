@@ -5,9 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Purchase;
 use App\Models\PurchaseItem;
-// use App\Models\Vendor;
-use App\Models\MasterItem;
-use App\Models\Product;
 use App\Models\Warehouse;
 use App\Models\Vendor;
 use App\Models\VendorLedger;
@@ -16,6 +13,7 @@ use App\Helpers\Settings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
+
 
 class PurchaseController extends Controller
 {
