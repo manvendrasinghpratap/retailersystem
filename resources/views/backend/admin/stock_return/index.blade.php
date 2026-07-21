@@ -28,8 +28,8 @@
                     <form method="GET" action="{{ route(array_key_exists('route2', $breadcrumb) ? $breadcrumb['route2'] : 'admin.stock_returns.index') }}" class="mb-3">
                         <div class="row">
                             <x-text-input name="return_no" label="{{ __('translation.return_no')}}" value="{{ request('return_no') }}" mainrows="2" />
-                            <x-select-dropdown name="vendor_id" label="{{ __('translation.vendor')}}" :options="$vendors" :selected="request()->get('vendor_id') ?? ''" class="vendor" mainrows="2" />
-                            <x-select-dropdown name="warehouse_id" label="{{ __('translation.warehouse')}}" :options="$warehouses" :selected="request()->get('warehouse_id') ?? ''" class="warehouse" mainrows="2" />
+                            <x-select-dropdown name="vendor_id" label="{{ __('translation.vendor')}}" :options="$vendors" :selected="request('vendor_id') ?? ''" class="supplier" mainrows="2" />  
+                            <x-select-dropdown name="warehouse_id" label="{{ __('translation.warehouse')}}" :options="$warehouses" :selected="request('warehouse_id') ?? ''" class="warehouse" mainrows="2" />
                             <x-text-input name="from_date" label="{{ __('translation.from_date') }}" value="{{ \App\Helpers\Settings::formatDate(request('from_date') ?? $date ?? '', Config::get('constants.dateformat.slashdmyonly')) }}" class="flatdatepickr" mainrows="2" />
                             <x-text-input name="to_date" label="{{ __('translation.to_date') }}" value="{{ \App\Helpers\Settings::formatDate(request('to_date') ?? $date ?? '', Config::get('constants.dateformat.slashdmyonly')) }}" class="flatdatepickr" mainrows="2" />
                             <x-button submitText="Filter" resetText="{{ __('translation.reset') }}" url="{{ route($breadcrumb['route2'] ?? 'admin.stock_returns.index') }}" isbutton="1" iscancel="1" mainrows="2" />
