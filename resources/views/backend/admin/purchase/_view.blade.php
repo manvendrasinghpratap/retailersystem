@@ -20,20 +20,20 @@
         <div class="row mt-2">
             <div class="col-6">
                 <small class="text-muted">{{ __('translation.vendor') }}</small>
-                <div>{{ $purchase->vendor->company_name ?? 'N/A' }}</div>
-                <div>{{ $purchase->vendor->name ?? 'N/A' }}</div>
-                <div>{{ $purchase->vendor->address ?? 'N/A' }}</div>
-                <div>{{ __('translation.phone') }}:{{ $purchase->vendor->phone ?? 'N/A' }}</div>
+                <div><strong>{{__('translation.company_name')}}:</strong>{{ $purchase->vendor->company_name ?? 'N/A' }}</div>
+                <div><strong>{{ __('translation.managed_by') }}:</strong>{{ $purchase->vendor->name ?? 'N/A' }}</div>
+                <div><strong>{{ __('translation.address') }}:</strong> {{ $purchase->vendor->address ?? 'N/A' }}</div>
+                <div><strong>{{ __('translation.phone') }}:</strong>{{ $purchase->vendor->phone ?? 'N/A' }}</div>
             </div>
 
             <div class="col-6 text-end">
                 <small class="text-muted">{{ __('translation.warehouse') }}</small>
                 @if($purchase->warehouse->staff)
-                    <div>{{ $purchase->warehouse->staff->name ?? '--' }}</div>
+                    <div><strong>{{__('translation.managed_by')}}:</strong> {{ $purchase->warehouse->staff->name ?? '--' }}</div>
                 @endif
-                <div>{{ $purchase->warehouse->name ?? 'N/A' }}</div>
-                <div>{{ $purchase->warehouse->address ?? 'N/A' }}</div>
-                <div>{{ $purchase->warehouse->phone ?? 'N/A' }}</div>
+                <div><strong>{{ __('translation.name') }}:</strong>{{ $purchase->warehouse->name ?? 'N/A' }}</div>
+                <div><strong>{{ __('translation.address') }}:</strong> {{ $purchase->warehouse->address ?? 'N/A' }}</div>
+                <div><strong>{{ __('translation.phone') }}:</strong>{{ $purchase->warehouse->phone ?? 'N/A' }}</div>
             </div>
         </div>
     </div>
@@ -44,8 +44,8 @@
             <thead class="table-light">
                 <tr>
                     <th>{{ __('translation.product') }}</th>
-                    <th width="80" class="text-center">{{ __('translation.quantity') }}</th>
-                    <th width="120" class="text-end">{{ __('translation.price') }}</th>
+                    <th width="10%" class="text-center">{{ __('translation.quantity') }}</th>
+                    <th width="20%" class="text-end">{{ __('translation.price') }}</th>
                     <th width="20%" class="text-end">{{ __('translation.total') }}</th>
                 </tr>
             </thead>

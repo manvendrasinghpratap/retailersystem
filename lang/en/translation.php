@@ -636,4 +636,7 @@ return [
     'purchase_returns' => 'Purchase Returns',
     'business_partners' => 'Business Partners',
     'total' => 'Totals',
+    'no_items_available' => 'No Items Available',
+    'managed_by' => 'Managed by',
+    'total_quantity' => 'Total Quantity',
 ];

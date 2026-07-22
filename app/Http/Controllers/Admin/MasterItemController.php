@@ -7,6 +7,7 @@ use App\Models\MasterItem;
 use Illuminate\Http\Request;
 use App\Helpers\Settings;
 use Illuminate\Database\QueryException;
+use PDF;
 
 class MasterItemController extends Controller
 {
@@ -47,11 +48,55 @@ class MasterItemController extends Controller
             ->when($request->filled('status'), function ($q) use ($request) {
                 $q->where('status', $request->status);
             })
-            ->latest()
-            ->paginate(config('constants.pagination'));
+            ->latest();
+        if ($request->pdf) {
+            $items = $items->get();
+            $pdfHeaderdata = \Config::get('constants.downloadmasteritempdf');
+            $pdf = Pdf::loadView('backend.pdf.master_items.itempdf', compact('items', 'pdfHeaderdata'));
+            $pdf = Settings::downloadpdf($pdf);
+            $fileName = $pdfHeaderdata['filename'] . '-' . date('Y-m-d') . '.pdf';
+            return $pdf->stream($fileName);
+        } elseif ($request->has('csv')) {
+            $items = $items->get();
+            $csvHeaderdata = \Config::get('constants.downloadproductpdf');
+            $fileName = $csvHeaderdata['filename'] . '-' . date('Y-m-d') . '.csv';
+            $data = [];
+            $ii = $i = 0;
+            // ✅ Header Row
+            $data[$ii] = [
+                '#',
+                __('translation.code'),
+                __('translation.name'),
+                __('translation.description'),
+                __('translation.status'),
+            ];
 
+            foreach ($items as $item) {
+                $data[++$ii] = [
+                    $ii,
+                    $item->code,
+                    $item->name,
+                    $item->description,
+                    $item->status == 1 ? __('translation.active') : __('translation.inactive'),
+                ];
+            }
+
+            return Settings::downloadcsvfile($data, $fileName);
+        }
+        $items = $items->paginate(account_setting('general.pagination'));
         return view('backend.admin.master_items.index', compact('items', 'breadcrumb'));
 
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $request->merge(['pdf' => 1]);
+        return $this->index($request);
+    }
+    public function exportCsv(Request $request)
+    {
+        $request->merge(['csv' => 1]);
+        return $this->index($request);
     }
 
     public function create()

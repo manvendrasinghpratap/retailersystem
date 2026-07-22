@@ -79,7 +79,7 @@
                                     <td>{{ $req->requisition_no }}</td>
                                     <td>{{ $req->fromWarehouse->name ?? '-' }}</td>
                                     <td>{{ $req->store->name ?? '-' }}</td>
-                                    <td>{{ number_format($req->total_qty, 2) }}</td>
+                                    <td>{{ $req->total_qty }}</td>
                                     <td>
                                         @if($req->status == 3)
                                             <span class="badge bg-success">{{ __('translation.moved_to_store') }}</span>

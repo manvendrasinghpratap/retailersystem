@@ -11,8 +11,8 @@
                     <h4 class="card-title d-inline-block">{{ __('translation.filter') }}</h4>
                     <div class="d-inline-block">
                         @include('backend.components.exportpdfcsv', [
-                            'showPdf'=>false,
-                            'showCsv'=>false,
+                            'showPdf'=>true,
+                            'showCsv'=>true,
                             'pdfId' =>'downloadmasteritempdf',    
                             'pdfRoute' => route('admin.master_items.exportPdf'),
                             'pdfClass' => 'downloadmasteritempdf',
@@ -53,8 +53,8 @@
                                 <tr>
                                 <th>#</th>
                                 <th>{{ __('translation.image') }}</th>
-                                <th>{{ __('translation.name') }}</th>
                                 <th>{{ __('translation.code') }}</th>
+                                <th>{{ __('translation.name') }}</th>
                                 <th>{{ __('translation.description') }}</th>
                                 <th>{{ __('translation.status') }}</th>
                                 <th>{{ __('translation.action') }}</th>
@@ -64,11 +64,9 @@
                             @foreach($items as $item)
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
-                                <td>
-                                    <img src="{{ (!empty($item->image) && file_exists(public_path('uploads/master_item/small/' . $item->image))) ? asset('uploads/master_item/small/' . $item->image) : asset('assets/images/no-image.png') }}" width="80" height="60" alt="Master Item Image">
-                                </td>
-                                <td>{{ $item->name }}</td>
+                                <td> <img src="{{ (!empty($item->image) && file_exists(public_path(Config::get('main_constants.image_path') . $item->image))) ? asset(Config::get('main_constants.image_path') . $item->image) : asset(Config::get('main_constants.no_image')) }}" width="80" height="60" alt="Master Item Image"></td>
                                 <td>{{ $item->code }}</td>
+                                <td>{{ $item->name }}</td>
                                 <td>{{ $item->description }}</td>
                                 <td>
                                     <span class="badge {{ $item->status ? 'bg-success':'bg-danger' }}">

@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-
+use Illuminate\Database\Eloquent\Casts\Attribute;
 class Requisition extends Model
 {
     protected $table = 'requisitions';
@@ -15,8 +15,8 @@ class Requisition extends Model
     */
 
     const STATUS_CANCELLED = 0;
-    const STATUS_ACTIVE    = 1;
-    const STATUS_PARTIAL   = 2;
+    const STATUS_ACTIVE = 1;
+    const STATUS_PARTIAL = 2;
     const STATUS_COMPLETED = 3;
 
     /*
@@ -43,9 +43,9 @@ class Requisition extends Model
     */
 
     protected $casts = [
-        'date'      => 'date',
+        'date' => 'date',
         'total_qty' => 'decimal:2',
-        'status'    => 'integer',
+        'status' => 'integer',
     ];
 
     /*
@@ -114,19 +114,19 @@ class Requisition extends Model
         return match ($this->status) {
 
             self::STATUS_ACTIVE =>
-                'Active',
+            'Active',
 
             self::STATUS_PARTIAL =>
-                'Partial To Store',
+            'Partial To Store',
 
             self::STATUS_COMPLETED =>
-                'Moved To Store',
+            'Moved To Store',
 
             self::STATUS_CANCELLED =>
-                'Cancelled',
+            'Cancelled',
 
             default =>
-                'Unknown',
+            'Unknown',
         };
     }
 
@@ -207,5 +207,13 @@ class Requisition extends Model
         $this->update([
             'status' => 3
         ]);
+    }
+
+    protected function totalQty(): Attribute
+    {
+        return Attribute::make(
+            get: fn($value) => (int) $value,
+            set: fn($value) => (int) $value,
+        );
     }
 }
