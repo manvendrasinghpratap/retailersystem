@@ -91,7 +91,7 @@
                                     @endforeach
                                 @else
                                     <tr>
-                                        <td colspan="7" class="text-center">No Product Available</td>
+                                        <td colspan="9" class="text-center">{{ __('translation.no_product_available') }}</td>
                                     </tr>
                                 @endif
                             </tbody>

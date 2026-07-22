@@ -639,4 +639,7 @@ return [
     'no_items_available' => 'No Items Available',
     'managed_by' => 'Managed by',
     'total_quantity' => 'Total Quantity',
+    'no_product_available' => 'No Product Available',
+    'createdat' => 'Created At',
+    'store' => 'Store',
 ];

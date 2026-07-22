@@ -105,8 +105,6 @@ class CategoryController extends Controller
                 '#',
                 __('translation.category_name'),
                 __('translation.description'),
-                __('translation.slug'),
-                __('translation.image'),
                 __('translation.status'),
                 __('translation.createdat'),
             ];
@@ -116,9 +114,7 @@ class CategoryController extends Controller
                     $ii,
                     $customer->name,
                     $customer->description,
-                    $customer->slug,
-                    $customer->image,
-                    $customer->status,
+                    ($customer->status == 1) ? __('translation.active') : __('translation.inactive'),
                     $customer->created_at,
                 ];
             }
@@ -126,7 +122,7 @@ class CategoryController extends Controller
         }
 
 
-        $categories = $categories->paginate(config('constants.pagination'));
+        $categories = $categories->paginate(account_setting('general.pagination'));
         $status = config('constants.accountstatus');
 
         return view('backend.admin.category.index', compact('categories', 'breadcrumb', 'status'));

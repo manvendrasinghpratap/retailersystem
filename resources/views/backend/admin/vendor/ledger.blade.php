@@ -17,11 +17,11 @@
                 <div class="card-title-right">
                     @include('backend.components.exportpdfcsv', [
                         'pdfId' => 'downloadpdf',
-                        'pdfRoute' => route('admin.vendors.exportPdf', ['id' => $vendor->id]),
+                        'pdfRoute' => route('admin.vendors.ledger.pdf', ['id' => \App\Helpers\Settings::getEncodeCode($vendor->id)]),
                         'pdfClass' => 'downloadpdf',
                         'pdfLabel' => __('translation.pdf'),
                         'csvId' => 'downloadcsv',
-                        'csvRoute' => route('admin.vendors.exportCsv', ['vendor' => $vendor->id]),
+                        'csvRoute' => route('admin.vendors.ledger.csv', ['id' => \App\Helpers\Settings::getEncodeCode($vendor->id)]),
                         'csvClass' => 'downloadcsv',
                         'csvLabel' => __('translation.csv'),
                     ])
@@ -32,15 +32,18 @@
 
                 {{-- Vendor Info --}}
                 <div class="row mb-3">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
+                            <strong>{{ __('translation.company_name') }}:</strong> {{ $vendor->company_name }}
+                        </div>
+                    <div class="col-md-3">
                         <strong>{{ __('translation.name') }}:</strong> {{ $vendor->name }}
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <strong>{{ __('translation.phone') }}:</strong> {{ $vendor->phone }}
                     </div>
 
-                    <div class="col-md-4 text-end">
+                    <div class="col-md-3 text-end">
                         <strong>{{ __('translation.current_balance') }}:</strong>
                         {{ __('translation.currency') }}
                         {{ number_format($vendor->current_balance,2) }}

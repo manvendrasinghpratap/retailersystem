@@ -136,6 +136,7 @@ Route::middleware(['auth', 'route.permission', 'subscription'])->prefix('admin')
     Route::post('/vendors/status-update', [VendorController::class, 'statusUpdate'])->name('admin.vendors.statusUpdate');
     Route::get('/vendors/export-pdf', [VendorController::class, 'exportPdf'])->name('admin.vendors.exportPdf');
     Route::get('/vendors/export-csv', [VendorController::class, 'exportExcel'])->name('admin.vendors.exportCsv');
+
     /*
         |--------------------------------------------------------------------------
         | Vendor Payment Routes
@@ -156,8 +157,9 @@ Route::middleware(['auth', 'route.permission', 'subscription'])->prefix('admin')
     |--------------------------------------------------------------------------
     */
 
-    Route::get('/vendors/ledger/{id}', [VendorController::class, 'ledger'])
-        ->name('admin.vendors.ledger');
+    Route::get('/vendors/ledger/{id}', [VendorController::class, 'ledger'])->name('admin.vendors.ledger');
+    Route::get('/vendors/ledger/{id}/export-pdf', [VendorController::class, 'ledgerExportPdf'])->name('admin.vendors.ledger.pdf');
+    Route::get('/vendors/ledger/{id}/export-csv', [VendorController::class, 'ledgerExportCsv'])->name('admin.vendors.ledger.csv');
 });
 
 

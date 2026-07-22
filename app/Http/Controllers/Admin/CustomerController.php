@@ -16,7 +16,6 @@ class CustomerController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
-
         $this->breadcrumbAddNew = [
             'title' => __('translation.customers'),
             'breadcrumb' => [
@@ -69,7 +68,10 @@ class CustomerController extends Controller
     }
 
     /**
-     * Customer Listing
+     * @desc function to fetch customer listing
+     * @param Request $request
+     * @author manvendra <[EMAIL_ADDRESS]>
+     * @date 2026-07-23
      */
     public function index(Request $request)
     {
@@ -123,23 +125,34 @@ class CustomerController extends Controller
                     $customer->phone,
                     $customer->email,
                     $customer->wallet_balance,
-                    $customer->status,
+                    ($customer->status == 1) ? __('translation.active') : __('translation.inactive'),
                     !empty($customer->created_at) ? "\t" . Settings::getFormattedDatetime($customer->created_at) : '-',
                 ];
             }
             return Settings::downloadcsvfile($data, $fileName);
         }
-        $customers = $customers->paginate(config('constants.pagination'));
+        $customers = $customers->paginate(account_setting('general.pagination'));
         $status = config('constants.accountstatus');
         return view('backend.admin.customers.index', compact('customers', 'breadcrumb', 'status'));
     }
 
 
+    /**
+     * @desc function to export customer list
+     * @author manvendra <[EMAIL_ADDRESS]>
+     * @date 2026-07-23
+     */
     public function exportPdf(Request $request)
     {
         $request->merge(['pdf' => 1]);
         return $this->index($request);
     }
+
+    /**
+     * @desc function to export customer list
+     * @author manvendra <[EMAIL_ADDRESS]>
+     * @date 2026-07-23
+     */
     public function exportCsv(Request $request)
     {
         $request->merge(['csv' => 1]);
@@ -147,7 +160,9 @@ class CustomerController extends Controller
     }
 
     /**
-     * Create Page
+     * @desc function to create customer
+     * @author manvendra <[EMAIL_ADDRESS]>
+     * @date 2026-07-23
      */
     public function create()
     {
@@ -157,7 +172,9 @@ class CustomerController extends Controller
     }
 
     /**
-     * Store Customer
+     * @desc function to store customer
+     * @author manvendra <[EMAIL_ADDRESS]>
+     * @date 2026-07-23
      */
     public function store(Request $request)
     {
@@ -189,7 +206,9 @@ class CustomerController extends Controller
     }
 
     /**
-     * Edit Customer
+     * @desc function to edit customer
+     * @author manvendra <[EMAIL_ADDRESS]>
+     * @date 2026-07-23
      */
     public function edit($id)
     {
@@ -212,7 +231,9 @@ class CustomerController extends Controller
     }
 
     /**
-     * Update Customer
+     * @desc function to update customer
+     * @author manvendra <[EMAIL_ADDRESS]>
+     * @date 2026-07-23
      */
     public function update(Request $request)
     {
@@ -248,7 +269,9 @@ class CustomerController extends Controller
     }
 
     /**
-     * Soft Delete
+     * @desc function to soft delete customer
+     * @author manvendra <[EMAIL_ADDRESS]>
+     * @date 2026-07-23
      */
     public function softdelete(Request $request)
     {
@@ -275,7 +298,9 @@ class CustomerController extends Controller
     }
 
     /**
-     * Status Update (AJAX)
+     * @desc function to update customer status
+     * @author manvendra <[EMAIL_ADDRESS]>
+     * @date 2026-07-23
      */
     public function statusUpdate(Request $request)
     {
@@ -302,7 +327,9 @@ class CustomerController extends Controller
     }
 
     /**
-     * Hard Delete (Optional)
+     * @desc function to delete customer
+     * @author manvendra <[EMAIL_ADDRESS]>
+     * @date 2026-07-23
      */
     public function destroy($id)
     {
@@ -317,6 +344,11 @@ class CustomerController extends Controller
             ->with('success', 'Customer permanently deleted.');
     }
 
+    /**
+     * @desc function to find customer by phone
+     * @author manvendra <[EMAIL_ADDRESS]>
+     * @date 2026-07-23
+     */
     public function findByPhone(Request $request)
     {
         $customer = Customer::where('account_id', auth()->user()->account_id)
@@ -329,6 +361,11 @@ class CustomerController extends Controller
         ]);
     }
 
+    /**
+     * @desc function to update customer
+     * @author manvendra <[EMAIL_ADDRESS]>
+     * @date 2026-07-23
+     */
     public function updateByPhone(Request $request)
     {
         $request->validate([
@@ -350,6 +387,11 @@ class CustomerController extends Controller
         ]);
     }
 
+    /**
+     * @desc function to store customer
+     * @author manvendra <[EMAIL_ADDRESS]>
+     * @date 2026-07-23
+     */
     public function quickStore(Request $request)
     {
         $customer = Customer::create([

@@ -7,10 +7,11 @@
                 <th>#</th>
                 <th>{{ __('translation.category')}}</th>
                 <th>{{ __('translation.product_name')}}</th>
+                <th>{{ __('translation.description') }}</th>
+                <th>{{ __('translation.sku')}}</th>
                 <th>{{ __('translation.selling_price') }}</th>
                 <th>{{ __('translation.barcode')}}</th>
-                <th>{{ __('translation.sku')}}</th>
-                <th>{{ __('translation.status')}}</th>
+                <th>{{ __('translation.status') }}</th>
             </tr>
         </thead>
 
@@ -21,9 +22,10 @@
                         <td>{{ $loop->iteration }}</td>
                         <td>{{ $p->category->name ?? '-' }}</td>
                         <td>{{ $p->name }}</td>
+                        <td>{{ $p->description }}</td>
+                        <td>{{ $p->sku }}</td>
                         <td>{{ $p->selling_price }}</td>
                         <td><img src="data:image/png;base64,{{ DNS1D::getBarcodePNG($p->barcode, 'C128') }}" style="width:120px; height:40px;" /><br>{{$p->barcode}}</td>
-                        <td>{{ $p->sku }}</td>
                         <td>
                             @if($p->status == 1)
                                 <span class="badge bg-success">{{ __('translation.active') }}</span>
@@ -35,7 +37,7 @@
                 @endforeach
             @else
                 <tr>
-                    <td colspan="7" class="text-center">No Product Available</td>
+                    <td colspan="8" class="text-center">{{ __('translation.no_product_available') }}</td>
                 </tr>
             @endif
         </tbody>

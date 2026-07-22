@@ -50,10 +50,9 @@
                             <thead>
                                 <tr>
                                     <th>#</th>
-                                    <th>{{__('translation.category_name')}}</th>
-                                    <th>{{__('translation.description')}}</th>
-                                    <th>{{__('translation.slug')}}</th>
                                     <th>{{__('translation.image')}}</th>
+                                    <th>{{__('translation.category_name')}}</th>
+                                    <th>{{__('translation.description')}}
                                     <th>{{__('translation.status')}}</th>
                                     <th>{{__('translation.createdat')}}</th>
                                     <th>{{__('translation.actions')}}</th>
@@ -64,17 +63,14 @@
                                     @foreach($categories as $categoriesType)
                                         <tr>
                                             <td>{{ $loop->iteration }}</td>
+                                            <td><img src="{{ (!empty($categoriesType->image) && file_exists(public_path('uploads/categories/small/' . $categoriesType->image))) ? asset('uploads/categories/small/'. $categoriesType->image) : asset(Config::get('main_constants.no_image')) }}" width="80" height="60" alt="Category Image"></td>
                                             <td>{{ $categoriesType->name }}</td>
                                             <td>{{ substr($categoriesType->description, 0, 50) }}</td>
-                                            <td>{{ $categoriesType->slug }}</td>
-                                            <td>
-                                                <img src="{{ (!empty($categoriesType->image) && file_exists(public_path('uploads/categories/small/' . $categoriesType->image))) ? asset('uploads/categories/small/' . $categoriesType->image) : asset('assets/images/no-image.png') }}" width="80" height="60" alt="Category Image">
-                                            </td>
                                             <td>
                                                 @if($categoriesType->status == 1)
-                                                    <span class="badge bg-success">Active</span>
+                                                    <span class="badge bg-success">{{ __('translation.active') }}</span>
                                                 @else
-                                                    <span class="badge bg-danger">Inactive</span>
+                                                    <span class="badge bg-danger">{{ __('translation.inactive') }}</span>
                                                 @endif
                                             </td>
                                             <td>{{ App\Helpers\Settings::getFormattedDatetime($categoriesType->created_at)}}</td>

@@ -13,6 +13,7 @@ use App\Models\LocalGovernment;
 use App\Models\Countries;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use PDF;
 
 class VendorController extends Controller
 {
@@ -55,14 +56,14 @@ class VendorController extends Controller
     |--------------------------------------------------------------------------
     | Vendor List
     |--------------------------------------------------------------------------
+    @author Manvendra Pratap Singh
+    @description This function is used to display the list of vendors
+    @function index
     */
-
     public function index(Request $request)
     {
         $breadcrumb = $this->breadcrumbListing;
-
         $vendors = Vendor::ofAccount();
-
         if ($request->vendor_name) {
             $vendors->where('name', 'like', '%' . trim($request->vendor_name) . '%');
         }
@@ -70,23 +71,67 @@ class VendorController extends Controller
         if ($request->company_name) {
             $vendors->where('company_name', 'like', '%' . trim($request->company_name) . '%');
         }
-
         if ($request->phone) {
             $vendors->where('phone', 'like', '%' . trim($request->phone) . '%');
         }
-
         if ($request->status !== '' && $request->status !== null) {
             $vendors->where('status', $request->status);
         }
+        $vendors = $vendors->latest();
 
-        $vendors = $vendors->latest()->paginate(config('constants.pagination'));
+        if ($request->has('pdf')) {
+            $vendors = $vendors->get();
+            $pdfHeaderdata = \Config::get('constants.vendorListpdf');
+            $pdf = PDF::loadView('backend.pdf.vendors.vendorListpdf', compact('vendors', 'pdfHeaderdata', 'breadcrumb'));
+            $pdf = Settings::downloadLandscapepdf($pdf);
+            $fileName = $pdfHeaderdata['filename'] . '-' . date('Y-m-d') . '.pdf';
+            return $pdf->stream($fileName);
 
-        return view('backend.admin.vendor.index', compact(
-            'vendors',
-            'breadcrumb'
-        ));
+        } elseif ($request->has('csv')) {
+            $vendors = $vendors->get();
+            $csvHeaderdata = \Config::get('constants.vendorListpdf');
+            $fileName = $csvHeaderdata['filename'] . '-' . date('Y-m-d') . '.csv';
+            $data = [];
+            $ii = $i = 0;
+            // ✅ Header Row
+            $data[$ii] = [
+                '#',
+                __('translation.vendor_code'),
+                __('translation.company_name'),
+                __('translation.vendor_name'),
+                __('translation.phone'),
+                __('translation.email'),
+                __('translation.currency') . ' ' . __('translation.opening_balance'),
+                __('translation.currency') . ' ' . __('translation.current_balance'),
+                __('translation.status'),
+                __('translation.createdat'),
+            ];
+
+            foreach ($vendors as $vendor) {
+                $data[++$ii] = [
+                    $ii,
+                    $vendor->vendor_code,
+                    $vendor->company_name,
+                    $vendor->name,
+                    ' ' . $vendor->phone,
+                    ' ' . $vendor->email,
+                    __('translation.currency') . ' ' . Settings::getcustomnumberformat($vendor->opening_balance),
+                    __('translation.currency') . ' ' . Settings::getcustomnumberformat($vendor->current_balance),
+                    ($vendor->status == 1) ? __('translation.active') : __('translation.inactive'),
+                    Settings::getFormattedDatetime($vendor->created_at),
+                ];
+            }
+            return Settings::downloadcsvfile($data, $fileName);
+        }
+        $vendors = $vendors->paginate(account_setting('general.pagination'));
+        return view('backend.admin.vendor.index', compact('vendors', 'breadcrumb'));
     }
 
+    /*
+    @author Manvendra Pratap Singh
+    @description This function is used to export the list of vendors to PDF
+    @function exportPdf
+    */
     public function exportPdf(Request $request)
     {
         $request->merge([
@@ -96,21 +141,25 @@ class VendorController extends Controller
         return $this->index($request);
     }
 
+    /*
+    @author Manvendra Pratap Singh
+    @description This function is used to export the list of vendors to Excel
+    @function exportExcel
+    */
     public function exportExcel(Request $request)
     {
         $request->merge([
-            'excel' => 1,
+            'csv' => 1,
             'account_id' => auth()->user()->account_id,
         ]);
         return $this->index($request);
     }
 
     /*
-    |--------------------------------------------------------------------------
-    | Create Vendor Form
-    |--------------------------------------------------------------------------
+    @author Manvendra Pratap Singh
+    @description This function is used to display the form for creating a new vendor
+    @function create
     */
-
     public function create()
     {
         $state = State::getList();
@@ -120,11 +169,10 @@ class VendorController extends Controller
     }
 
     /*
-    |--------------------------------------------------------------------------
-    | Store Vendor
-    |--------------------------------------------------------------------------
+    @author Manvendra Pratap Singh
+    @description This function is used to store a new vendor
+    @function store
     */
-
     public function store(Request $request)
     {
         $request->validate([
@@ -178,9 +226,9 @@ class VendorController extends Controller
     }
 
     /*
-    |--------------------------------------------------------------------------
-    | Edit Vendor
-    |--------------------------------------------------------------------------
+    @author Manvendra Pratap Singh
+    @description This function is used to edit a vendor
+    @function edit
     */
 
     public function edit($id)
@@ -200,9 +248,9 @@ class VendorController extends Controller
     }
 
     /*
-    |--------------------------------------------------------------------------
-    | Update Vendor
-    |--------------------------------------------------------------------------
+    @author Manvendra Pratap Singh
+    @description This function is used to update a vendor
+    @function update
     */
 
     public function update(Request $request)
@@ -236,9 +284,9 @@ class VendorController extends Controller
     }
 
     /*
-    |--------------------------------------------------------------------------
-    | Vendor Payment Form
-    |--------------------------------------------------------------------------
+    @author Manvendra Pratap Singh
+    @description This function is used to display the form for vendor payment
+    @function paymentForm
     */
 
     public function paymentForm($id)
@@ -253,9 +301,9 @@ class VendorController extends Controller
     }
 
     /*
-    |--------------------------------------------------------------------------
-    | Save Vendor Payment
-    |--------------------------------------------------------------------------
+    @author Manvendra Pratap Singh
+    @description This function is used to save vendor payment
+    @function paymentStore
     */
 
     public function paymentStore(Request $request)
@@ -309,12 +357,11 @@ class VendorController extends Controller
     }
 
     /*
-    |--------------------------------------------------------------------------
-    | Vendor Ledger
-    |--------------------------------------------------------------------------
+    @author Manvendra Pratap Singh
+    @description This function is used to display the vendor ledger
+    @function ledger
     */
-
-    public function ledger($id)
+    public function ledger($id, $type = null)
     {
         $breadcrumb = $this->breadcrumbListing;
         $breadcrumb['title'] = __('translation.vendor_ledger');
@@ -325,26 +372,84 @@ class VendorController extends Controller
         ];
 
         $id = Settings::getDecodeCode($id);
+        try {
+            $vendor = Vendor::where('account_id', auth()->user()->account_id)->findOrFail($id);
+            $types = Type::active()->pluck('name', 'id')->toArray();
+            $ledgers = VendorLedger::where('vendor_id', $vendor->id)->latest();
+            if ($type == 'pdf') {
+                $ledgers = $ledgers->get();
+                $pdfHeaderdata = \Config::get('constants.vendorLedgerListpdf');
+                $pdf = PDF::loadView('backend.pdf.vendors.vendorLedgerListpdf', compact('ledgers', 'pdfHeaderdata', 'breadcrumb', 'types', 'vendor'));
+                $pdf = Settings::downloadpdf($pdf);
+                $fileName = $pdfHeaderdata['filename'] . '-' . date('Y-m-d') . '.pdf';
+                return $pdf->stream($fileName);
+            }
+            if ($type == 'csv') {
+                $ledgers = $ledgers->get();
+                $csvHeaderdata = \Config::get('constants.vendorLedgerListpdf');
+                $fileName = $csvHeaderdata['filename'] . '-' . date('Y-m-d') . '.csv';
+                $data = [];
+                $ii = $i = $y = 0;
 
-        $vendor = Vendor::where('account_id', auth()->user()->account_id)
-            ->findOrFail($id);
+                $data[$ii] = [
+                    __('translation.company_name'),
+                    __('translation.name'),
+                    __('translation.phone'),
+                    __('translation.currency') . ' ' . __('translation.current_balance'),
+                ];
+                $data[++$ii] = [
+                    $vendor->company_name,
+                    $vendor->name,
+                    ' ' . $vendor->phone,
+                    __('translation.currency') . ' ' . Settings::getcustomnumberformat($vendor->current_balance),
+                ];
+                $data[++$ii] = [''];
+                $data[++$ii] = [''];
+                ++$ii;
+                $data[++$ii] = [
+                    '#',
+                    __('translation.date'),
+                    __('translation.type'),
+                    __('translation.currency') . ' ' . __('translation.debit'),
+                    __('translation.currency') . ' ' . __('translation.credit'),
+                    __('translation.currency') . ' ' . __('translation.balance'),
+                    __('translation.remarks'),
+                ];
 
-        $types = Type::active()->pluck('name', 'id')->toArray();
-        $ledgers = VendorLedger::where('vendor_id', $vendor->id)
-            ->latest()
-            ->paginate(config('constants.pagination'));
-        return view('backend.admin.vendor.ledger', compact(
-            'vendor',
-            'ledgers',
-            'breadcrumb',
-            'types'
-        ));
+                foreach ($ledgers as $ledger) {
+                    $data[++$ii] = [
+                        ++$y,
+                        Settings::getFormattedDatetime($ledger->created_at),
+                        $types[$ledger->type],
+                        __('translation.currency') . ' ' . Settings::getcustomnumberformat($ledger->debit),
+                        __('translation.currency') . ' ' . Settings::getcustomnumberformat($ledger->credit),
+                        __('translation.currency') . ' ' . Settings::getcustomnumberformat($ledger->balance),
+                        $ledger->remarks,
+                    ];
+                }
+                return Settings::downloadcsvfile($data, $fileName);
+            }
+
+            $ledgers = $ledgers->paginate(account_setting('general.pagination'));
+            return view('backend.admin.vendor.ledger', compact('vendor', 'ledgers', 'breadcrumb', 'types'));
+        } catch (e) {
+            return redirect()->route('admin.vendors.index');
+        }
+    }
+
+    public function ledgerExportPdf($id)
+    {
+        return $this->ledger($id, 'pdf');
+    }
+    public function ledgerExportCsv($id)
+    {
+        return $this->ledger($id, 'csv');
     }
 
     /*
-    |--------------------------------------------------------------------------
-    | Soft Delete
-    |--------------------------------------------------------------------------
+    @author Manvendra Pratap Singh
+    @description This function is used to soft delete a vendor
+    @function softdelete
     */
 
     public function softdelete(Request $request)
@@ -361,9 +466,9 @@ class VendorController extends Controller
     }
 
     /*
-    |--------------------------------------------------------------------------
-    | Status Update
-    |--------------------------------------------------------------------------
+    @author Manvendra Pratap Singh
+    @description This function is used to update the status of a vendor
+    @function statusUpdate
     */
 
     public function statusUpdate(Request $request)

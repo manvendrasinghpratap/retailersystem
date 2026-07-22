@@ -39,12 +39,9 @@
                                     <x-filter-href-button name="reset" href="{!! !empty($breadcrumb['route2']) ? route($breadcrumb['route2']) : '' !!}" label="Reset" />
                                 </div>
                             </div>
-
                         </div>
-
                     </form>
                 </div>
-
             </div>
         </div>
     </div>
@@ -53,7 +50,6 @@
     <div class="row">
         <div class="col-12">
             <div class="card">
-
                 <div class="card-header">
                     <h4 class="card-title">
                         {{ array_key_exists('title', $breadcrumb) ? $breadcrumb['title'] : '' }}
@@ -87,8 +83,8 @@
                                             <td>{{ $vendor->name }}</td>
                                             <td>{{ $vendor->phone }}</td>
                                             <td>{{ $vendor->email }}</td>
-                                            <td>{{ __('translation.currency') }} {{ number_format($vendor->opening_balance, 2) }}</td>
-                                            <td>{{ __('translation.currency') }} {{ number_format($vendor->current_balance, 2) }}</td>
+                                            <td>{{ __('translation.currency') }} {{ App\Helpers\Settings::getcustomnumberformat($vendor->opening_balance) }}</td>
+                                            <td>{{ __('translation.currency') }} {{ App\Helpers\Settings::getcustomnumberformat($vendor->current_balance) }}</td> 
                                             <td>
                                                 @if($vendor->status == 1)
                                                     <span class="badge bg-success">{{ __('translation.active') }}</span>

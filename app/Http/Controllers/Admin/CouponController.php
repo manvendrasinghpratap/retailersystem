@@ -127,7 +127,7 @@ class CouponController extends Controller
             return Settings::downloadcsvfile($data, $fileName);
         }
 
-        $coupons = $coupons->paginate(config('constants.pagination'));
+        $coupons = $coupons->paginate(account_setting('general.pagination'));
 
         return view('backend.admin.coupon.index', compact('coupons', 'breadcrumb'));
     }

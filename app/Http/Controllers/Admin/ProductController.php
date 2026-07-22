@@ -24,14 +24,10 @@ class ProductController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
-
         $this->middleware(function ($request, $next) {
-
-            $role = Settings::getUserRole(); // admin / staff / etc.
-
+            $role = Settings::getUserRole();
             $this->breadcrumbAddNew = [
                 'title' => __('translation.product'),
-
                 'breadcrumb' => [
                     [
                         'route' => 'admin.dashboard',
@@ -102,7 +98,6 @@ class ProductController extends Controller
      * @description Show list of products
      * @access      public
      * @param       Request $request
-     * @return      View
      */
     public function index(Request $request)
     {
@@ -123,7 +118,7 @@ class ProductController extends Controller
             $products = $products->get();
             $pdfHeaderdata = \Config::get('constants.downloadproductpdf');
             $pdf = Pdf::loadView('backend.pdf.products.productpdf', compact('products', 'pdfHeaderdata'));
-            $pdf = Settings::downloadpdf($pdf);
+            $pdf = Settings::downloadLandscapePdf($pdf);
             $fileName = $pdfHeaderdata['filename'] . '-' . date('Y-m-d') . '.pdf';
             return $pdf->stream($fileName);
         } elseif ($request->has('csv')) {
@@ -156,9 +151,11 @@ class ProductController extends Controller
             }
             return Settings::downloadcsvfile($data, $fileName);
         }
-        $products = $products->paginate(config('constants.pagination'));
+        $products = $products->paginate(account_setting('general.pagination'));
         return view('backend.admin.product.index', compact('products', 'breadcrumb', 'categories'));
     }
+
+
     public function exportPdf(Request $request)
     {
         $request->merge(['pdf' => 1]);

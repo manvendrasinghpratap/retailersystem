@@ -52,7 +52,7 @@ class StaffController extends Controller
             'route2' => 'admin.staff.store',
             'route2Title' => __('translation.addstaff'),
             'reset_route' => 'admin.staff.index',
-            'reset_route_title' => __('translation.reset')
+            'reset_route_title' => __('translation.cancel')
         ];
         $this->breadcrumbStaffListing = [
             'title' => __('translation.staff'),
@@ -113,7 +113,7 @@ class StaffController extends Controller
             $userList = $userList->get();
             $pdfHeaderdata = \Config::get('constants.staffspdf');
             $pdf = PDF::loadView('backend.pdf.staff.staffListpdf', compact('userList', 'pdfHeaderdata', 'breadcrumb', 'staffstatus', 'stores'));
-            $pdf = Settings::downloadpdf($pdf);
+            $pdf = Settings::downloadLandscapePdf($pdf);
             $fileName = $pdfHeaderdata['filename'] . '-' . date('Y-m-d') . '.pdf';
             return $pdf->stream($fileName);
         } elseif ($request->has('csv')) {
@@ -148,7 +148,7 @@ class StaffController extends Controller
                         $user->username ?? '-',
                         $user->designation->name ?? '-',
                         // ✅ Ensure hire date and created date formatted safely
-                        !empty($user->hire_date) ? "\t" . $user->hire_date : '-',
+                        !empty($user->detail->hire_date) ? "\t" . $user->detail->hire_date : '-',
                         $status,
                         !empty($user->created_at) ? "\t" . $user->created_at : '-',
                     ];
@@ -160,7 +160,7 @@ class StaffController extends Controller
             Settings::downloadcsvfile($data, $fileName);
         }
 
-        $userList = $userList->paginate(\Config::get('constants.pagination'));
+        $userList = $userList->paginate(account_setting('general.pagination'));
         return view('backend.staff.index', compact("userList", "designation", "updatedAt", 'staffstatus', 'breadcrumb', 'stores'));
     }
 
