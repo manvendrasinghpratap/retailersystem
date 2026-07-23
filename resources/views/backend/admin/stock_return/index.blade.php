@@ -97,13 +97,7 @@
     $(document).on('click', '.viewReturn', function () {
         let route = $(this).attr('data-route');
         let pdfroute = $(this).attr('data-pdfroute');
-           
-        // Set PDF download route
-        $('#downloadstockreturnitemlistpdf').attr('data-downloadroutepdf', pdfroute);  
-        alert(pdfroute);
-        // Or directly set href
-        //$('#downloadstockreturnpdf').attr('href', pdfroute);
-         $('#stockReturnModal').modal('show');
+        $('#stockReturnModal').modal('show');
         $('#stockReturnDetails').html('<div class="text-center">Loading...</div>');  
         $.get(route, function (res) {
             $('#stockReturnDetails').html(res);
