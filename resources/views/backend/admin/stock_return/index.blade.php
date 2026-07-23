@@ -11,14 +11,14 @@
                     <h4 class="card-title d-inline-block">{{ __('translation.filter') }}</h4>
                     <div class="d-inline-block">
                         @include('backend.components.exportpdfcsv', [
-                        'showPdf' => false,
-                        'showCsv' => false,
-                        'pdfId' =>'downloadpurchasespdf',
-                        'pdfRoute' => route('admin.purchases.exportPdf'),
-                        'pdfClass' => 'downloadpurchasespdf',
-                        'csvId' =>'downloadpurchasescsv',
-                        'csvRoute' => route('admin.purchases.exportCsv'),
-                        'csvClass' => 'downloadpurchasescsv',
+                        'showPdf' => true,
+                        'showCsv' => true,
+                        'pdfId' =>'downloadstockreturnpdf',
+                        'pdfRoute' => route('admin.stock_returns.exportpdf'),
+                        'pdfClass' => 'downloadstockreturnpdf',
+                        'csvId' =>'downloadstockreturncsv',
+                        'csvRoute' => route('admin.stock_returns.exportcsv'),
+                        'csvClass' => 'downloadstockreturncsv',
                         ])                 
                     </div>      
                 </div>  
@@ -47,10 +47,10 @@
                     <th>{{ __('translation.return_no') }}</th>
                     <th>{{ __('translation.vendor') }}</th>
                     <th>{{ __('translation.warehouse') }}</th>
-                    <th>{{ __('translation.total') }}</th>
+                    <th>{{ __('translation.currency') }} {{ __('translation.total') }}</th> 
                     <th>{{ __('translation.status') }}</th>
                     <th>{{ __('translation.created_at') }}</th>
-                    <th width="15%">Action</th>
+                    <th width="10%">{{ __('translation.actions') }}</th>
                 </tr>
             </thead>
 
@@ -61,7 +61,7 @@
                     <td>{{ $row->return_no }}</td>
                     <td>{{ $row->vendor->name ?? '' }}</td>
                     <td>{{ $row->warehouse->name ?? '' }}</td>
-                    <td>{{ $row->total }}</td>
+                    <td>{{ __('translation.currency') }} {{ $row->total }}</td>
                     <td>
                         @if($row->status == 1)
                             <span class="badge bg-success">Active</span>
@@ -84,8 +84,9 @@
                 @endforelse
             </tbody>
         </table>
-
-        {{ $returns->links() }}
+        <div class="right user-navigation">
+            {!! $returns->appends(request()->input())->links() !!}
+        </div>
     </div>
 </div>
 
@@ -169,11 +170,11 @@
                 });
             }
         });
-
         });
-
     });
-
-
-</script>
+    $(document).ready(function () {
+        setupPdfDownload('.downloadstockreturnpdf', 'data-downloadroutepdf');
+        setupPdfDownload('.downloadstockreturncsv', 'data-downloadroutepdf');
+    });
+    </script>
 @endsection

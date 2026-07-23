@@ -15,10 +15,10 @@
                 <div>
                     @include('backend.components.exportpdfcsv', [
                         'pdfId' =>'downloadrequisitionpdf',    
-                        'showPdf'=>false, 
+                        'showPdf'=>true, 
                         'pdfRoute' => route('admin.requisitions.exportPdf'),
                         'pdfClass' => 'downloadrequisitionpdf',
-                        'showCsv'=>false, 
+                        'showCsv'=>true, 
                         'csvId' =>'downloadrequisitioncsv',    
                         'csvRoute' => route('admin.requisitions.exportCsv'),
                         'csvClass' => 'downloadrequisitioncsv',
@@ -68,7 +68,7 @@
                                 <th>{{ __('translation.total_qty') }}</th>
                                 <th>{{ __('translation.status') }}</th>
                                 <th>{{ __('translation.requester') }}</th>
-                                <th>{{ __('translation.date') }}</th>
+                                <th>{{ __('translation.createdat') }}</th>
                                 <th>{{ __('translation.action') }}</th>
                             </tr>
                         </thead>
@@ -103,24 +103,16 @@
 
                             @empty
                                 <tr>
-                                    <td colspan="8" class="text-center">
-                                        No requisitions found
-                                    </td>
+                                    <td colspan="8" class="text-center">{{ __('translation.no_data_found') }}</td>
                                 </tr>
                             @endforelse
-
                         </tbody>
-
                     </table>
                 </div>
-
-                <!-- PAGINATION -->
-                <div class="mt-3">
-                    {{ $requisitions->appends(request()->input())->links() }}
+                <div class="right user-navigation">
+                    {!! $requisitions->appends(request()->input())->links() !!}
                 </div>
-
             </div>
-
         </div>
     </div>
 </div>
@@ -185,7 +177,10 @@ $(document).on('click', '.cancelRequisition', function () {
     });
 
 });
-
+$(document).ready(function () {
+    setupPdfDownload('.downloadrequisitionpdf', 'data-downloadroutepdf');
+    setupPdfDownload('.downloadrequisitioncsv', 'data-downloadroutepdf');
+});
 </script>
 
 @endsection

@@ -159,8 +159,6 @@ class InventoryController extends Controller
                 __('translation.sku'),
                 __('translation.barcode'),
                 __('translation.stock'),
-                __('translation.low_alert'),
-                __('translation.status'),
             ];
 
             foreach ($inventory as $stock) {
@@ -171,8 +169,6 @@ class InventoryController extends Controller
                     $stock->product->sku ?? '',
                     $stock->product->barcode ?? '',
                     $stock->stock,
-                    $stock->low_stock_alert,
-                    $stock->isLowStock() ? __('translation.low_stock') : __('translation.normal_stock'),
                 ];
             }
             return Settings::downloadcsvfile($data, $fileName);

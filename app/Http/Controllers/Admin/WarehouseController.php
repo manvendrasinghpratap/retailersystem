@@ -12,6 +12,7 @@ use App\Helpers\Settings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
+use PDF;
 
 class WarehouseController extends Controller
 {
@@ -20,7 +21,6 @@ class WarehouseController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
-
         $this->breadcrumb = [
             'title' => __('translation.warehouses'),
             'breadcrumb' => [
@@ -55,6 +55,12 @@ class WarehouseController extends Controller
     |--------------------------------------------------------------------------
     | Warehouse List
     |--------------------------------------------------------------------------
+    @description To get the warehouse list
+    @access public
+    @method GET
+    @route admin.warehouses.index
+    @param Request $request
+    @return \Illuminate\Http\Response
     */
 
     public function index(Request $request)
@@ -67,16 +73,94 @@ class WarehouseController extends Controller
         if ($request->status !== '' && $request->status !== null) {
             $warehouses->where('status', $request->status);
         }
-        $warehouses = $warehouses->latest()->paginate(config('constants.pagination'));
+        $warehouses = $warehouses->latest();
+        if ($request->has('pdf')) {
+            $warehouses = $warehouses->get();
+            $pdfHeaderdata = \Config::get('constants.warehouseListpdf');
+            $pdf = PDF::loadView('backend.pdf.warehouses.warehouseListpdf', compact('warehouses', 'pdfHeaderdata', 'breadcrumb'));
+            $pdf = Settings::downloadpdf($pdf);
+            $fileName = $pdfHeaderdata['filename'] . '-' . date('Y-m-d') . '.pdf';
+            return $pdf->stream($fileName);
+        } elseif ($request->has('csv')) {
+            $warehouses = $warehouses->get();
+            $csvHeaderdata = \Config::get('constants.warehouseListpdf');
+            $fileName = $csvHeaderdata['filename'] . '-' . date('Y-m-d') . '.csv';
+            $data = [];
+            $ii = $i = 0;
+            // ✅ Header Row
+            $data[$ii] = [
+                '#',
+                __('translation.code'),
+                __('translation.warehouse_name'),
+                __('translation.manager'),
+                __('translation.phone'),
+                __('translation.email'),
+                __('translation.status'),
+                __('translation.createdat'),
+            ];
+
+            foreach ($warehouses as $warehouse) {
+                $data[++$ii] = [
+                    $ii,
+                    $warehouse->warehouse_code,
+                    $warehouse->name,
+                    $warehouse->manager_name ?? '-',
+                    $warehouse->phone ?? '-',
+                    $warehouse->email ?? '-',
+                    $warehouse->status == 1 ? __('translation.active') : __('translation.inactive'),
+                    !empty($warehouse->created_at) ? "\t" . Settings::getFormattedDatetime($warehouse->created_at) : '-',
+                ];
+            }
+            return Settings::downloadcsvfile($data, $fileName);
+        }
+
+        $warehouses = $warehouses->paginate(account_setting('general.pagination'));
         return view('backend.admin.warehouses.index', compact('warehouses', 'breadcrumb'));
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Warehouse List PDF
+    |--------------------------------------------------------------------------
+    @description To get the warehouse list in PDF format
+    @access public
+    @method GET
+    @route admin.warehouses.pdf
+    @param Request $request
+    @return \Illuminate\Http\Response
+    */
+    public function warehousePdf(Request $request)
+    {
+        $request->merge(['pdf' => 1]);
+        return $this->index($request);
+    }
+    /*
+    |--------------------------------------------------------------------------
+    | Warehouse List CSV
+    |--------------------------------------------------------------------------
+    @description To get the warehouse list in CSV format
+    @access public
+    @method GET
+    @route admin.warehouses.csv
+    @param Request $request
+    @return \Illuminate\Http\Response
+    */
+    public function warehouseCsv(Request $request)
+    {
+        $request->merge(['csv' => 1]);
+        return $this->index($request);
     }
 
     /*
     |--------------------------------------------------------------------------
     | Create Warehouse
     |--------------------------------------------------------------------------
+    @description To create a new warehouse
+    @access public
+    @method GET
+    @route admin.warehouses.create
+    @return \Illuminate\Http\Response
     */
-
     public function create()
     {
         $staffs = User::activeByAccountAndStaff()->pluck('name', 'id');
@@ -90,6 +174,12 @@ class WarehouseController extends Controller
     |--------------------------------------------------------------------------
     | Store Warehouse
     |--------------------------------------------------------------------------
+    @description To store a new warehouse
+    @access public
+    @method POST
+    @route admin.warehouses.store
+    @param Request $request
+    @return \Illuminate\Http\Response
     */
 
     public function store(Request $request)
@@ -120,6 +210,12 @@ class WarehouseController extends Controller
     |--------------------------------------------------------------------------
     | Edit Warehouse
     |--------------------------------------------------------------------------
+    @description To edit a warehouse
+    @access public
+    @method GET
+    @route admin.warehouses.edit
+    @param int $id
+    @return \Illuminate\Http\Response
     */
 
     public function edit($id)
@@ -140,6 +236,12 @@ class WarehouseController extends Controller
     |--------------------------------------------------------------------------
     | Update Warehouse
     |--------------------------------------------------------------------------
+    @description To update a warehouse
+    @access public
+    @method PUT
+    @route admin.warehouses.update
+    @param Request $request
+    @return \Illuminate\Http\Response
     */
 
     public function update(Request $request)
@@ -171,6 +273,11 @@ class WarehouseController extends Controller
     |--------------------------------------------------------------------------
     | Stock Transfer Form
     |--------------------------------------------------------------------------
+    @description To get the stock transfer form
+    @access public
+    @method GET
+    @route admin.warehouses.transfer.form
+    @return \Illuminate\Http\Response
     */
 
     public function transferForm()
@@ -189,6 +296,12 @@ class WarehouseController extends Controller
     |--------------------------------------------------------------------------
     | Store Stock Transfer
     |--------------------------------------------------------------------------
+    @description To store the stock transfer
+    @access public
+    @method POST
+    @route admin.warehouses.transfer.store
+    @param Request $request
+    @return \Illuminate\Http\Response
     */
 
     public function transferStore(Request $request)
@@ -248,6 +361,12 @@ class WarehouseController extends Controller
     |--------------------------------------------------------------------------
     | Delete Warehouse
     |--------------------------------------------------------------------------
+    @description To delete a warehouse
+    @access public
+    @method POST
+    @route admin.warehouses.softdelete
+    @param Request $request
+    @return \Illuminate\Http\Response
     */
 
     public function softdelete(Request $request)
@@ -269,6 +388,12 @@ class WarehouseController extends Controller
     |--------------------------------------------------------------------------
     | Status Update
     |--------------------------------------------------------------------------
+    @description To update the status of a warehouse
+    @access public
+    @method POST
+    @route admin.warehouses.statusupdate
+    @param Request $request
+    @return \Illuminate\Http\Response
     */
 
     public function statusUpdate(Request $request)
@@ -282,6 +407,18 @@ class WarehouseController extends Controller
         return response()->json(['success' => $updated ? true : false]);
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Get Warehouse Products
+    |--------------------------------------------------------------------------
+    @description To get the products of a warehouse
+    @access public
+    @method GET
+    @route admin.warehouses.products
+    @param Request $request
+    @param int $id
+    @return \Illuminate\Http\Response
+    */
 
     public function getWarehouseProducts(Request $request, $id)
     {
@@ -331,17 +468,73 @@ class WarehouseController extends Controller
             });
         }
 
-        $items = $query
-            ->orderBy('name')
-            ->paginate(config('constants.pagination'))
-            ->withQueryString();
+        $query = $query->orderBy('name');
+        if ($request->has('pdf')) {
+            $items = $query->get();
+            $pdfHeaderdata = \Config::get('constants.warehouseproductspdf');
+            $pdf = PDF::loadView('backend.pdf.warehouses.warehouseproductspdf', compact('items', 'pdfHeaderdata', 'breadcrumb'));
+            $pdf = Settings::downloadpdf($pdf);
+            $fileName = $pdfHeaderdata['filename'] . '-' . date('Y-m-d') . '.pdf';
+            return $pdf->stream($fileName);
+        } elseif ($request->has('csv')) {
+            $items = $query->get();
+            $csvHeaderdata = \Config::get('constants.warehouseproductspdf');
+            $fileName = $csvHeaderdata['filename'] . '-' . date('Y-m-d') . '.csv';
+            $data = [];
+            $ii = $i = 0;
+            // ✅ Header Row
+            $data[$ii] = [
+                '#',
+                __('translation.product_name'),
+                __('translation.available_stock')
+            ];
+            $sum = 0;
+            foreach ($items as $item) {
+                $sum += $item->stocks->first()?->stock ?? 0;
+                $data[++$ii] = [
+                    $ii,
+                    $item->name,
+                    $item->stocks->first()?->stock ?? 0,
+                ];
+            }
 
+            $data[++$ii] = [
+                '',
+                __('translation.total'),
+                $sum
+            ];
+            return Settings::downloadcsvfile($data, $fileName);
+        }
+
+        $items = $query->orderBy('name')->paginate(account_setting('general.pagination'))->withQueryString();
         return view(
-            'backend.admin.warehouses.warehouseProducts', // you can rename later
+            'backend.admin.warehouses.warehouseProducts',
             compact('breadcrumb', 'warehouse', 'items')
         );
     }
 
+    public function warehouseproductPdf(Request $request, $id)
+    {
+        $request->merge(['pdf' => 1]);
+        return $this->getWarehouseProducts($request, $id);
+    }
+
+    public function warehouseproductCsv(Request $request, $id)
+    {
+        $request->merge(['csv' => 1]);
+        return $this->getWarehouseProducts($request, $id);
+    }
+    /*
+    |--------------------------------------------------------------------------
+    | Get Product Stock
+    |--------------------------------------------------------------------------
+    @description To get the stock of a product in a warehouse
+    @access public
+    @method POST
+    @route admin.warehouses.product.stock
+    @param Request $request
+    @return \Illuminate\Http\Response
+    */
     public function getProductStock(Request $request)
     {
         $stock = ProductStock::ofAccount()
@@ -354,6 +547,17 @@ class WarehouseController extends Controller
         ]);
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Stock Listing
+    |--------------------------------------------------------------------------
+    @description To list the stock of all warehouses
+    @access public
+    @method GET
+    @route admin.warehouses.stock.listing
+    @param Request $request
+    @return \Illuminate\Http\Response
+    */
     public function stockListing(Request $request)
     {
         $this->breadcrumb['title'] = __('translation.warehouse_stock_listing');

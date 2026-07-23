@@ -13,7 +13,7 @@ use App\Helpers\Settings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\Store;
-
+use PDF;
 class RequisitionController extends Controller
 {
     protected $breadcrumb;
@@ -45,25 +45,25 @@ class RequisitionController extends Controller
             'route2Title' => trans('translation.requisitions'),
         ];
 
-    $this->breadcrumbPendingPosting = [
-        'title' => trans('translation.pending_posting'),
-        'breadcrumb' => [
-            [
-                'route' => 'admin.dashboard',
-                'title' => trans('translation.dashboard')
+        $this->breadcrumbPendingPosting = [
+            'title' => trans('translation.pending_posting'),
+            'breadcrumb' => [
+                [
+                    'route' => 'admin.dashboard',
+                    'title' => trans('translation.dashboard')
+                ],
+                [
+                    'route' => 'admin.requisitions.pending.posting',
+                    'title' => trans('translation.pending_posting')
+                ],
             ],
-            [
-                'route' => 'admin.requisitions.pending.posting',
-                'title' => trans('translation.pending_posting')
-            ],
-        ],
 
-        'route1' => 'admin.requisitions.index',
-        'route1Title' => trans('translation.requisition_list'),
+            'route1' => 'admin.requisitions.index',
+            'route1Title' => trans('translation.requisition_list'),
 
-        'route2' => 'admin.requisitions.pending.posting',
-        'route2Title' => trans('translation.pending_posting'),
-    ];
+            'route2' => 'admin.requisitions.pending.posting',
+            'route2Title' => trans('translation.pending_posting'),
+        ];
     }
 
     /*
@@ -75,61 +75,84 @@ class RequisitionController extends Controller
     public function index(Request $request)
     {
         $breadcrumb = $this->breadcrumb;
-
-        $warehouses = Warehouse::ofAccount()->active()->orderBy('name','asc')->pluck('name', 'id');
-        $stores = Store::ofAccount()->active()->orderBy('name','asc')->pluck('name', 'id');
-
-        $requisitions = Requisition::with([
-                'fromWarehouse',
-                'toWarehouse'
-                ])
-                ->where('account_id', auth()->user()->account_id)
-                ->latest();
-
-            // =========================
-            // FILTERS
-            // =========================
-
-            if ($request->filled('requisition_no')) {
-
-                $requisitions->where(
-                    'requisition_no',
-                    'LIKE',
-                    '%' . trim($request->requisition_no) . '%'
-                );
-            }
-
-            if ($request->filled('from_warehouse_id')) {
-
-                $requisitions->where(
-                    'from_warehouse_id',
-                    $request->from_warehouse_id
-                );
-            }
-
-            if ($request->filled('for_store_id')) {
-                $requisitions->where('for_store_id', $request->for_store_id); 
-            }
-            if ($request->filled('status')) {
-                $requisitions->where('status', $request->status); 
-            }
-            $requisitions = Settings::applyDateRange($requisitions,$request,'created_at',true); 
-
-            $requisitions = $requisitions
-                ->paginate(config('constants.pagination'))
-                ->withQueryString();
-
-            return view(
-                'backend.admin.requisition.index',
-                compact(
-                    'requisitions',
-                    'breadcrumb',
-                    'warehouses',
-                    'stores'
-                )
-            );
+        $warehouses = Warehouse::ofAccount()->active()->orderBy('name', 'asc')->pluck('name', 'id');
+        $stores = Store::ofAccount()->active()->orderBy('name', 'asc')->pluck('name', 'id');
+        $requisitions = Requisition::with(['fromWarehouse', 'toWarehouse'])->where('account_id', auth()->user()->account_id)->latest();
+        // =========================
+        // FILTERS
+        // =========================
+        if ($request->filled('requisition_no')) {
+            $requisitions->where('requisition_no', 'LIKE', '%' . trim($request->requisition_no) . '%');
         }
+        if ($request->filled('from_warehouse_id')) {
+            $requisitions->where('from_warehouse_id', $request->from_warehouse_id);
+        }
+        if ($request->filled('for_store_id')) {
+            $requisitions->where('for_store_id', $request->for_store_id);
+        }
+        if ($request->filled('status')) {
+            $requisitions->where('status', $request->status);
+        }
+        $requisitions = Settings::applyDateRange($requisitions, $request, 'created_at', true);
+        if ($request->has('pdf')) {
+            $requisitions = $requisitions->get();
+            $pdfHeaderdata = \Config::get('constants.requisitionListpdf');
+            $pdf = PDF::loadView('backend.pdf.requisitions.requisitionListpdf', compact('requisitions', 'pdfHeaderdata', 'breadcrumb'));
+            $pdf = Settings::downloadpdf($pdf);
+            $fileName = $pdfHeaderdata['filename'] . '-' . date('Y-m-d') . '.pdf';
+            return $pdf->stream($fileName);
+        }
+        if ($request->has('csv')) {
+            $requisitions = $requisitions->get();
+            $csvHeaderdata = \Config::get('constants.requisitionListpdf');
+            $fileName = $csvHeaderdata['filename'] . '-' . date('Y-m-d') . '.csv';
+            $data = [];
+            $ii = $i = 0;
+            // ✅ Header Row
+            $data[$ii] = [
+                '#',
+                __('translation.requisition_no'),
+                __('translation.from_warehouse'),
+                __('translation.for_store'),
+                __('translation.total_qty'),
+                __('translation.status'),
+                __('translation.requester'),
+                __('translation.createdat'),
+            ];
 
+            foreach ($requisitions as $requisition) {
+                $data[++$ii] = [
+                    $ii,
+                    $requisition->requisition_no,
+                    $requisition->fromWarehouse->name ?? '-',
+                    $requisition->store->name ?? '-',
+                    $requisition->total_qty,
+                    match ($requisition->status) {
+                        3 => __('translation.moved_to_store'),
+                        2 => __('translation.partial_to_store'),
+                        1 => __('translation.active'),
+                        default => __('translation.cancelled'),
+                    },
+                    $requisition->creator->name ?? '-',
+                    !empty($requisition->created_at) ? "\t" . Settings::getFormattedDatetime($requisition->created_at) : '-',
+                ];
+            }
+            return Settings::downloadcsvfile($data, $fileName);
+        }
+        $requisitions = $requisitions->paginate(account_setting('general.pagination'))->withQueryString();
+        return view('backend.admin.requisition.index', compact('requisitions', 'breadcrumb', 'warehouses', 'stores'));
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $request->merge(['pdf' => 1]);
+        return $this->index($request);
+    }
+    public function exportCsv(Request $request)
+    {
+        $request->merge(['csv' => 1]);
+        return $this->index($request);
+    }
     /*
     |--------------------------------------------------------------------------
     | CREATE
@@ -138,8 +161,8 @@ class RequisitionController extends Controller
 
     public function create()
     {
-        $warehouses = Warehouse::ofAccount()->active()->orderBy('name','asc')->pluck('name', 'id');
-        $stores = Store::ofAccount()->active()->orderBy('name','asc')->pluck('name', 'id');
+        $warehouses = Warehouse::ofAccount()->active()->orderBy('name', 'asc')->pluck('name', 'id');
+        $stores = Store::ofAccount()->active()->orderBy('name', 'asc')->pluck('name', 'id');
         return view('backend.admin.requisition.form', [
             'breadcrumb' => $this->breadcrumb,
             'warehouses' => $warehouses,
@@ -157,12 +180,12 @@ class RequisitionController extends Controller
         try {
 
             $validated = $request->validate([
-                'from_warehouse_id'      => 'required|exists:warehouses,id',
-                'for_store_id'           => 'required|exists:stores,id',
-                'date'                   => 'required',
-                'items'                  => 'required|array|min:1',
+                'from_warehouse_id' => 'required|exists:warehouses,id',
+                'for_store_id' => 'required|exists:stores,id',
+                'date' => 'required',
+                'items' => 'required|array|min:1',
                 'items.*.master_item_id' => 'required|exists:master_items,id',
-                'items.*.qty'            => 'required|numeric|min:1',
+                'items.*.qty' => 'required|numeric|min:1',
             ]);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -191,17 +214,17 @@ class RequisitionController extends Controller
                 // =========================
 
                 $req = Requisition::create([
-                    'account_id'        => $accountId,
+                    'account_id' => $accountId,
                     'from_warehouse_id' => $validated['from_warehouse_id'],
-                    'for_store_id'      => $validated['for_store_id'],
-                    'requisition_no'    => $requisitionNo,
-                    'date'              => Settings::formatDate(
+                    'for_store_id' => $validated['for_store_id'],
+                    'requisition_no' => $requisitionNo,
+                    'date' => Settings::formatDate(
                         $validated['date'],
                         'Y-m-d'
                     ),
-                    'total_qty'         => $totalQty,
-                    'status'            => 1,
-                    'created_by'        => auth()->id(),
+                    'total_qty' => $totalQty,
+                    'status' => 1,
+                    'created_by' => auth()->id(),
                 ]);
 
                 $stockService = app(StockService::class);
@@ -213,10 +236,10 @@ class RequisitionController extends Controller
                 foreach ($validated['items'] as $item) {
 
                     $stock = ProductStock::where([
-                            'account_id'     => $accountId,
-                            'warehouse_id'   => $validated['from_warehouse_id'],
-                            'master_item_id' => $item['master_item_id']
-                        ])
+                        'account_id' => $accountId,
+                        'warehouse_id' => $validated['from_warehouse_id'],
+                        'master_item_id' => $item['master_item_id']
+                    ])
                         ->lockForUpdate()
                         ->first();
 
@@ -243,7 +266,7 @@ class RequisitionController extends Controller
                     RequisitionItem::create([
                         'requisition_id' => $req->id,
                         'master_item_id' => $item['master_item_id'],
-                        'qty'            => $qty
+                        'qty' => $qty
                     ]);
 
                     // =========================
@@ -251,13 +274,13 @@ class RequisitionController extends Controller
                     // =========================
 
                     $stockService->moveStock([
-                        'account_id'     => $accountId,
-                        'warehouse_id'   => $validated['from_warehouse_id'],
+                        'account_id' => $accountId,
+                        'warehouse_id' => $validated['from_warehouse_id'],
                         'master_item_id' => $item['master_item_id'],
-                        'type'           => 'transfer_out',
-                        'qty'            => $qty,
-                        'reference_id'   => $req->id,
-                        'remarks'        => 'Requisition OUT #' . $requisitionNo
+                        'type' => 'transfer_out',
+                        'qty' => $qty,
+                        'reference_id' => $req->id,
+                        'remarks' => 'Requisition OUT #' . $requisitionNo
                     ]);
                 }
             });
@@ -288,10 +311,10 @@ class RequisitionController extends Controller
         $id = Settings::getDecodeCode($id);
 
         $requisition = Requisition::with([
-                'items.masterItem',
-                'fromWarehouse',
-                'toWarehouse'
-            ])
+            'items.masterItem',
+            'fromWarehouse',
+            'toWarehouse'
+        ])
             ->where('account_id', auth()->user()->account_id)
             ->findOrFail($id);
 
@@ -339,13 +362,13 @@ class RequisitionController extends Controller
                 foreach ($req->items as $item) {
 
                     $stockService->moveStock([
-                        'account_id'     => $accountId,
-                        'warehouse_id'   => $req->from_warehouse_id,
+                        'account_id' => $accountId,
+                        'warehouse_id' => $req->from_warehouse_id,
                         'master_item_id' => $item->master_item_id,
-                        'type'           => 'transfer_in',
-                        'qty'            => (float) $item->qty,
-                        'reference_id'   => $req->id,
-                        'remarks'        => 'Cancel Requisition #' . $req->requisition_no
+                        'type' => 'transfer_in',
+                        'qty' => (float) $item->qty,
+                        'reference_id' => $req->id,
+                        'remarks' => 'Cancel Requisition #' . $req->requisition_no
                     ]);
                 }
 
@@ -354,7 +377,7 @@ class RequisitionController extends Controller
                 // =========================
 
                 $req->update([
-                    'status'       => 0,
+                    'status' => 0,
                     'cancelled_by' => auth()->id(),
                     'cancelled_at' => now(),
                 ]);
@@ -384,10 +407,10 @@ class RequisitionController extends Controller
         $id = Settings::getDecodeCode($id);
 
         $requisition = Requisition::with([
-                'items.masterItem',
-                'fromWarehouse',
-                'store'
-            ])
+            'items.masterItem',
+            'fromWarehouse',
+            'store'
+        ])
             ->where('account_id', auth()->user()->account_id)
             ->findOrFail($id);
 
@@ -400,16 +423,16 @@ class RequisitionController extends Controller
     public function pendingPosting(Request $request)
     {
         $breadcrumb = $this->breadcrumbPendingPosting;
-        $warehouses = Warehouse::ofAccount()->active()->orderBy('name','asc')->pluck('name', 'id');
-        $stores = Store::ofAccount()->active()->orderBy('name','asc')->pluck('name', 'id');
+        $warehouses = Warehouse::ofAccount()->active()->orderBy('name', 'asc')->pluck('name', 'id');
+        $stores = Store::ofAccount()->active()->orderBy('name', 'asc')->pluck('name', 'id');
 
         $items = RequisitionItem::with([
-                'requisition',
-                'masterItem',
-                'requisition.store',
-                'requisition.fromWarehouse',
-                'requisition.creator'
-            ])
+            'requisition',
+            'masterItem',
+            'requisition.store',
+            'requisition.fromWarehouse',
+            'requisition.creator'
+        ])
 
             // =========================
             // ONLY PENDING ITEMS
@@ -422,7 +445,7 @@ class RequisitionController extends Controller
             ->whereHas('requisition', function ($q) use ($request) {
 
                 // default active requisition
-                $q->whereIn('status', [1,2]);
+                $q->whereIn('status', [1, 2]);
 
                 // =========================
                 // FILTER : REQUISITION NO
@@ -555,22 +578,22 @@ class RequisitionController extends Controller
                 $stockService = app(StockService::class);
 
                 $stockService->moveStock([
-                    'account_id'     => $accountId,
-                    'warehouse_id'   => $requisition->from_warehouse_id,
+                    'account_id' => $accountId,
+                    'warehouse_id' => $requisition->from_warehouse_id,
                     'master_item_id' => $item->master_item_id,
-                    'type'           => 'transfer_in',
-                    'qty'            => (float) $item->qty,
-                    'reference_id'   => $requisition->id,
-                    'remarks'        => 'Cancel Requisition Item #' . $requisition->requisition_no
+                    'type' => 'transfer_in',
+                    'qty' => (float) $item->qty,
+                    'reference_id' => $requisition->id,
+                    'remarks' => 'Cancel Requisition Item #' . $requisition->requisition_no
                 ]);
 
                 // =========================
                 // CANCEL ITEM
                 // =========================
                 $item->update([
-                    'status'        => 0,
-                    'cancelled_by'  => auth()->id(),
-                    'cancelled_at'  => now(),
+                    'status' => 0,
+                    'cancelled_by' => auth()->id(),
+                    'cancelled_at' => now(),
                 ]);
 
                 // =========================

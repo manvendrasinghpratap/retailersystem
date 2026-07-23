@@ -1,8 +1,22 @@
 <div class="row mb-3">
-	<div class="col-md-4 text-muted"><strong>{{ __('translation.return_no') }}:</strong> {{ $return->return_no }}</div>
-	<div class="col-md-4 text-muted"><strong>{{ __('translation.vendor') }}:</strong> {{ $return->vendor->name }}</div>
-	<div class="col-md-4 text-muted"><strong>{{ __('translation.warehouse') }}:</strong> {{ $return->warehouse->name }}</div>
-	<div class="col-md-4 text-muted mt-2"><strong>{{ __('translation.date') }}:</strong> {{ \App\Helpers\Settings::getFormattedDatetime($return->created_at) }}</div>
+	<div class="col-md-6 text-muted"><strong>{{ __('translation.return_no') }}:</strong> {{ $return->return_no }}</div>
+	<div class="col-md-6 text-muted"><strong>{{ __('translation.date') }}:</strong> {{ \App\Helpers\Settings::getFormattedDatetime($return->created_at) }}</div>
+	<br>
+	<br>
+	<div class="col-md-6 text-muted"><strong>{{ __('translation.vendor') }} {{ __('translation.details') }}:-</strong>
+		<br><strong>{{__('translation.company_name')}}</strong> : {{ $return->vendor->company_name ?? 'N/A' }}
+		<br><strong>{{__('translation.managed_by')}}</strong> : {{ $return->vendor->name }}
+		<br><strong>{{__('translation.phone')}}</strong> : {{ $return->vendor->phone }}
+		<br><strong>{{__('translation.email')}}</strong> : {{ $return->vendor->email }}
+		<br><strong>{{__('translation.address')}}</strong> : {{ $return->vendor->address }}
+	</div>
+	<div class="col-md-6 text-muted"><strong>{{ __('translation.warehouse') }} {{ __('translation.details') }}:-</strong>
+		<br><strong>{{ __('translation.name')}}</strong> : {{ $return->warehouse->name }}
+		<br><strong>{{ __('translation.managed_by')}}</strong> : {{ $return->warehouse->manager_name ?? 'N/A' }}
+		<br><strong>{{ __('translation.phone')}}</strong> : {{ $return->warehouse->phone }}
+		<br><strong>{{ __('translation.email')}}</strong> : {{ $return->warehouse->email }}
+		<br><strong>{{ __('translation.address')}}</strong> : {{ $return->warehouse->address }}
+	</div>
 </div>
 
 <table class="table table-bordered">
@@ -18,15 +32,13 @@
 
 	<tbody>
 		@foreach($return->items as $item)
-		<tr>
-			<td>{{ $loop->iteration }}</td>
-			<td>
-                    {{ $item->masterItem->name ?? 'N/A' }}
-                </td>
-			<td>{{ $item->qty }}</td>
-			<td> {{ __('translation.currency')}} {{ \App\Helpers\Settings::getcustomnumberformat($item->price) }}</td>
-            <td> {{ __('translation.currency')}} {{ \App\Helpers\Settings::getcustomnumberformat($item->total) }}</td>
-		</tr>
+			<tr>
+				<td>{{ $loop->iteration }}</td>
+				<td>{{ $item->masterItem->name ?? 'N/A' }}</td>
+				<td>{{ $item->qty }}</td>
+				<td> {{ __('translation.currency')}} {{ \App\Helpers\Settings::getcustomnumberformat($item->price) }}</td>
+				<td> {{ __('translation.currency')}} {{ \App\Helpers\Settings::getcustomnumberformat($item->total) }}</td>
+			</tr>
 		@endforeach
 	</tbody>
 </table>

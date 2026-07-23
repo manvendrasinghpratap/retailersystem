@@ -15,6 +15,7 @@ use App\Services\StockService;
 use App\Helpers\Settings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use PDF;
 
 class StockReturnController extends Controller
 {
@@ -55,6 +56,9 @@ class StockReturnController extends Controller
     |--------------------------------------------------------------------------
     | LISTING
     |--------------------------------------------------------------------------
+    @description: List Stock Return
+    @method: GET
+    @return: view('backend.admin.stock_return.index')
     */
     public function index(Request $request)
     {
@@ -75,17 +79,66 @@ class StockReturnController extends Controller
         if (request()->has('warehouse_id') && request('warehouse_id') != '') {
             $returns = $returns->where('warehouse_id', request('warehouse_id'));
         }
-
         $returns = Settings::applyDateRange($returns, $request, 'created_at', true);
+        if ($request->has('pdf')) {
+            $returns = $returns->get();
+            $pdfHeaderdata = \Config::get('constants.stockreturnpdf');
+            $pdf = PDF::loadView('backend.pdf.stockreturn.stockreturnpdf', compact('returns', 'pdfHeaderdata', 'breadcrumb'));
+            $pdf = Settings::downloadpdf($pdf);
+            $fileName = $pdfHeaderdata['filename'] . '-' . date('Y-m-d') . '.pdf';
+            return $pdf->stream($fileName);
+        } elseif ($request->has('csv')) {
+            $returns = $returns->get();
+            $csvHeaderdata = \Config::get('constants.stockreturnpdf');
+            $fileName = $csvHeaderdata['filename'] . '-' . date('Y-m-d') . '.csv';
+            $data = [];
+            $ii = $i = 0;
+            // ✅ Header Row
+            $data[$ii] = [
+                '#',
+                __('translation.return_no'),
+                __('translation.vendor'),
+                __('translation.warehouse'),
+                __('translation.currency') . __('translation.total'),
+                __('translation.status'),
+                __('translation.createdat'),
+            ];
 
-        $returns = $returns->paginate(config('constants.pagination'));
+            foreach ($returns as $return) {
+                $data[++$ii] = [
+                    $ii,
+                    $return->return_no,
+                    $return->vendor->name,
+                    $return->warehouse->name,
+                    $return->total,
+                    $return->status == 1 ? __('translation.active') : __('translation.inactive'),
+                    !empty($return->created_at) ? "\t" . Settings::getFormattedDatetime($return->created_at) : '-',
+                ];
+            }
+            return Settings::downloadcsvfile($data, $fileName);
+        }
+        $returns = $returns->paginate(account_setting('general.pagination'));
+
         return view('backend.admin.stock_return.index', compact('returns', 'breadcrumb', 'vendors', 'warehouses', 'date'));
     }
 
+    public function exportPdf(Request $request)
+    {
+        $request->merge(['pdf' => 1]);
+        return $this->index($request);
+    }
+    public function exportCsv(Request $request)
+    {
+        $request->merge(['csv' => 1]);
+        return $this->index($request);
+    }
     /*
     |--------------------------------------------------------------------------
     | CREATE
     |--------------------------------------------------------------------------
+    @description: Create Stock Return
+    @method: GET
+    @return: view('backend.admin.stock_return.form')
     */
     public function create()
     {
@@ -107,6 +160,9 @@ class StockReturnController extends Controller
     |--------------------------------------------------------------------------
     | STORE
     |--------------------------------------------------------------------------
+    @description: Store Stock Return
+    @method: POST
+    @return: view('backend.admin.stock_return.form')
     */
     public function store(Request $request)
     {
@@ -289,146 +345,15 @@ class StockReturnController extends Controller
             );
         }
     }
-    public function store_old(Request $request)
-    {
-        try {
 
-            $validated = $request->validate([
-                'vendor_id' => 'required|exists:vendors,id',
-                'warehouse_id' => 'required|exists:warehouses,id',
-                'items' => 'required|array|min:1',
-                'items.*.product_id' => 'required|exists:products,id',
-                'items.*.qty' => 'required|numeric|min:0.01',
-                'items.*.price' => 'required|numeric|min:0.01',
-            ]);
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return Settings::roleRedirect('stock_returns.index', $e->getMessage(), 'error');
-        }
-
-        try {
-
-            DB::transaction(function () use ($validated) {
-
-                $accountId = auth()->user()->account_id;
-
-                $returnNo = 'RET-' . date('Ymd') . '-' . rand(1000, 9999);
-
-                // ✅ Calculate total
-                $totalAmount = collect($validated['items'])->sum(function ($item) {
-                    return $item['qty'] * $item['price'];
-                });
-
-                // ✅ Create Return
-                $return = StockReturn::create([
-                    'account_id' => $accountId,
-                    'vendor_id' => $validated['vendor_id'],
-                    'warehouse_id' => $validated['warehouse_id'],
-                    'return_no' => $returnNo,
-                    'return_date' => now()->format('Y-m-d'),
-                    'total' => $totalAmount,
-                    'created_by' => auth()->id(),
-                ]);
-
-                $stockService = app(StockService::class);
-
-                // ============================
-                // 🔥 VALIDATE STOCK FIRST
-                // ============================
-                foreach ($validated['items'] as $item) {
-
-                    $stock = ProductStock::where('account_id', $accountId)
-                        ->where('warehouse_id', $validated['warehouse_id'])
-                        ->where('product_id', $item['product_id'])
-                        ->lockForUpdate()
-                        ->first();
-
-                    if (!$stock) {
-                        throw new \Exception('Product not found in warehouse stock');
-                    }
-
-                    if ($stock->stock <= 0) {
-                        throw new \Exception('No stock available for selected product');
-                    }
-
-                    if ($stock->stock < $item['qty']) {
-                        throw new \Exception('Return qty exceeds available stock');
-                    }
-                }
-
-                // ============================
-                // 🔥 PROCESS RETURN
-                // ============================
-                foreach ($validated['items'] as $item) {
-
-                    $qty = $item['qty'];
-                    $price = $item['price'];
-
-                    // Save item
-                    StockReturnItem::create([
-                        'return_id' => $return->id,
-                        'product_id' => $item['product_id'],
-                        'qty' => $qty,
-                        'price' => $price,
-                        'total' => $qty * $price
-                    ]);
-
-                    // ✅ STOCK OUT (use existing supported type)
-                    $stockService->moveStock([
-                        'account_id' => $accountId,
-                        'warehouse_id' => $validated['warehouse_id'],
-                        'product_id' => $item['product_id'],
-                        'type' => 'adjustment_sub', // ✅ IMPORTANT FIX
-                        'qty' => $qty,
-                        'reference_id' => $return->id,
-                        'remarks' => 'Stock Return #' . $returnNo
-                    ]);
-                }
-
-                // ============================
-                // 🔥 VENDOR BALANCE UPDATE
-                // ============================
-
-                $vendor = Vendor::lockForUpdate()->find($validated['vendor_id']);
-
-                $oldBalance = $vendor->current_balance ?? 0;
-                $newBalance = $oldBalance - $totalAmount;
-
-                // Ledger Entry
-                VendorLedger::create([
-                    'account_id' => $accountId,
-                    'vendor_id' => $vendor->id,
-                    'type' => 5, //
-                    'reference_id' => $return->id,
-                    'debit' => 0,
-                    'credit' => $totalAmount,
-                    'balance' => $newBalance,
-                    'remarks' => 'Stock Return #' . $returnNo
-                ]);
-
-                // Update Vendor
-                $vendor->update([
-                    'current_balance' => $newBalance
-                ]);
-
-            });
-
-            return Settings::roleRedirect('stock_returns.index', 'Stock Return Created Successfully.');
-
-        } catch (\Exception $e) {
-
-            echo "<pre>";
-            print_r($e->getMessage());
-            echo "</pre>";
-            exit;
-            return Settings::roleRedirect('stock_returns.index', $e->getMessage(), 'error');
-        }
-    }
 
     /*
     |--------------------------------------------------------------------------
     | VIEW
     |--------------------------------------------------------------------------
+    @description: View Stock Return
+    @method: GET
+    @return: view('backend.admin.stock_return.view')
     */
     public function show($id)
     {
@@ -441,6 +366,14 @@ class StockReturnController extends Controller
         return view('backend.admin.stock_return.view', compact('return'));
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | GET STOCK
+    |--------------------------------------------------------------------------
+    @description: Get Stock
+    @method: GET
+    @return: json
+    */
     public function getStock(Request $request)
     {
         $stock = \App\Models\ProductStock::where([
@@ -454,6 +387,14 @@ class StockReturnController extends Controller
         ]);
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | VIEW AJAX
+    |--------------------------------------------------------------------------
+    @description: View Stock Return
+    @method: GET
+    @return: view('backend.admin.stock_return.view')
+    */
     public function viewAjax($id)
     {
         $id = Settings::getDecodeCode($id);
@@ -466,10 +407,13 @@ class StockReturnController extends Controller
     }
 
     /*
-|--------------------------------------------------------------------------
-| CANCEL RETURN
-|--------------------------------------------------------------------------
-*/
+    |--------------------------------------------------------------------------
+    | CANCEL RETURN
+    |--------------------------------------------------------------------------
+    @description: Cancel Stock Return
+    @method: POST
+    @return: view('backend.admin.stock_return.view')
+    */
 
     public function cancel(Request $request)
     {

@@ -13,7 +13,7 @@
         <strong>{{ __('translation.for_store') }}:</strong>
         {{ $requisition->store->name ?? '-' }}
     </div>
-<div class="col-md-4 mt-3">
+    <div class="col-md-4 mt-3">
         <strong>{{ __('translation.requester') }}:</strong>
         {{ $requisition->creator->name ?? '-' }}
     </div>
@@ -30,7 +30,7 @@
             <th>#</th>
             <th>{{ __('translation.product') }}</th>
             <th>{{ __('translation.quantity') }}</th>
-            <th>{{ __('translation.accepted_by') }}</th> 
+            <th>{{ __('translation.accepted_by') }}</th>
             <th>{{ __('translation.action') }}</th>
         </tr>
     </thead>
@@ -39,8 +39,8 @@
             <tr>
                 <td>{{ $loop->iteration }}</td>
                 <td>{{ $item->masterItem->name ?? '-' }}</td>
-                <td>{{ number_format($item->qty, 2) }}</td>
-                <td>{{ $item->acceptedBy->name ?? 'NO' }}</td> 
+                <td>{{ $item->qty }}</td>
+                <td>{{ $item->acceptedBy->name ?? 'NO' }}</td>
                 <td>
                     @if($item->accepted_by == null && $requisition->status == 1)
                         <x-href-input action="no-barcode" name="no-barcode" label="" class="no-barcode" data-id="{{ \App\Helpers\Settings::getEncodeCode($item->id) }}" href="javascript:void(0);" />
@@ -72,75 +72,75 @@
 
 <script>
 
-// ===============================
-// NO BARCODE
-// ===============================
-$(document).on('click', '.no-barcode', function () {
+    // ===============================
+    // NO BARCODE
+    // ===============================
+    $(document).on('click', '.no-barcode', function () {
 
-    let id = $(this).data('id');
+        let id = $(this).data('id');
 
-    Swal.fire({
-        title: 'Brand Without Barcode?',
-        text: 'This item will use auto generated barcode.',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'Proceed',
-        cancelButtonText: 'Cancel'
-    }).then((result) => {
+        Swal.fire({
+            title: 'Brand Without Barcode?',
+            text: 'This item will use auto generated barcode.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Proceed',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
 
-        if (result.isConfirmed) {
+            if (result.isConfirmed) {
 
-            Swal.fire({
-                title: 'Redirecting...',
-                text: 'Opening in new tab',
-                icon: 'success',
-                timer: 1000,
-                showConfirmButton: false
-            });
+                Swal.fire({
+                    title: 'Redirecting...',
+                    text: 'Opening in new tab',
+                    icon: 'success',
+                    timer: 1000,
+                    showConfirmButton: false
+                });
 
-            // redirect to another URL in new tab
-            window.open(
-                "{{ route('admin.no-barcode') }}?requisition_item_id=" + id,
-                '_blank'
-            );
-        }
+                // redirect to another URL in new tab
+                window.open(
+                    "{{ route('admin.no-barcode') }}?requisition_item_id=" + id,
+                    '_blank'
+                );
+            }
+        });
     });
-});
 
 
-// ===============================
-// WITH BARCODE
-// ===============================
-$(document).on('click', '.barcode', function () {
+    // ===============================
+    // WITH BARCODE
+    // ===============================
+    $(document).on('click', '.barcode', function () {
 
-    let id = $(this).data('id');
+        let id = $(this).data('id');
 
-    Swal.fire({
-        title: 'Brand With Barcode?',
-        text: 'Barcode labels will be printed.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Proceed',
-        cancelButtonText: 'Cancel'
-    }).then((result) => {
+        Swal.fire({
+            title: 'Brand With Barcode?',
+            text: 'Barcode labels will be printed.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Proceed',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
 
-        if (result.isConfirmed) {
+            if (result.isConfirmed) {
 
-            Swal.fire({
-                title: 'Redirecting...',
-                text: 'Opening in new tab',
-                icon: 'success',
-                timer: 1000,
-                showConfirmButton: false
-            });
+                Swal.fire({
+                    title: 'Redirecting...',
+                    text: 'Opening in new tab',
+                    icon: 'success',
+                    timer: 1000,
+                    showConfirmButton: false
+                });
 
-            // redirect to another URL in new tab
-            window.open(
-                "{{ route('admin.barcode') }}?requisition_item_id=" + id,
-                '_blank'
-            );
-        }
+                // redirect to another URL in new tab
+                window.open(
+                    "{{ route('admin.barcode') }}?requisition_item_id=" + id,
+                    '_blank'
+                );
+            }
+        });
     });
-});
 
 </script>

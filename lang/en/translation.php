@@ -642,4 +642,7 @@ return [
     'no_product_available' => 'No Product Available',
     'createdat' => 'Created At',
     'store' => 'Store',
+    'payment_method' => 'Payment Method',
+    'savepayment' => 'Save Payment',
+    'method' => 'Method',
 ];

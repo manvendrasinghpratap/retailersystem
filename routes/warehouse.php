@@ -10,12 +10,18 @@ Route::middleware(['auth', 'route.permission', 'subscription'])->prefix('admin/w
     Route::post('/update/{id}', [WarehouseController::class, 'update'])->name('update');
     Route::post('/softdelete/{id}', [WarehouseController::class, 'softdelete'])->name('softdelete');
     Route::post('/status-update', [WarehouseController::class, 'statusUpdate'])->name('statusUpdate');
+    Route::get('/export-pdf', [WarehouseController::class, 'warehousePdf'])->name('warehousePdf');
+    Route::get('/export-csv', [WarehouseController::class, 'warehouseCsv'])->name('warehouseCsv');
+
 
     Route::get('/stock-transfer/create', [WarehouseController::class, 'transferForm'])->name('stockTransfer.create');
     Route::post('/stock-transfer', [WarehouseController::class, 'transferStore'])->name('stockTransfer.store');
     Route::get('/stock-transfer/export-pdf', [WarehouseController::class, 'exportPdf'])->name('exportPdf');
     Route::get('/stock-transfer/export-csv', [WarehouseController::class, 'exportCsv'])->name('exportCsv');
     Route::get('/{id}/products', [WarehouseController::class, 'getWarehouseProducts'])->name('products');
+    Route::get('/{id}/products/export/pdf', [WarehouseController::class, 'warehouseproductPdf'])->name('warehouseproductPdf');
+    Route::get('/{id}/products/export/csv', [WarehouseController::class, 'warehouseproductCsv'])->name('warehouseproductCsv');
+
     Route::get('/warehouse-product-stock', [WarehouseController::class, 'getProductStock'])->name('warehouse.product.stock');
     Route::get('/stock-listing', [WarehouseController::class, 'stockListing'])->name('stock.listing');
     // EXPORT PDF

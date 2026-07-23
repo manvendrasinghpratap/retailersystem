@@ -14,7 +14,8 @@ use App\Http\Controllers\Admin\{
     VendorController,
     PurchaseController,
     StockReturnController,
-    RequisitionController
+    RequisitionController,
+    PurchaseReturnController
 };
 
 Route::get('/updateapp', function () {
@@ -202,6 +203,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'route.permission', 
         Route::get('/show/{id}', [StockReturnController::class, 'show'])->name('show');
         Route::get('/stock-check', [StockReturnController::class, 'getStock'])->name('stock.check');
         Route::post('/cancel', [StockReturnController::class, 'cancel'])->name('cancel');
+        Route::get('/exportpdf', [StockReturnController::class, 'exportPdf'])->name('exportpdf');
+        Route::get('/exportcsv', [StockReturnController::class, 'exportCsv'])->name('exportcsv');
     });
 
     Route::prefix('requisitions')->name('requisitions.')->group(function () {

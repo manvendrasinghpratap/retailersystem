@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class RequisitionItem extends Model
 {
@@ -107,4 +108,13 @@ class RequisitionItem extends Model
 
         return 'Pending';
     }
+
+    protected function qty(): Attribute
+    {
+        return Attribute::make(
+            get: fn($value) => (int) $value,
+            set: fn($value) => (int) $value,
+        );
+    }
+
 }
