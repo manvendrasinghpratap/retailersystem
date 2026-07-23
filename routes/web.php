@@ -200,6 +200,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'route.permission', 
         Route::get('/create', [StockReturnController::class, 'create'])->name('create');
         Route::post('/store', [StockReturnController::class, 'store'])->name('store');
         Route::get('/view/ajax/{id}', [StockReturnController::class, 'viewAjax'])->name('view.ajax');
+        Route::get('/view/ajax/pdf/{id}', [StockReturnController::class, 'viewAjaxPdf'])->name('view.ajax.pdf');
         Route::get('/show/{id}', [StockReturnController::class, 'show'])->name('show');
         Route::get('/stock-check', [StockReturnController::class, 'getStock'])->name('stock.check');
         Route::post('/cancel', [StockReturnController::class, 'cancel'])->name('cancel');

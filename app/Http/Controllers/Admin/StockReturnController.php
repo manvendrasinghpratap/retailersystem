@@ -395,15 +395,22 @@ class StockReturnController extends Controller
     @method: GET
     @return: view('backend.admin.stock_return.view')
     */
-    public function viewAjax($id)
+    public function viewAjax($id, $type = '')
     {
         $id = Settings::getDecodeCode($id);
-
-        $return = StockReturn::with(['vendor', 'warehouse', 'items.masterItem'])
-            ->where('account_id', auth()->user()->account_id)
-            ->findOrFail($id);
-
+        $return = StockReturn::with(['vendor', 'warehouse', 'items.masterItem'])->ofAccount()->findOrFail($id);
+        if ($type == 'pdf') {
+            $pdfHeaderdata = \Config::get('constants.viewStockReturnListItemPdf');
+            $pdf = PDF::loadView('backend.pdf.stockreturn.viewStockReturnListItemPdf', compact('return', 'pdfHeaderdata'));
+            $pdf = Settings::downloadpdf($pdf);
+            $fileName = $pdfHeaderdata['filename'] . '-' . date('Y-m-d') . '.pdf';
+            return $pdf->stream($fileName);
+        }
         return view('backend.admin.stock_return._view', compact('return'));
+    }
+    public function viewAjaxPdf($id)
+    {
+        return $this->viewAjax($id, 'pdf');
     }
 
     /*

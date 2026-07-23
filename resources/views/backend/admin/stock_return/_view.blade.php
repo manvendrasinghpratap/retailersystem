@@ -27,6 +27,7 @@
 			<th>{{ __('translation.quantity') }}</th>
 			<th>{{ __('translation.price') }}</th>
 			<th>{{ __('translation.total') }}</th>
+			<th>{{ __('translation.reason') }}</th>
 		</tr>
 	</thead>
 
@@ -38,11 +39,12 @@
 				<td>{{ $item->qty }}</td>
 				<td> {{ __('translation.currency')}} {{ \App\Helpers\Settings::getcustomnumberformat($item->price) }}</td>
 				<td> {{ __('translation.currency')}} {{ \App\Helpers\Settings::getcustomnumberformat($item->total) }}</td>
+				<td>{{ $item->reason }}</td>
 			</tr>
 		@endforeach
 	</tbody>
 </table>
 
 <div class="text-end">
-	<h4>{{ __('translation.total')}} : {{ __('translation.currency')}} {{$return->total}} {{-- \App\Helpers\Settings::getcustomnumberformat($return->total) --}}</h4>
+	<h4>{{ __('translation.total')}} : {{ __('translation.currency')}} {{$return->total}}</h4>
 </div>

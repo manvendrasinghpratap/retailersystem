@@ -64,14 +64,14 @@
                     <td>{{ __('translation.currency') }} {{ $row->total }}</td>
                     <td>
                         @if($row->status == 1)
-                            <span class="badge bg-success">Active</span>
+                            <span class="badge bg-success">{{__('translation.active')}}</span>
                         @else
-                            <span class="badge bg-danger">Cancelled</span>
+                            <span class="badge bg-danger">{{__('translation.cancelled')}}</span>
                             @endif
                     </td>
                     <td>{{ \App\Helpers\Settings::formatDate($row->created_at, Config::get('constants.dateformat.slashdmy')) }}</td> 
                     <td>
-                        <x-href-input action="view" name="view" label="View" class="viewReturn" data-route="{{ route('admin.stock_returns.view.ajax', \App\Helpers\Settings::getEncodeCode($row->id)) }}" href="javascript:void(0);" />
+                        <x-href-input action="view" name="view" label="View" class="viewReturn" data-pdfroute="{{ route('admin.stock_returns.view.ajax.pdf', \App\Helpers\Settings::getEncodeCode($row->id)) }}" data-route="{{ route('admin.stock_returns.view.ajax', \App\Helpers\Settings::getEncodeCode($row->id)) }}" href="javascript:void(0);" />
                         @if($row->status == 1)
                             <x-href-input action="cancel" name="cancel" class="cancelReturn" label="Cancel" href="javascript:void(0);" data-id="{{ \App\Helpers\Settings::getEncodeCode($row->id) }}" />
                         @endif
@@ -89,8 +89,6 @@
         </div>
     </div>
 </div>
-
-
 @endsection
 
 @section('script')
@@ -98,10 +96,21 @@
 
     $(document).on('click', '.viewReturn', function () {
         let route = $(this).attr('data-route');
-        $('#stockReturnModal').modal('show');
-        $('#stockReturnDetails').html('<div class="text-center">Loading...</div>');        
+        let pdfroute = $(this).attr('data-pdfroute');
+           
+        // Set PDF download route
+        $('#downloadstockreturnitemlistpdf').attr('data-downloadroutepdf', pdfroute);  
+        alert(pdfroute);
+        // Or directly set href
+        //$('#downloadstockreturnpdf').attr('href', pdfroute);
+         $('#stockReturnModal').modal('show');
+        $('#stockReturnDetails').html('<div class="text-center">Loading...</div>');  
         $.get(route, function (res) {
             $('#stockReturnDetails').html(res);
+            $('#downloadstockreturnitemlistpdf').attr(
+            'data-downloadstockreturnitemlistpdf',
+            pdfroute
+        );
         });
     }); 
 
@@ -175,6 +184,7 @@
     $(document).ready(function () {
         setupPdfDownload('.downloadstockreturnpdf', 'data-downloadroutepdf');
         setupPdfDownload('.downloadstockreturncsv', 'data-downloadroutepdf');
+        setupPdfDownload('.downloadstockreturnitemlistpdf', 'data-downloadstockreturnitemlistpdf');
     });
     </script>
 @endsection
