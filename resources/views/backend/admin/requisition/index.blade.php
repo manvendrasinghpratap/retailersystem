@@ -94,7 +94,7 @@
                                     <td>{{ $req->creator->name ?? '-' }}</td>
                                     <td>{{ \App\Helpers\Settings::getFormattedDatetime($req->created_at) }}</td>
                                     <td>
-                                        <x-href-input action="view" name="view" label="View" class="viewRequisition" data-id="{{ \App\Helpers\Settings::getEncodeCode($req->id) }}" href="javascript:void(0);" />
+                                        <x-href-input action="view" name="view" label="View" class="viewRequisition" data-pdfroute="{{ route('admin.requisitions.view.ajax.pdf', \App\Helpers\Settings::getEncodeCode($req->id)) }}" data-id="{{ \App\Helpers\Settings::getEncodeCode($req->id) }}" href="javascript:void(0);" />
                                         @if($req->status == 1)
                                             <x-href-input action="cancel" name="cancel" class="cancelRequisition" label="Cancel" href="javascript:void(0);" data-id="{{ \App\Helpers\Settings::getEncodeCode($req->id) }}" />
                                         @endif
@@ -133,12 +133,13 @@ validateSelect2Form('requisitionForm', [
 $(document).on('click', '.viewRequisition', function () {
 
     let id = $(this).data('id');
-
+    let pdfroute = $(this).attr('data-pdfroute');
     $('#requisitionModal').modal('show');
     $('#requisitionModalBody').html('Loading...');
 
     $.get("{{ route('admin.requisitions.view.ajax', ':id') }}".replace(':id', id), function (res) {
         $('#requisitionModalBody').html(res);
+        $('#downloadrequisitionitemlistpdf').attr('data-downloadrequisitionitemlistpdf', pdfroute);
     });
 
 });
@@ -180,6 +181,8 @@ $(document).on('click', '.cancelRequisition', function () {
 $(document).ready(function () {
     setupPdfDownload('.downloadrequisitionpdf', 'data-downloadroutepdf');
     setupPdfDownload('.downloadrequisitioncsv', 'data-downloadroutepdf');
+    setupPdfDownload('.downloadrequisitionitemlistpdf', 'data-downloadrequisitionitemlistpdf');
+    
 });
 </script>
 

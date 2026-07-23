@@ -301,7 +301,7 @@
 
 <!---- Stock Return Modal Begin ---->
 <div class="modal fade" id="stockReturnModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable width90per">
         <div class="modal-content">
 
             <div class="modal-header">
@@ -323,11 +323,14 @@
 
 <!---- Requisition Modal Begin ---->
 <div class="modal fade" id="requisitionModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable width90per">
         <div class="modal-content">
 
             <div class="modal-header">
                 <h5 class="modal-title" id="requisitionModalTitle">{{ __('translation.requisition_details') }}</h5>
+                <div class="d-inline-block" style="margin-left:97% !important;">
+                    <a href="javascript:void(0)" id="downloadrequisitionitemlistpdf" target="_blank" class="downloadrequisitionitemlistpdf" title="Download as PDF"><i class="fas fa-file-pdf action-btn text-danger" title="PDF"></i></a>
+                </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 

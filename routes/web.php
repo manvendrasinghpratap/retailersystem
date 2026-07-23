@@ -221,6 +221,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'route.permission', 
         Route::get('/pdf/{id}', [RequisitionController::class, 'pdf'])->name('pdf');
         Route::get('/csv/{id}', [RequisitionController::class, 'csv'])->name('csv');
         Route::get('/view/ajax/{id}', [RequisitionController::class, 'viewAjax'])->name('view.ajax');
+        Route::get('/view/ajax/pdf/{id}', [RequisitionController::class, 'viewAjaxPdf'])->name('view.ajax.pdf');
         Route::get('/pending-posting', [RequisitionController::class, 'pendingPosting'])->name('pending.posting');
         Route::post('/cancel-item', [RequisitionController::class, 'cancelItem'])->name('cancel.item');
 

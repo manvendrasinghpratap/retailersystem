@@ -118,4 +118,8 @@
     text-align: right;
     margin-top: 5px;
   }
+
+  .width90per {
+    max-width: 90% !important;
+  }
 </style>

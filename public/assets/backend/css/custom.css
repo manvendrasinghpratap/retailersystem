@@ -1186,3 +1186,7 @@ select:focus:invalid {
     width: 100% !important;
     margin: auto !important;
 }
+
+.width90per {
+    max-width: 90% !important;
+}
