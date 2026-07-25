@@ -14,7 +14,17 @@
 	<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 	<!-- Favicon -->
-	<link rel="icon" href="{{ asset('assets/img/brand/favicon.png') }}" type="image/x-icon" />
+	@php($cssRefresh = Config::get('app.css_refresh'))
+	<link rel="apple-touch-icon" sizes="180x180" href="{{ asset('assets/images/icons/apple-touch-icon.png')}}">
+	<link rel="icon" type="image/png" sizes="32x32" href="{{ asset('assets/images/icons/favicon-32x32.png')}}">
+	<link rel="icon" type="image/png" sizes="16x16" href="{{ asset('assets/images/icons/favicon-16x16.png')}}">
+	<link rel="mask-icon" href="assets/images/icons/safari-pinned-tab.svg" color="#666666">
+	<meta name="apple-mobile-web-app-title" content="Molla">
+	<meta name="application-name" content="{{ config('app.name') }}">
+	<meta name="msapplication-TileColor" content="#cc9966">
+	<meta name="theme-color" content="#ffffff">
+	<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+	<link rel="preconnect" href="https://cdn.jsdelivr.net">
 
 	<!-- Bootstrap css -->
 	<link href="{{ asset('assets/plugins/bootstrap/css/bootstrap.css') }}" rel="stylesheet" />
