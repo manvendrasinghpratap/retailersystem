@@ -25,7 +25,7 @@
                 <div class="card-body">
                     <form name="cartlistingform" id="cartlistingform" method="GET">
                         <div class="row">
-                            <x-text-input name="item_name" label="Item Name / Code" value="{{ request('item_name') }}" mainrows="3" />
+                            <x-text-input name="item_name" label="{{ __('translation.master_product_code') }}" value="{{ request('item_name') }}" mainrows="3" />
                             <x-select-dropdown name="status" label="{{ __('translation.status') }}" :options="\Config::get('constants.accountstatus')" :selected="request('status')" class="accountstatus" mainrows="2" />
                             <div class="col-xl-2 col-md-2">
                                 <div class="form-group mb-3">
