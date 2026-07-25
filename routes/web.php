@@ -5,7 +5,8 @@ use App\Http\Controllers\{
     ProfileController,
     BarcodeController,
     SaleController,
-    ReportController
+    ReportController,
+    ContactController
 };
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\Admin\{
@@ -64,6 +65,7 @@ Route::get('/generate-barcode', [BarcodeController::class, 'index']);
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
+Route::post('/contact-us', [ContactController::class, 'store'])->name('contact.store');
 
 Route::middleware(['auth', 'subscription'])->get('admin', [DashboardController::class, 'index'])->name('dashboard');
 Route::middleware(['auth', 'route.permission', 'subscription'])->prefix('admin/staff')->group(function () {

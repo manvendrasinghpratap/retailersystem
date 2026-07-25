@@ -342,36 +342,33 @@
                 <!-- Contact Form -->
                 <div class="col-lg-7">
                     <div class="p-4 bg-white rounded-4 shadow-sm">
-
-                        <form action="#" method="post">
-
-                            <div class="row mb-3">
-                                <div class="col-md-6 mb-3 mb-md-0">
+                        <form id="contactForm">
+                            @csrf
+                            <div class="row">
+                                <div class="col-md-6 mb-0 mb-md-0">
                                     <input type="text" name="name" class="form-control" placeholder="Full Name" required>
                                 </div>
 
-                                <div class="col-md-6">
+                                <div class="col-md-6 mb-0 mb-md-0">
                                     <input type="email" name="email" class="form-control" placeholder="Email" required>
                                 </div>
+                                <div class="col-md-6 mb-0 mb-md-0">
+                                    <input type="tel" name="phone" id="phone" class="form-control" placeholder="Phone" maxlength="15" inputmode="numeric">
+                                </div>
+                                <div class="col-md-6 mb-0 mb-md-0">
+                                    <input type="text" name="organization" class="form-control" placeholder="Organization Name">
+                                </div>
+                                <div class="col-md-12 mb-0 mb-md-0">
+                                    <input type="text" name="service" class="form-control" placeholder="Service Required">
+                                </div>
+                                <div class="col-md-12 mb-0 mb-md-0">
+                                    <textarea name="message" rows="1" class="form-control" placeholder="Message" required></textarea>
+                                </div>
                             </div>
-
-                            <div class="mb-3">
-                                <input type="text" name="organization" class="form-control" placeholder="Organization Name">
-                            </div>
-
-                            <div class="mb-3">
-                                <textarea name="message" class="form-control" rows="4" placeholder="Message" required></textarea>
-                            </div>
-
-                            <button type="submit" class="btn btn-primary w-100">
-                                Send Message
-                            </button>
-
+                            <button type="submit" class="btn btn-primary w-100"> Send Message</button>
                         </form>
-
                     </div>
                 </div>
-
             </div>
         </div>
     </section>
@@ -475,7 +472,7 @@
     @include('model.newsletter-popup')
     <!-- Plugins JS File -->
     @include('layouts.frontend.js')
-    @stack('scripts')
+    @stack('script')
 </body>
 
 <script>
@@ -507,6 +504,59 @@
                 break;
         }
 
+    });
+
+</script>
+
+<script>
+    $(document).ready(function () {
+
+        $('#contactForm').submit(function (e) {
+            e.preventDefault();
+            let form = $(this);
+            $.ajax({
+                url: "{{ route('contact.store') }}",
+                type: "POST",
+                data: form.serialize(),
+                beforeSend: function () {
+                    form.find('button[type=submit]')
+                        .prop('disabled', true)
+                        .html('Sending...');
+                },
+                success: function (response) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: response.message,
+                        confirmButtonColor: '#3085d6'
+                    });
+                    form.trigger('reset');
+                },
+                error: function (xhr) {
+                    let message = 'Something went wrong.';
+                    if (xhr.status == 422) {
+                        let errors = xhr.responseJSON.errors;
+                        message = '';
+                        $.each(errors, function (key, value) {
+                            message += value[0] + '<br>';
+                        });
+                    }
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Validation Error',
+                        html: message
+                    });
+                },
+                complete: function () {
+                    form.find('button[type=submit]')
+                        .prop('disabled', false)
+                        .html('Send Message');
+                }
+            });
+        });
+    });
+    $(document).on('input', '#phone', function () {
+        this.value = this.value.replace(/[^0-9]/g, '');
     });
 </script>
 
