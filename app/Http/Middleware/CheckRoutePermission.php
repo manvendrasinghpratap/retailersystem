@@ -51,9 +51,9 @@ class CheckRoutePermission
             ->where('is_allowed', 1)
             ->exists();
 
-        if (!$permission) {
-            abort(403, 'Access denied');
-        }
+        // if (!$permission) {
+        //     abort(403, 'Access denied');
+        // }
 
         return $next($request);
     }

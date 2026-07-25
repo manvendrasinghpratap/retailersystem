@@ -211,10 +211,11 @@ class StaffController extends Controller
         $emergecyRelationship = \Config::get('constants.emergecyRelationship');
         $staffstatus = \Config::get('constants.staffstatus');
         $designation = Designation::getSelectable();
+        $cashierDesignation = Designation::getDesignationIdOfCashier();
         $state = State::getList();
         $localGovernment = LocalGovernment::getList();
         $countries = Countries::getList();
-        return view('backend.staff.form', compact(["designation", 'suffix', 'state', 'localGovernment', 'emergecyRelationship', 'staffstatus', 'isimagechanged', 'countries', 'breadcrumb', 'submitText', 'stores']));
+        return view('backend.staff.form', compact(["cashierDesignation", "designation", 'suffix', 'state', 'localGovernment', 'emergecyRelationship', 'staffstatus', 'isimagechanged', 'countries', 'breadcrumb', 'submitText', 'stores']));
     }
 
     public function store(StoreStaffRequest $request)

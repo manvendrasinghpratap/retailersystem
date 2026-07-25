@@ -150,7 +150,7 @@
             {{-- ===================================================== --}}
             {{-- Master Setup --}}
             {{-- ===================================================== --}}
-            <li class="nav-item dropdown {{ $isActive(['admin.payment-types.*']) ? 'active' : '' }}" style="display: none;">
+            <li class="nav-item dropdown {{ $isActive(['admin.payment-types.*']) ? 'active' : '' }}" style="display: none-;">
                 <a href="javascript:void(0);" class="nav-link dropdown-toggle" data-bs-toggle="dropdown"><i data-feather="settings"></i><span>@lang('translation.master')</span></a>
                 <div class="dropdown-menu">
                     {{-- Master Entries --}}
@@ -158,6 +158,8 @@
                     <a href="{{ route('admin.payment-types.index') }}" class="dropdown-item"><i data-feather="credit-card" class="menu-icon-sm"></i>@lang('translation.payment_types')</a>
                     <a href="{{ route('admin.credit-durations.index') }}" class="dropdown-item"><i data-feather="calendar" class="menu-icon-sm"></i>@lang('translation.credit_duration')</a>
                     <a href="{{ route('admin.account-settings.index') }}" class="dropdown-item"><i data-feather="settings" class="menu-icon-sm"></i>@lang('translation.account_settings')</a>
+                    <a href="{{ route('admin.designations.index') }}" class="dropdown-item"><i data-feather="modules" class="menu-icon-sm"></i>@lang('translation.designations')</a>
+                    <a href="{{ route('admin.modules.index') }}" class="dropdown-item"><i data-feather="modules" class="menu-icon-sm"></i>@lang('translation.modules')</a>
                 </div>
             </li>
         </ul>

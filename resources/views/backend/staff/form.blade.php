@@ -59,7 +59,7 @@
                             </div>
                             <div class="row">
                                 <x-select-dropdown name="store_id" label="Store" :options="$stores ?? []" :selected="$userDetails->store_id ?? (collect($stores)->keys()->first())" class="store_id" required />
-                                <x-select-dropdown name="designation_id" label="Designation" :options="$designation ?? []" :selected="$userDetails->designation_id ?? '3'" class="designation_id" required />
+                                <x-select-dropdown name="designation_id" label="Designation" :options="$designation ?? []" :selected="$userDetails->designation_id ?? $cashierDesignation" class="designation_id" required />
                                 <x-date-input name="hire_date" label="Hired Date" value="{{ $userDetails->detail->hire_date ?? \App\Helpers\Settings::getFormattedDate(date('Y-m-d')) }}" required class="flatdatepickrto hire_date" data-mindate="{{\App\Helpers\Settings::getFormattedDate(date('Y-m-d', strtotime('-60 years')) )}}" data-maxdate="{{\App\Helpers\Settings::getFormattedDate(date('Y-m-d', strtotime('+1 year')))}}" />
 
                                 @if(empty($userDetails))

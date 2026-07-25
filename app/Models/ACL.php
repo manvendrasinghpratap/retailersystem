@@ -16,6 +16,7 @@ class ACL extends Model
     protected $table = 'designation_route';
     protected $fillable = [
         'designation_id',
+        'account_id',
         'route_id',
     ];
     public function route()
@@ -25,5 +26,9 @@ class ACL extends Model
     public function designation()
     {
         return $this->belongsTo(Designation::class);
+    }
+    public function scopeOfAccount($query)
+    {
+        return $query->where('account_id', auth()->user()->account_id);
     }
 }

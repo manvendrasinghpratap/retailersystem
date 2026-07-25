@@ -28,7 +28,7 @@ class AclController extends Controller
         $designations = Designation::getSelectable();
         $routes = RouteModel::getSelectable();
 
-        $query = ACL::query();
+        $query = ACL::ofAccount();
 
         // 🔍 Filter by designation
         if ($request->filled('designation_id')) {
@@ -79,6 +79,7 @@ class AclController extends Controller
                         $insertData[] = [
                             'designation_id' => $designationId,
                             'route_id' => $routeId,
+                            'account_id' => auth()->user()->account_id,
                             'created_at' => now(),
                             'updated_at' => now(),
                         ];

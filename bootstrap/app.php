@@ -14,9 +14,10 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-			'subscription' => \App\Http\Middleware\CheckSubscription::class,
+            'subscription' => \App\Http\Middleware\CheckSubscription::class,
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'route.permission' => \App\Http\Middleware\CheckRoutePermission::class,
+            'permission' => \App\Http\Middleware\PermissionMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -25,7 +25,10 @@ class StockReturnController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
-
+        $this->middleware('permission:stock_return.view')->only(['index', 'viewAjax', 'viewAjaxPdf', 'getStock']);
+        $this->middleware('permission:stock_return.create')->only(['create', 'store']);
+        $this->middleware('permission:stock_return.cancel')->only(['cancel']);
+        $this->middleware('permission:stock_return.export')->only(['exportPdf', 'exportCsv']);
         $this->breadcrumb = [
             'title' => __('translation.stock_returns'),
             'breadcrumb' => [

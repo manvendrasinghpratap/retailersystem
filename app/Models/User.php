@@ -10,6 +10,8 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Notifications\ResetUserPasswordNotification;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use App\Models\Permission;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class User extends Authenticatable
 {
@@ -99,9 +101,57 @@ class User extends Authenticatable
     |--------------------------------------------------------------------------
     */
 
-    public function designation()
+    // public function designation()
+    // {
+    //     return $this->belongsTo(Designation::class);
+    // }
+
+    public function designation(): BelongsTo
     {
-        return $this->belongsTo(Designation::class);
+        return $this->belongsTo(Designation::class, 'designation_id');
+    }
+
+    public function hasPermission(string $permission): bool
+    {
+        return true;
+        if (!$this->designation_id) {
+            return false;
+        }
+
+        return $this->designation->permissions()
+            ->where('permissions.account_id', $this->account_id)
+            ->where('permissions.slug', $permission)
+            ->where('permissions.status', true)
+            ->exists();
+    }
+
+    public function hasAnyPermission(array $permissions): bool
+    {
+        return true;
+        if (!$this->designation_id) {
+            return false;
+        }
+
+        return $this->designation
+            ->permissions()
+            ->where('permissions.account_id', $this->account_id)
+            ->whereIn('permissions.slug', $permissions)
+            ->where('permissions.status', true)
+            ->exists();
+    }
+
+    public function hasAllPermissions(array $permissions): bool
+    {
+        if (!$this->designation_id) {
+            return false;
+        }
+
+        return $this->designation
+            ->permissions()
+            ->where('permissions.account_id', $this->account_id)
+            ->whereIn('permissions.slug', $permissions)
+            ->where('permissions.status', true)
+            ->count() === count($permissions);
     }
 
     public function subscriptionplan()

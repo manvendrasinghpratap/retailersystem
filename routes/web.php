@@ -236,5 +236,6 @@ require __DIR__ . '/attendance.php';
 require __DIR__ . '/warehouse.php';
 require __DIR__ . '/masteritem.php';
 require __DIR__ . '/sessionout.php';
-
-
+require __DIR__ . '/designationpermissions.php';
+require __DIR__ . '/designation.php';
+require __DIR__ . '/modules.php';
