@@ -484,7 +484,7 @@ return [
     'master_item_list' => 'Master Item List',
     'stock_return_cancelled_successfully' => 'Stock Return Cancelled Successfully',
     'paper' => 'Paper',
-    'for_store' => 'For Store',
+    'for_store' => 'To Store (Show Room)',
     'moved_to_store' => 'Moved To Store',
     'partial_to_store' => 'Partial To Store',
     'pending' => 'Pending',

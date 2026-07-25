@@ -478,5 +478,36 @@
     @stack('scripts')
 </body>
 
+<script>
+    $(document).on('click', '.toggle-password', function (e) {
+
+        e.preventDefault();
+
+        let input = $('#' + $(this).data('target'));
+        let icon = $(this).find('i');
+        let library = $(this).data('library');
+
+        input.attr(
+            'type',
+            input.attr('type') === 'password' ? 'text' : 'password'
+        );
+
+        switch (library) {
+
+            case 'bootstrap':
+                icon.toggleClass('bi-eye bi-eye-slash');
+                break;
+
+            case 'fontawesome':
+                icon.toggleClass('fa-eye fa-eye-slash');
+                break;
+
+            default:
+                icon.toggleClass('la-eye la-eye-slash');
+                break;
+        }
+
+    });
+</script>
 
 </html>

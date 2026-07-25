@@ -69,7 +69,7 @@
                                     <td>{{ $item->requisition->fromWarehouse->name ?? '-' }}</td>
                                     <td>{{ $item->requisition->store->name ?? '-' }}</td>
                                     <td>{{ $item->masterItem->name ?? '-' }}</td>
-                                    <td>{{ number_format($item->qty, 2) }}</td>
+                                    <td>{{ $item->qty }}</td>
                                     <td>
                                         @if($item->accepted_by)
                                             <span class="badge bg-success">{{ __('translation.posted') }}</span>
