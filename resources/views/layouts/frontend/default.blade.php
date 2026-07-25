@@ -211,7 +211,7 @@
 
                             <h5 class="fw-bold">Starter</h5>
 
-                            <h2 class="text-primary my-3">$49<span class="fs-6">/mo</span></h2>
+                            <h2 class="text-primary my-3">{{__('translation.currency')}}1000<span class="fs-6">/mo</span></h2>
 
                             <p class="text-muted">Perfect for small clinics</p>
 
@@ -237,13 +237,13 @@
 
                         <div class="card-body p-4">
 
-                            <span class="badge bg-primary mb-2">
+                            <span class="badge bg-warning mb-2">
                                 Most Popular
                             </span>
 
                             <h5 class="fw-bold">Professional</h5>
 
-                            <h2 class="text-primary my-3">$99<span class="fs-6">/mo</span></h2>
+                            <h2 class="text-primary my-3">{{__('translation.currency')}}1500<span class="fs-6">/mo</span></h2>
 
                             <p class="text-muted">Best for growing clinics</p>
 
@@ -255,7 +255,9 @@
                             </ul>
 
                             <button class="btn btn-primary w-100">
-                                Start Free Trial
+                                <a href="#pricing" class="btn btn-primary btn-lg me-2">
+                                    Start Free Trial
+                                </a>
                             </button>
 
                         </div>
@@ -272,7 +274,7 @@
 
                             <h5 class="fw-bold">Enterprise</h5>
 
-                            <h2 class="text-primary my-3">$199<span class="fs-6">/mo</span></h2>
+                            <h2 class="text-primary my-3">{{__('translation.currency')}}2500<span class="fs-6">/mo</span></h2>
 
                             <p class="text-muted">Ideal for hospitals</p>
 
@@ -304,7 +306,7 @@
 
             <div class="text-center mb-5">
                 <h2 class="fw-bold">Contact Us</h2>
-                <p class="text-muted">Our healthcare experts are ready to help you</p>
+                <p class="text-muted">We're committed to helping you manage your retail business with ease.</p>
             </div>
 
             <div class="row">
@@ -325,10 +327,14 @@
                             {{ Config::get('constants.phonenumber') }}
                         </p>
 
-                        <p class="mb-0">
+                        <p class="mb-3">
                             <i class="fa-solid fa-location-dot text-primary me-2"></i>
                             {{ Config::get('constants.address') }}
                         </p>
+                        <p class="mb-3">
+                            <i class="fa-solid fa-building text-primary me-2"></i> Head Office: 12 Willow Creel Court Parkville, Maryland USA
+                        </p>
+                        <p></p>
 
                     </div>
                 </div>
@@ -383,54 +389,62 @@
                 <!-- Testimonial 1 -->
                 <div class="col-md-4 mb-4">
                     <div class="card shadow-sm border-0 h-100">
-
                         <div class="card-body p-4">
-
-                            <p class="text-muted mb-4">
-                                RetailCloud made our billing super fast and simple.
-                            </p>
-
-                            <h5 class="fw-bold mb-0">Amit Sharma</h5>
-                            <p class="text-muted small">Retail Owner</p>
-
+                            <p class="text-muted mb-4">This retailer management system has made managing our inventory and sales effortless. It's fast, reliable, and easy to use.</p>
+                            <h5 class="fw-bold mb-0">Blessing Adeyemi</h5>
+                            <p class="text-muted small">Retail Operations Manager</p>
                         </div>
-
                     </div>
                 </div>
 
                 <!-- Testimonial 2 -->
                 <div class="col-md-4 mb-4">
                     <div class="card shadow-sm border-0 h-100">
-
                         <div class="card-body p-4">
-
-                            <p class="text-muted mb-4">
-                                Inventory tracking saved us hours every week.
-                            </p>
-
-                            <h5 class="fw-bold mb-0">Neha Patel</h5>
-                            <p class="text-muted small">Store Manager</p>
-
+                            <p class="text-muted mb-4">The reporting and inventory tracking features have saved us countless hours. It's exactly what our business needed.</p>
+                            <h5 class="fw-bold mb-0">Emeka Nwosu</h5>
+                            <p class="text-muted small">Supermarket Owner</p>
                         </div>
-
                     </div>
                 </div>
-
                 <!-- Testimonial 3 -->
                 <div class="col-md-4 mb-4">
                     <div class="card shadow-sm border-0 h-100">
-
                         <div class="card-body p-4">
-
-                            <p class="text-muted mb-4">
-                                The analytics helped grow our business fast.
-                            </p>
-
-                            <h5 class="fw-bold mb-0">Raj Mehta</h5>
-                            <p class="text-muted small">Business Owner</p>
-
+                            <p class="text-muted mb-4">A complete solution for managing purchases, sales, and stock. The interface is intuitive, and the support team is excellent.</p>
+                            <h5 class="fw-bold mb-0">Chinedu Okafor</h5>
+                            <p class="text-muted small">Business Manager</p>
                         </div>
-
+                    </div>
+                </div>
+                <!-- Testimonial 4 -->
+                <div class="col-md-4 mb-4">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body p-4">
+                            <p class="text-muted mb-4">The barcode, inventory, and billing features work seamlessly together. This software has significantly improved our efficiency.</p>
+                            <h5 class="fw-bold mb-0">Hafsat Bello</h5>
+                            <p class="text-muted small">Electronics Store Owner</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Testimonial 5 -->
+                <div class="col-md-4 mb-4">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body p-4">
+                            <p class="text-muted mb-4">An outstanding retail management solution that has streamlined our operations and improved productivity.</p>
+                            <h5 class="fw-bold mb-0">Chioma Umeh</h5>
+                            <p class="text-muted small">Business Owner</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Testimonial 6 -->
+                <div class="col-md-4 mb-4">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body p-4">
+                            <p class="text-muted mb-4">Since implementing this system, our daily operations have become much more organized. Highly recommended for any retail business.</p>
+                            <h5 class="fw-bold mb-0">Blessing Adeyemi</h5>
+                            <p class="text-muted small">Retail Operations Manager</p>
+                        </div>
                     </div>
                 </div>
 
@@ -443,7 +457,7 @@
     <!-- CTA -->
     <section class="cta py-5 text-center">
         <h2 class="fw-bold mb-3">Start Your Free POS Today!</h2>
-        <a class="btn btn-light btn-lg">Start Free Trial</a>
+        <a href="#pricing" class="btn btn-light btn-lg">Start Free Trial</a>
     </section>
 
     <!-- FOOTER -->
