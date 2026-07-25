@@ -150,7 +150,7 @@
             {{-- ===================================================== --}}
             {{-- Master Setup --}}
             {{-- ===================================================== --}}
-            <li class="nav-item dropdown {{ $isActive(['admin.payment-types.*']) ? 'active' : '' }}" style="display: none-;">
+            <li class="nav-item dropdown {{ $isActive(['admin.payment-types.*']) ? 'active' : '' }}" style="display: none;">
                 <a href="javascript:void(0);" class="nav-link dropdown-toggle" data-bs-toggle="dropdown"><i data-feather="settings"></i><span>@lang('translation.master')</span></a>
                 <div class="dropdown-menu">
                     {{-- Master Entries --}}
