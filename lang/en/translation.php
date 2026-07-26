@@ -520,7 +520,7 @@ return [
     'remaining_amount' => 'Remaining Amount',
     'accepted_by' => 'Accepted By',
     'requester' => 'Requester',
-    'pending_posting' => 'Ready for Entry',
+    'pending_posting' => 'Store Receiving',
     'item' => 'Item',
     'create_requisition' => 'Create Requisition',
     'product_added_successfully' => 'Product Added Successfully',
