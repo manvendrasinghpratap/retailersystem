@@ -88,7 +88,7 @@
                 <div class="dropdown-menu">
                     {{-- PRODUCT SETUP --}}
                     <h6 class="dropdown-header">@lang('translation.product_setup') </h6>
-                    <a href="{{ route('admin.master_items.index') }}" class="dropdown-item"><i data-feather="layers" class="menu-icon-sm"></i>@lang('translation.master_items')</a>
+                    <a href="{{ route('admin.master_items.index') }}" class="dropdown-item"><i data-feather="settings" class="menu-icon-sm"></i>@lang('translation.master_items')</a>
                     <a href="{{ route($role . '.products') }}" class="dropdown-item"><i data-feather="box" class="menu-icon-sm"></i>@lang('translation.products')</a>
                     <a href="{{ route($role . '.categories.index') }}" class="dropdown-item"><i data-feather="grid" class="menu-icon-sm"></i>@lang('translation.categories')</a>
                     <div class="dropdown-divider"></div>
