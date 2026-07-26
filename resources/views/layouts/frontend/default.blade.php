@@ -559,5 +559,22 @@
         this.value = this.value.replace(/[^0-9]/g, '');
     });
 </script>
+@auth
+    <script>
+        $(function () {
+            window.sessionManager = new SessionManager(window.sessionConfig);
+        });
+        window.sessionConfig = {
+            timeout: {{ account_setting('general.session_timeout', 10) }},
+            warning: {{ account_setting('general.warning_before', 60) }},
+            keepAlive: {{ account_setting('general.keep_alive', 1) }},
+            csrf: "{{ csrf_token() }}",
+            logoutUrl: "{{ route('logout') }}",
+            keepAliveUrl: "{{ route('admin.keepalive') }}"
+
+        };
+
+    </script>
+@endauth
 
 </html>

@@ -6,7 +6,8 @@ use App\Http\Controllers\{
     BarcodeController,
     SaleController,
     ReportController,
-    ContactController
+    ContactController,
+    KeepAliveController,
 };
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\Admin\{
@@ -56,6 +57,13 @@ Route::get('syncroutes', function () {
     echo 'routes synced';
 });
 Route::get('admin/acl', [\App\Http\Controllers\Administrator\AclController::class, 'index'])->name('acl');
+
+/*  This is for session management keep alive  begin*/
+
+Route::middleware('auth')->post('/keep-alive', KeepAliveController::class)->name('admin.keepalive');
+
+/*  This is for session management keep alive  End*/
+
 // Mail::raw('Test email', function ($message) {
 //     $message->to('m8005029425@gmail.com')
 //         ->subject('Test Mail');

@@ -13,5 +13,6 @@
 <script src="{{ asset('assets/backend/js/select2.min.js') }}"></script>
 <script src="{{ asset('assets/backend/js/common.js?id=' . $cssRefresh) }}"></script>
 <script src="{{ asset('assets/backend/js/pages/form-validation.init.js') }}"></script>
+<script src="{{ asset('assets/js/session-manager.js?id=' . $cssRefresh) }}"></script>
 @yield('script')
 @stack('scripts')

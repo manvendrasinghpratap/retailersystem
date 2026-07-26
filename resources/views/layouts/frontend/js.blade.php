@@ -39,3 +39,4 @@
 
 <script src="{{ asset('assets/js/common.js') }}?v={{ $cssRefresh }}"></script>
 <script src="{{ asset('assets/js/modelregisterlogin.js') }}?v={{ $cssRefresh }}"></script>
+<script src="{{ asset('assets/js/session-manager.js?id=' . $cssRefresh) }}"></script>
