@@ -53,7 +53,11 @@ class Requisition extends Model
     | RELATIONSHIPS
     |--------------------------------------------------------------------------
     */
-
+    public function acceptedBy()
+    {
+        return $this->belongsTo(User::class, 'accepted_by');
+    }
+    
     public function items()
     {
         return $this->hasMany(RequisitionItem::class, 'requisition_id');

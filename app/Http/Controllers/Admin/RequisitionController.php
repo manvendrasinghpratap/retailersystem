@@ -56,6 +56,10 @@ class RequisitionController extends Controller
                     'route' => 'admin.requisitions.pending.posting',
                     'title' => trans('translation.pending_posting')
                 ],
+                [
+                    'route' => 'admin.requisitions.pending.posting.history',
+                    'title' => trans('translation.pending_posting_history')
+                ],
             ],
 
             'route1' => 'admin.requisitions.index',
@@ -422,6 +426,136 @@ class RequisitionController extends Controller
     }
 
 
+    public function pendingPostingHistory(Request $request)
+    {
+        $today = date('Y-m-d');
+        $this->breadcrumbPendingPosting['route2'] = __("translation.pending_posting_history");
+        $this->breadcrumbPendingPosting['title'] = __("translation.pending_posting_history");
+
+        $breadcrumb = $this->breadcrumbPendingPosting;
+        $warehouses = Warehouse::ofAccount()->active()->orderBy('name', 'asc')->pluck('name', 'id');
+        $stores = Store::ofAccount()->active()->orderBy('name', 'asc')->pluck('name', 'id');
+
+        $items = RequisitionItem::with([
+            'requisition',
+            'masterItem',
+            'requisition.store',
+            'requisition.fromWarehouse',
+            'requisition.creator'
+        ])
+
+            // =========================
+            // ONLY PENDING ITEMS
+            // =========================
+            ->whereNotNull('accepted_by')
+
+            // =========================
+            // ONLY ACTIVE REQUISITIONS
+            // =========================
+            ->whereHas('requisition', function ($q) use ($request, $today) {
+
+                // default active requisition
+                $q->whereIn('status', [2, 3]);
+
+                // =========================
+                // FILTER : REQUISITION NO
+                // =========================
+                $q->when($request->requisition_no, function ($qq) use ($request) {
+                    $qq->where('requisition_no', 'like', '%' . $request->requisition_no . '%');
+                });
+
+                // =========================
+                // FILTER : WAREHOUSE
+                // =========================
+                $q->when($request->from_warehouse_id, function ($qq) use ($request) {
+                    $qq->where('from_warehouse_id', $request->from_warehouse_id);
+                });
+
+                // =========================
+                // FILTER : STORE
+                // =========================
+                $q->when($request->for_store_id, function ($qq) use ($request) {
+                    $qq->where('for_store_id', $request->for_store_id);
+                });
+
+                // =========================
+                // FILTER : STATUS
+                // =========================
+                if ($request->filled('status')) {
+                    $q->where('status', $request->status);
+                }
+
+                // =========================
+                // FILTER : FROM DATE
+                // =========================
+                $q->when(
+                    $request->from_date,
+                    function ($qq) use ($request) {
+                    $qq->whereDate('updated_at', '>=', Settings::formatDate($request->from_date, 'Y-m-d'));
+                },
+                    function ($qq) use ($today) {
+                    $qq->whereDate('updated_at', '>=', $today);
+                }
+                );
+
+                // =========================
+                // FILTER : TO DATE
+                // =========================
+                $q->when($request->to_date, function ($qq) use ($request) {
+                    $qq->whereDate('date', '<=', Settings::formatDate($request->to_date, 'Y-m-d'));
+                });
+            })
+            ->orderBy('updated_at', 'desc');
+        if ($request->has('pdf')) {
+            $items = $items->get();
+            $pdfHeaderdata = \Config::get('constants.pendingPostingHistoryListpdf');
+            $pdf = PDF::loadView('backend.pdf.requisitions.pendingPostingHistoryListpdf', compact('items', 'pdfHeaderdata', 'breadcrumb'));
+            $pdf = Settings::downloadpdf($pdf);
+            $fileName = $pdfHeaderdata['filename'] . '-' . date('Y-m-d') . '.pdf';
+            return $pdf->stream($fileName);
+        } elseif ($request->has('csv')) {
+            $items = $items->get();
+            $csvHeaderdata = \Config::get('constants.pendingPostingHistoryListpdf');
+            $fileName = $csvHeaderdata['filename'] . '-' . date('Y-m-d') . '.csv';
+            $data = [];
+            $ii = $i = 0;
+            // ✅ Header Row
+            $data[$ii] = [
+                '#',
+                __('translation.requisition_no'),
+                __('translation.from_warehouse'),
+                __('translation.product'),
+                __('translation.quantity'),
+                __('translation.received_by'),
+                __('translation.received_date'),
+            ];
+
+            foreach ($items as $item) {
+                $data[++$ii] = [
+                    $ii,
+                    $item->requisition->requisition_no ?? '-',
+                    $item->requisition->fromWarehouse->name ?? '-',
+                    $item->masterItem->name ?? '-',
+                    $item->qty,
+                    !empty($item->accepted_by) ? $item->acceptedBy->name : '-',
+                    !empty($item->updated_at) ? "\t" . Settings::getFormattedDatetime($item->updated_at) : '-',
+                ];
+            }
+            return Settings::downloadcsvfile($data, $fileName);
+        }
+        $items = $items->paginate(account_setting('general.pagination'));
+        return view(
+            'backend.admin.requisition.pending-posting-history',
+            compact(
+                'items',
+                'warehouses',
+                'stores',
+                'breadcrumb',
+                'today'
+            )
+        );
+    }
+
     public function pendingPosting(Request $request)
     {
         $breadcrumb = $this->breadcrumbPendingPosting;
@@ -519,8 +653,45 @@ class RequisitionController extends Controller
                     );
                 });
             })
-            ->latest()
-            ->paginate(config('constants.pagination'));
+            ->orderBy('updated_at', 'desc');
+        if ($request->has('pdf')) {
+            $items = $items->get();
+            $pdfHeaderdata = \Config::get('constants.pendingPostingListpdf');
+            $pdf = PDF::loadView('backend.pdf.requisitions.pendingPostingpdf', compact('items', 'pdfHeaderdata', 'breadcrumb'));
+            $pdf = Settings::downloadpdf($pdf);
+            $fileName = $pdfHeaderdata['filename'] . '-' . date('Y-m-d') . '.pdf';
+            return $pdf->stream($fileName);
+        } elseif ($request->has('csv')) {
+            $items = $items->get();
+            $csvHeaderdata = \Config::get('constants.pendingPostingListpdf');
+            $fileName = $csvHeaderdata['filename'] . '-' . date('Y-m-d') . '.csv';
+            $data = [];
+            $ii = $i = 0;
+            // ✅ Header Row
+            $data[$ii] = [
+                '#',
+                __('translation.requisition_no'),
+                __('translation.from_warehouse'),
+                __('translation.product'),
+                __('translation.quantity'),
+                __('translation.received_by'),
+                __('translation.received_date'),
+            ];
+
+            foreach ($items as $item) {
+                $data[++$ii] = [
+                    $ii,
+                    $item->requisition->requisition_no ?? '-',
+                    $item->requisition->fromWarehouse->name ?? '-',
+                    $item->masterItem->name ?? '-',
+                    $item->qty,
+                    !empty($item->accepted_by) ? $item->acceptedBy->name : '-',
+                    !empty($item->updated_at) ? "\t" . Settings::getFormattedDatetime($item->updated_at) : '-',
+                ];
+            }
+            return Settings::downloadcsvfile($data, $fileName);
+        }
+        $items = $items->paginate(account_setting('general.pagination'));
 
         return view(
             'backend.admin.requisition.pending-posting',
@@ -531,6 +702,30 @@ class RequisitionController extends Controller
                 'breadcrumb'
             )
         );
+    }
+
+    public function pendingPostingHistorypdf(Request $request)
+    {
+        $request->merge(['pdf' => 1]);
+        return $this->pendingPostingHistory($request);
+    }
+
+    public function pendingPostingHistorycsv(Request $request)
+    {
+        $request->merge(['csv' => 1]);
+        return $this->pendingPostingHistory($request);
+    }
+
+    public function pendingPostingPdf(Request $request)
+    {
+        $request->merge(['pdf' => 1]);
+        return $this->pendingPosting($request);
+    }
+
+    public function pendingPostingcsv(Request $request)
+    {
+        $request->merge(['csv' => 1]);
+        return $this->pendingPosting($request);
     }
 
     public function cancelItem(Request $request)
