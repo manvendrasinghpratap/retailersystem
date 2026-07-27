@@ -236,6 +236,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'route.permission', 
         Route::get('/pending-posting/pdf', [RequisitionController::class, 'pendingPostingPdf'])->name('pending.posting.pdf');
         Route::get('/pending-posting/csv', [RequisitionController::class, 'pendingPostingCsv'])->name('pending.posting.csv');
         Route::get('/pending-posting-history', [RequisitionController::class, 'pendingPostingHistory'])->name('pending.posting.history');
+        Route::get('/pending-posting-history-report', [RequisitionController::class, 'pendingPostingHistoryReport'])->name('pending.posting.history.report');
         Route::get('/pending-posting-history/pdf', [RequisitionController::class, 'pendingPostingHistorypdf'])->name('pending.posting.history.pdf');
         Route::get('/pending-posting-history/csv', [RequisitionController::class, 'pendingPostingHistorycsv'])->name('pending.posting.history.csv');
         Route::post('/cancel-item', [RequisitionController::class, 'cancelItem'])->name('cancel.item');

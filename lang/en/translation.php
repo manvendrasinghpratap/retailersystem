@@ -522,6 +522,7 @@ return [
     'requester' => 'Requester',
     'pending_posting' => 'Store Receiving',
     'pending_posting_history' => 'Store Receiving History',
+    'pending_posting_history_report' => 'Store Receiving History Report',
     'received_by' => 'Received By',
     'received_date' => 'Received date',
     'item' => 'Item',

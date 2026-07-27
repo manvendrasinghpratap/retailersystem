@@ -128,7 +128,7 @@
             {{-- ===================================================== --}}
             {{-- REPORTS --}}
             {{-- ===================================================== --}}
-            <li class="nav-item dropdown {{ $isActive(['reports.*']) ? 'active' : '' }}">
+            <li class="nav-item dropdown {{ $isActive(['reports.*', 'admin.requisitions.pending.posting.history.report*']) ? 'active' : '' }}">
                 <a href="javascript:void(0);" class="nav-link dropdown-toggle" data-bs-toggle="dropdown"><i data-feather="bar-chart-2"></i><span>@lang('translation.reports')</span></a>
                 <div class="dropdown-menu">
                     {{-- SALES REPORTS --}}
@@ -138,6 +138,10 @@
                     {{-- STAFF REPORTS --}}
                     <h6 class="dropdown-header">@lang('translation.staff_reports')</h6>
                     <a href="{{ route('attendance.report') }}" class="dropdown-item"><i data-feather="clock" class="menu-icon-sm"></i>@lang('translation.attendance_report')</a>
+                    {{-- PENDING POSTING HISTORY REPORT --}}
+                    <div class="dropdown-divider"></div>
+                    <h6 class="dropdown-header">@lang('translation.pending_posting_history_report')</h6>
+                    <a href="{{ route('admin.requisitions.pending.posting.history.report') }}" class="dropdown-item"><i data-feather="rotate-ccw" class="menu-icon-sm"></i>@lang('translation.pending_posting_history_report')</a>
                 </div>
             </li>
             {{-- ===================================================== --}}

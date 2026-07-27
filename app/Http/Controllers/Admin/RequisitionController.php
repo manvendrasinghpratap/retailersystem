@@ -704,6 +704,10 @@ class RequisitionController extends Controller
         );
     }
 
+    public function pendingPostingHistoryReport(Request $request)
+    {
+        return $this->pendingPostingHistory($request);
+    }
     public function pendingPostingHistorypdf(Request $request)
     {
         $request->merge(['pdf' => 1]);
