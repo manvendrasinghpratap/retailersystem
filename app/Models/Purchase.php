@@ -7,8 +7,8 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Purchase extends Model
 {
-
     protected $table = 'purchases';
+
     protected $fillable = [
         'account_id',
         'vendor_id',
@@ -18,37 +18,59 @@ class Purchase extends Model
         'status',
         'created_by'
     ];
+
     protected $casts = [
-        'quantity' => 'decimal:2',
+        'total' => 'decimal:2',
     ];
+
+    /*
+    |--------------------------------------------------------------------------
+    | Scopes
+    |--------------------------------------------------------------------------
+    */
 
     public function scopeOfAccount($query)
     {
         return $query->where('account_id', auth()->user()->account_id);
     }
+
+    public function scopeOfActiveStatus($query)
+    {
+        return $query->where('status', 1);
+    }
+
     public function scopeActive($query)
     {
         return $query;
-        //return $query->where('status', 1);
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
 
     public function items()
     {
-        return $this->hasMany(PurchaseItem::class);
+        return $this->hasMany(PurchaseItem::class, 'purchase_id', 'id');
     }
 
     public function vendor()
     {
-        return $this->belongsTo(Vendor::class);
+        return $this->belongsTo(Vendor::class, 'vendor_id', 'id');
     }
 
     public function warehouse()
     {
-        return $this->belongsTo(Warehouse::class);
+        return $this->belongsTo(Warehouse::class, 'warehouse_id', 'id');
     }
+
     /*
-    @function quantity
+    |--------------------------------------------------------------------------
+    | Accessors
+    |--------------------------------------------------------------------------
     */
+
     protected function quantity(): Attribute
     {
         return Attribute::make(
@@ -56,5 +78,4 @@ class Purchase extends Model
             set: fn($value) => (int) $value,
         );
     }
-
 }

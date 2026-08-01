@@ -196,6 +196,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'route.permission', 
         Route::get('/exportcsv', [PurchaseController::class, 'exportCsv'])->name('exportCsv');
         // Ajax view
         Route::get('/view/ajax/{id}', [PurchaseController::class, 'viewAjax'])->name('view.ajax');
+        // Print barcode
+        Route::get('/barcodes', [PurchaseController::class, 'purchaseBarcodes'])->name('purchase-barcodes');
+        Route::post('/barcodes-data', [PurchaseController::class, 'purchaseBarcodesData'])->name('purchase-barcodes-data');
+        Route::get('/barcode-print/{purchase}', [PurchaseController::class, 'printBarcode'])->name('printBarcode');
+        Route::get('/barcode-preview/{purchase}', [PurchaseController::class, 'barcodePreview'])->name('barcodePreview');
     });
 
     // Purchase Return
@@ -240,7 +245,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'route.permission', 
         Route::get('/pending-posting-history/pdf', [RequisitionController::class, 'pendingPostingHistorypdf'])->name('pending.posting.history.pdf');
         Route::get('/pending-posting-history/csv', [RequisitionController::class, 'pendingPostingHistorycsv'])->name('pending.posting.history.csv');
         Route::post('/cancel-item', [RequisitionController::class, 'cancelItem'])->name('cancel.item');
-
+        Route::post('/validate-requisition-barcode', [RequisitionController::class, 'validateRequisitionBarcode'])->name('validateRequisitionBarcode');
+        Route::post('/barcode/search', [RequisitionController::class, 'searchBarcode'])->name('barcode.search');
     });
 });
 

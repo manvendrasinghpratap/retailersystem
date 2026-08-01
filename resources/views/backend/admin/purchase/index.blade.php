@@ -71,16 +71,17 @@
                                         <td>{{ $row->purchase_no }}</td>
                                         <td>{{ $row->vendor->company_name ?? '' }}</td>
                                         <td>{{ $row->warehouse->name ?? '' }}</td>
-                                        <td>{{__('translation.currency')}} {{ $row->total }}</td>
+                                        <td>{{__('translation.currency')}} {{ $row->total }}</td> 
                                         <td>{{ \App\Helpers\Settings::formatDate($row->created_at, Config::get('constants.dateformat.slashdmy')) }}</td> 
                                         <td>@if($row->status == 0)
-                                                <span class="badge bg-danger">Cancelled</span>
+                                                <span class="badge bg-danger">{{__('translation.cancelled')}}</span>
                                             @else
-                                                <span class="badge bg-success">Active</span>
+                                                <span class="badge bg-success">{{__('translation.active')}}</span>
                                             @endif</td>
                                         <td> 
                                             <x-href-input action="view" name="view" label="View" class="viewPurchase" data-id="{{ \App\Helpers\Settings::getEncodeCode($row->id) }}" href="javascript:void(0);" />
                                             @if($row->status == 1)
+                                            <x-href-input action="print_barcode" name="print_barcode" label="Print Barcode" class="printBarcode" href="{{ route('admin.purchases.printBarcode', \App\Helpers\Settings::getEncodeCode($row->id)) }}"/>
                                             <x-href-input action="cancel" name="cancel" class="cancelPurchase" label="Cancel" href="javascript:void(0);" data-id="{{ \App\Helpers\Settings::getEncodeCode($row->id) }}" />
                                             @endif
                                         </td> 

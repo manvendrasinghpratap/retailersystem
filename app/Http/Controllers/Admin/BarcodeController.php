@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Helpers\Settings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Validator;
 
 class BarcodeController extends Controller
 {
@@ -176,5 +177,53 @@ class BarcodeController extends Controller
             'payload' => $payload,
             'adjustmentType' => $adjustmentType,
         ]);
+    }
+
+    public function validatePurchaseBarcode(Request $request)
+    {
+        try {
+
+            $validator = Validator::make($request->all(), [
+                'barcode' => 'required|string',
+                'routeName' => 'required|string',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => $validator->errors()->first(),
+                ], 422);
+            }
+
+            $barcode = trim($request->barcode);
+
+            // Example validation
+            if (strlen($barcode) !== 13) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Invalid barcode.'
+                ]);
+            }
+            if (strlen($barcode) == 13 && !Settings::isValidEAN13($barcode)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Invalid barcode checksum.'
+                ]);
+            }
+
+            // SUCCESS
+            return response()->json([
+                'status' => true,
+                'message' => 'Bardddddcode is valid.',
+                'barcode' => $barcode
+            ]);
+
+        } catch (\Throwable $e) {
+
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 }

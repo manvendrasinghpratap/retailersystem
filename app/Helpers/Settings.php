@@ -183,8 +183,9 @@ class Settings
         }
         return $punchOutDate;
     }
-    public static function formatDate($date, $format)
+    public static function formatDate($date, $format = '')
     {
+        $format = (!empty($format)) ? $format : Config::get('constants.dateformat.slashdmy');
         if (strpos($date, '/') !== false) {
             return date($format, strtotime(str_replace('/', '-', $date)));
         } else {

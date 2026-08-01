@@ -1,431 +1,880 @@
 @extends('backend.layouts.master-horizontal')
+
 @section('title')
     {{ $breadcrumb['title'] ?? '' }} | {{ $breadcrumb['route1Title'] ?? '' }}
 @endsection
+
 @section('content')
-@include('backend.components.breadcrumb')
 
-<div class="row">
-    <div class="col-lg-12">
-        <div class="card">
-            <div class="card-header">
-                <h4 class="card-title">
-                    {{ request()->route()->getName() == 'admin.requisitions.create'
-                        ? $breadcrumb['route1Title']
-                        : ($breadcrumb['route3Title'] ?? '') }}
-                </h4>
-            </div>
-            <div class="card-body">
-                <form method="POST" action="{{ route('admin.requisitions.store') }}" id="requisitionForm" novalidate> 
-                    @csrf
-                    <div class="row">
-                        {{-- FROM WAREHOUSE --}}
-                        <x-select-dropdown name="from_warehouse_id" label="{{ __('translation.from_warehouse') }}" :options="$warehouses" required id="from_warehouse_id" class="warehouse"/>
-                        {{-- FOR STORE --}}
-                        <x-select-dropdown name="for_store_id" label="{{ __('translation.for_store') }}" :options="$stores" required id="for_store_id" class="store"/>
-                        {{-- DATE --}}
-                        <x-text-input name="date" label="{{ __('translation.date') }}" type="text" class="flatdatepickr" value="{{ \App\Helpers\Settings::getFormattedDate(date('Y-m-d')) }}" required id="date"/>
-                    </div>
+    @include('backend.components.breadcrumb')
 
-                    {{-- ITEMS TABLE --}}
-                    <table class="table table-bordered mt-3" id="itemsTable">
-                        <thead class="table-light">
-                            <tr>
-                                <th width="40%">{{ __('translation.product') }}</th>
-                                <th class="text-center">{{ __('translation.stock') }}</th>
-                                <th>{{ __('translation.quantity') }}</th>
-                                <th width="5%">{{ __('translation.action') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
 
-                    {{-- ADD BUTTON --}}
-                    <div class="text-center mt-2">
-                        <button type="button" class="btn btn-success px-4" id="addRow">
-                            <i class="mdi mdi-plus"></i>
-                            {{ __('translation.add_item') }}
-                        </button>
-                    </div>
+                <div class="card-header">
+                    <h4 class="card-title">
+                        {{ request()->route()->getName() == 'admin.requisitions.create'
+        ? $breadcrumb['route1Title']
+        : ($breadcrumb['route3Title'] ?? '') }}
+                    </h4>
+                </div>
 
-                    {{-- TOTAL --}}
-                    <div class="text-end mt-3">
-                        <h5>
-                            {{ __('translation.total_quantity') }} :
-                            <span id="totalQty">0</span>
-                        </h5>
-                    </div>
-                        <div class="card-footer form-group center">
-                            <div class="d-flex gap-2 dflex">
-                                <button type="submit" class="btn btn-primary">{{ __('translation.save') }}</button>
-                                <a href="{{ route('admin.requisitions.index') }}" class="btn btn-secondary">{{ __('translation.cancel') }}</a>
-                            </div>
+                <div class="card-body">
+
+                    <form method="POST" action="{{ route('admin.requisitions.store') }}" id="requisitionForm" novalidate>
+
+                        @csrf
+                        {{-- Header Information --}}
+                        <div class="row">
+
+                            <x-select-dropdown name="from_warehouse_id" label="{{ __('translation.from_warehouse') }}" :options="$warehouses" :selected="old('from_warehouse_id')" class="warehouse" id="from_warehouse_id" required />
+
+                            <x-select-dropdown name="for_store_id" label="{{ __('translation.for_store') }}" :options="$stores" :selected="old('for_store_id')" class="store" id="for_store_id" required />
+
+                            <x-text-input name="date" label="{{ __('translation.date') }}" class="flatdatepickr" id="date" required value="{{ old('date', \App\Helpers\Settings::getFormattedDate(date('Y-m-d'))) }}" />
+
                         </div>
-                </form>
+
+                        <hr>
+
+                        {{-- Products --}}
+                        <div class="table-responsive">
+
+                            <table class="table table-bordered align-middle" id="itemsTable">
+
+                                <thead class="table-light">
+
+                                    <tr>
+
+                                        <th width="26%">
+                                            {{ __('translation.product') }}
+                                        </th>
+
+                                        <th width="10%" class="text-center">
+                                            {{ __('translation.stock') }}
+                                        </th>
+
+                                        <th width="10%" class="text-center">
+                                            {{ __('translation.quantity') }}
+                                        </th>
+
+                                        <th width="12%" class="text-center">
+                                            {{ __('translation.tracking') }}
+                                        </th>
+
+                                        <th width="34%">
+                                            {{ __('translation.barcodes') }}
+                                        </th>
+
+                                        <th width="8%" class="text-center">
+                                            {{ __('translation.action') }}
+                                        </th>
+
+                                    </tr>
+
+                                </thead>
+
+                                <tbody>
+
+                                    {{-- Dynamic Rows --}}
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                        <div class="row mt-3">
+
+                            <div class="col-md-6">
+
+                                <button type="button" id="addRow" class="btn btn-success">
+
+                                    <i class="mdi mdi-plus"></i>
+
+                                    {{ __('translation.add_item') }}
+
+                                </button>
+
+                            </div>
+
+                            <div class="col-md-6 text-end">
+
+                                <h5 class="mb-0">
+
+                                    {{ __('translation.total_quantity') }} :
+
+                                    <span id="totalQty" class="badge bg-primary">
+                                        0
+                                    </span>
+
+                                </h5>
+
+                            </div>
+
+                        </div>
+
+                        <hr>
+
+                        <div class="d-flex justify-content-end gap-2">
+
+                            <button type="submit" class="btn btn-primary">
+
+                                <i class="mdi mdi-content-save"></i>
+
+                                {{ __('translation.save') }}
+
+                            </button>
+
+                            <a href="{{ route('admin.requisitions.index') }}" class="btn btn-secondary">
+
+                                <i class="mdi mdi-arrow-left"></i>
+
+                                {{ __('translation.cancel') }}
+
+                            </a>
+
+                        </div>
+
+                    </form>
+
+                </div>
 
             </div>
         </div>
     </div>
-</div>
 
+    @include('backend.admin.requisition.partials.barcode_modal')
 @endsection
 
 @section('script')
 
-<script>
+    <script>
+        let activeRow = null;
 
-validateSelect2Form('requisitionForm', [
-    'from_warehouse_id',
-    'for_store_id'
-]);
+        $(document).on('click', '.scanBarcode', function () {
 
-let rowIndex = 0;
+            activeRow = $(this).closest('tr');
 
-// ========================
-// INIT SELECT2
-// ========================
-function initSelect2(element)
-{
-    element.select2({
-        placeholder: 'Select Product',
-        width: '100%',
-        ajax: {
-            url: "{{ route('admin.products.search') }}",
-            dataType: 'json',
-            delay: 250,
+            $('#barcodeModal').modal('show');
 
-            data: function(params)
-            {
-                let warehouse_id = $('select[name="from_warehouse_id"]').val();
+            $('#scanBarcode').val('');
 
-                if (!warehouse_id) {
-                    return false;
-                }
+            $('#barcodeMessage').html('');
 
-                return {
-                    q: params.term,
-                    warehouse_id: warehouse_id
-                };
-            },
+            setTimeout(function () {
 
-            processResults: function(data)
-            {
-                return {
-                    results: data
-                };
+                $('#scanBarcode').focus();
+
+            }, 300);
+
+        });
+        $('#scanBarcode').keydown(function (e) {
+
+            if (e.which == 13) {
+
+                e.preventDefault();
+
+                searchBarcode();
+
             }
-        }
-    });
-}
 
-// ========================
-// RESET ITEMS
-// ========================
-function resetItems()
-{
-    $('#itemsTable tbody').empty();
+        });
+        validateSelect2Form('requisitionForm', [
+            'from_warehouse_id',
+            'for_store_id'
+        ]);
 
-    rowIndex = 0;
 
-    addRow();
+        function searchBarcode() {
 
-    calculateTotal();
-}
+            let barcode = $('#scanBarcode').val().trim();
 
-// ========================
-// ADD ROW
-// ========================
-function addRow()
-{
-    let fromWarehouse = $('select[name="from_warehouse_id"]').val();
+            if (barcode == '') {
+                return;
+            }
 
-    if (!fromWarehouse) {
-        Swal.fire(
-            'Error',
-            'Please select from warehouse first',
-            'error'
-        );
-        return;
-    }
+            let warehouse = $('#from_warehouse_id').val();
 
-    let row = `
-        <tr>
+            // Already scanned tracking ids
+            let scannedIds = $('.hiddenTracking').map(function () {
+                return $(this).val();
+            }).get();
 
-            <td>
-                <select
-                    name="items[${rowIndex}][master_item_id]"
-                    class="form-control selectProduct"
-                    required>
-                </select>
-            </td>
+            $.post(
+                "{{ route('admin.requisitions.barcode.search') }}",
+                {
+                    _token: "{{ csrf_token() }}",
+                    barcode: barcode,
+                    warehouse_id: warehouse,
+                    scanned_ids: scannedIds
+                },
+                function (res) {
 
-            <td class="stock text-center text-primary fw-bold">
-                0
-            </td>
+                    if (res.success) {
 
-            <td>
-                <input
-                    type="number"
-                    name="items[${rowIndex}][qty]"
-                    class="form-control qty"
-                    min="1"
-                    step="1"
-                    disabled
-                    required>
-            </td>
+                        fillProduct(res);
 
-            <td>
-                <button
-                    type="button"
-                    class="btn btn-danger removeRow">
-                    x
-                </button>
-            </td>
+                        $('#scanBarcode').val('').focus();
 
-        </tr>
-    `;
+                    } else {
 
-    $('#itemsTable tbody').append(row);
+                        Swal.fire(
+                            'Error',
+                            res.message,
+                            'error'
+                        );
 
-    let newRow = $('#itemsTable tbody tr:last');
+                    }
 
-    initSelect2(newRow.find('.selectProduct'));
-
-    rowIndex++;
-}
-
-$('#addRow').click(addRow);
-
-addRow();
-
-// ========================
-// FETCH STOCK
-// ========================
-function fetchStock(row)
-{
-    let master_item_id = row.find('.selectProduct').val();
-
-    let warehouse_id = $('select[name="from_warehouse_id"]').val();
-
-    if (!master_item_id || !warehouse_id) {
-        return;
-    }
-
-    $.get("{{ route('admin.stock_returns.stock.check') }}", {
-        master_item_id: master_item_id,
-        warehouse_id: warehouse_id
-    }, function(res) {
-
-        let stock = parseFloat(res.stock) || 0;
-
-        row.find('.stock').text(stock);
-
-        let qtyInput = row.find('.qty');
-
-        if (stock <= 0) {
-
-            qtyInput.val('').prop('disabled', true);
-
-            Swal.fire(
-                'Warning',
-                'No stock available',
-                'warning'
+                }
             );
 
-        } else {
+        }
 
-            qtyInput.prop('disabled', false);
 
-            qtyInput.attr('max', stock);
+        let rowIndex = 0;
 
-            qtyInput.val(1);
+        // ========================
+        // INIT SELECT2
+        // ========================
+        function initSelect2(element) {
+            element.select2({
+                placeholder: 'Select Product',
+                width: '100%',
+                ajax: {
+                    url: "{{ route('admin.products.search') }}",
+                    dataType: 'json',
+                    delay: 250,
+
+                    data: function (params) {
+                        let warehouse_id = $('select[name="from_warehouse_id"]').val();
+
+                        if (!warehouse_id) {
+                            return false;
+                        }
+
+                        return {
+                            q: params.term,
+                            warehouse_id: warehouse_id
+                        };
+                    },
+
+                    processResults: function (data) {
+                        return {
+                            results: data
+                        };
+                    }
+                }
+            });
+        }
+
+        // ========================
+        // RESET ITEMS
+        // ========================
+        function resetItems() {
+            $('#itemsTable tbody').empty();
+
+            rowIndex = 0;
+
+            if ($('#from_warehouse_id').val()) {
+                addRow();
+            }
 
             calculateTotal();
         }
-    });
-}
 
-// ========================
-// PRODUCT CHANGE
-// ========================
-$(document).on('change', '.selectProduct', function () {
+        // ========================
+        // ADD ROW
+        // ========================
+        function addRow() {
 
-    let row = $(this).closest('tr');
+            let warehouse = $('#from_warehouse_id').val();
 
-    let master_item_id = $(this).val();
+            if (!warehouse) {
+                Swal.fire('Error', 'Please select warehouse first', 'error');
+                return;
+            }
 
-    // Prevent duplicate
-    let duplicate = false;
+            let row = `
+                                                                                                    <tr class="productRow">
 
-    $('.selectProduct').not(this).each(function () {
+                                                                                                        <td>
+                                                                                                            <select
+                                                                                                                name="items[${rowIndex}][master_item_id]"
+                                                                                                                class="form-control selectProduct"
+                                                                                                                required>
+                                                                                                            </select>
+                                                                                                        </td>
 
-        if ($(this).val() == master_item_id && master_item_id !== '') {
-            duplicate = true;
+                                                                                                        <td class="stock text-center fw-bold text-primary">
+                                                                                                            0
+                                                                                                        </td>
+
+                                                                                                        <td>
+                                                                                                            <input
+                                                                                                                type="number"
+                                                                                                                name="items[${rowIndex}][qty]"
+                                                                                                                class="form-control qty"
+                                                                                                                min="1"
+                                                                                                                disabled>
+                                                                                                        </td>
+
+                                                                                                        <td class="text-center">
+
+                                                                                                            <span class="badge bg-secondary trackingType">
+                                                                                                                NONE
+                                                                                                            </span>
+
+                                                                                                            <br>
+
+                                                                                                            <button
+                                                                                                                type="button"
+                                                                                                                class="btn btn-primary btn-sm mt-2 scanBarcode d-none">
+
+                                                                                                                <i class="mdi mdi-barcode-scan"></i>
+
+                                                                                                                Scan
+
+                                                                                                            </button>
+
+                                                                                                        </td>
+
+                                                                                                        <td>
+
+                                                                                                            <div class="barcodeContainer"></div>
+
+                                                                                                        </td>
+
+                                                                                                        <td>
+
+                                                                                                            <button
+                                                                                                                type="button"
+                                                                                                                class="btn btn-danger removeRow">
+
+                                                                                                                <i class="mdi mdi-delete"></i>
+
+                                                                                                            </button>
+
+                                                                                                        </td>
+
+                                                                                                    </tr>`;
+
+            $('#itemsTable tbody').append(row);
+
+            let tr = $('#itemsTable tbody tr:last');
+
+            initSelect2(tr.find('.selectProduct'));
+
+            rowIndex++;
         }
-    });
 
-    if (duplicate) {
+        $('#addRow').click(addRow);
 
-        Swal.fire(
-            'Warning',
-            'Product already added',
-            'warning'
-        );
+        addRow();
 
-        $(this).val(null).trigger('change');
+        // ========================
+        // FETCH STOCK
+        // ========================
+        function fetchStock(row) {
 
-        return;
-    }
+            let warehouse_id = $('#from_warehouse_id').val();
+            let master_item_id = row.find('.selectProduct').val();
 
-    fetchStock(row);
-});
+            if (!warehouse_id || !master_item_id) {
+                return;
+            }
 
-// ========================
-// CALCULATE TOTAL
-// ========================
-function calculateTotal()
-{
-    let total = 0;
+            $.get(
+                "{{ route('admin.stock_returns.stock.check') }}",
+                {
+                    warehouse_id: warehouse_id,
+                    master_item_id: master_item_id
+                },
+                function (res) {
 
-    $('.qty').each(function () {
+                    let stock = parseFloat(res.stock) || 0;
+                    let trackingType = (res.tracking_type || 'none').toLowerCase();
 
-        total += parseFloat($(this).val()) || 0;
-    });
+                    // Save tracking type on row
+                    row.attr('data-tracking-type', trackingType);
 
-    $('#totalQty').text(total);
-}
+                    // Update UI
+                    row.find('.stock').text(stock);
+                    row.find('.trackingType').text(trackingType.toUpperCase());
 
-// ========================
-// QTY VALIDATION
-// ========================
-$(document).on('input', '.qty', function () {
+                    let qty = row.find('.qty');
+                    let scanBtn = row.find('.scanBarcode');
 
-    let qty = parseFloat($(this).val()) || 0;
+                    // Clear old scanned barcodes
+                    row.find('.barcodeContainer').html('');
 
-    let max = parseFloat($(this).attr('max')) || 0;
+                    if (stock <= 0) {
 
-    if (qty > max) {
+                        qty.val('')
+                            .prop('disabled', true)
+                            .prop('readonly', true)
+                            .removeAttr('max');
 
-        $(this).val(max);
+                        scanBtn.addClass('d-none');
 
-        Swal.fire(
-            'Warning',
-            'Max stock: ' + max,
-            'warning'
-        );
-    }
+                        calculateTotal();
 
-    if (qty <= 0) {
-        $(this).val('');
-    }
+                        return;
+                    }
 
-    calculateTotal();
-});
+                    qty.prop('disabled', false)
+                        .attr('max', stock);
 
-// ========================
-// REMOVE ROW
-// ========================
-$(document).on('click', '.removeRow', function () {
+                    if (trackingType === 'none') {
 
-    $(this).closest('tr').remove();
+                        // Manual quantity
+                        scanBtn.addClass('d-none');
 
-    calculateTotal();
-});
+                        qty.prop('readonly', false)
+                            .val(1);
 
-// ========================
-// WAREHOUSE CHANGE
-// ========================
-$('select[name="from_warehouse_id"], select[name="to_warehouse_id"]').on('change', function () {
+                    } else {
 
-    let fromWarehouse = $('select[name="from_warehouse_id"]').val();
+                        // Barcode mandatory
+                        scanBtn.removeClass('d-none');
 
-    let toWarehouse = $('select[name="to_warehouse_id"]').val();
+                        qty.prop('readonly', true)
+                            .val('');
 
-    if (fromWarehouse && toWarehouse && fromWarehouse == toWarehouse) {
+                    }
 
-        Swal.fire(
-            'Error',
-            'From & To warehouse cannot be same',
-            'error'
-        );
+                    calculateTotal();
 
-        $(this).val('').trigger('change');
+                }
+            ).fail(function () {
 
-        return;
-    }
+                Swal.fire(
+                    'Error',
+                    'Unable to fetch stock.',
+                    'error'
+                );
 
-    resetItems();
-});
+            });
 
-// ========================
-// FORM VALIDATION
-// ========================
-$('#requisitionForm').on('submit', function(e){
-
-    e.preventDefault();
-
-    let fromWarehouse = $('select[name="from_warehouse_id"]').val();
-
-    let toWarehouse = $('select[name="for_store_id"]').val();
-
-    if (!fromWarehouse || !toWarehouse) {
-
-        Swal.fire(
-            'Error',
-            'Please select warehouses',
-            'error'
-        );
-
-        return;
-    }
-
-    let valid = true;
-
-    $('#itemsTable tbody tr').each(function () {
-
-        let product = $(this).find('.selectProduct').val();
-
-        let qty = parseFloat($(this).find('.qty').val()) || 0;
-
-        if (!product || qty <= 0) {
-            valid = false;
         }
-    });
+        // ========================
+        // PRODUCT CHANGE
+        // ========================
+        $(document).on('change', '.selectProduct', function () {
 
-    if (!valid) {
+            let row = $(this).closest('tr');
 
-        Swal.fire(
-            'Error',
-            'Fill all item details correctly',
-            'error'
-        );
+            let product = $(this).val();
 
-        return;
-    }
+            row.find('.qty').val('');
 
-    if ($('#itemsTable tbody tr').length === 0) {
+            let duplicate = false;
 
-        Swal.fire(
-            'Error',
-            'Add at least one item',
-            'error'
-        );
+            $('.selectProduct').not(this).each(function () {
 
-        return;
-    }
+                if ($(this).val() == product) {
 
-    Swal.fire({
-        title: 'Confirm Requisition?',
-        icon: 'warning',
-        showCancelButton: true
-    }).then((res) => {
+                    duplicate = true;
 
-        if (res.isConfirmed) {
-            this.submit();
+                }
+
+            });
+
+            if (duplicate) {
+
+                Swal.fire(
+                    'Error',
+                    'Product already added.',
+                    'error'
+                );
+
+                $(this).val(null).trigger('change.select2');
+
+                return;
+
+            }
+            row.find('.barcodeContainer').html('');
+
+            row.find('.trackingType').text('NONE');
+
+            updateQty();
+
+            fetchStock(row);
+
+        });
+
+        // ========================
+        // CALCULATE TOTAL
+        // ========================
+        function calculateTotal() {
+            let total = 0;
+
+            $('.qty').each(function () {
+
+                total += parseFloat($(this).val()) || 0;
+            });
+
+            $('#totalQty').text(total);
         }
-    });
-});
 
-</script>
+        // ========================
+        // QTY VALIDATION
+        // ========================
+        $(document).on('input', '.qty', function () {
+
+            let qty = parseFloat($(this).val()) || 0;
+
+            let max = parseFloat($(this).attr('max')) || 0;
+
+            if (qty > max) {
+
+                $(this).val(max);
+
+                Swal.fire(
+                    'Warning',
+                    'Max stock: ' + max,
+                    'warning'
+                );
+            }
+
+            if (qty <= 0) {
+                $(this).val('');
+            }
+
+            calculateTotal();
+        });
+
+
+        // ========================
+        // WAREHOUSE CHANGE
+        // ========================
+        $('#from_warehouse_id').change(function () {
+
+            resetItems();
+
+        });
+
+        $('#for_store_id').change(function () {
+
+        });
+
+        // ========================
+        // FORM VALIDATION
+        // ========================
+        $('#requisitionForm').on('submit', function (e) {
+
+            e.preventDefault();
+
+            let valid = true;
+
+            let fromWarehouse = $('#from_warehouse_id').val();
+            let toWarehouse = $('#for_store_id').val();
+
+            if (!fromWarehouse || !toWarehouse) {
+
+                Swal.fire(
+                    'Error',
+                    'Please select warehouse and store.',
+                    'error'
+                );
+
+                return;
+            }
+
+            if ($('#itemsTable tbody tr').length === 0) {
+
+                Swal.fire(
+                    'Error',
+                    'Add at least one item.',
+                    'error'
+                );
+
+                return;
+            }
+
+            // ===========================
+            // Validate Product & Qty
+            // ===========================
+            $('#itemsTable tbody tr').each(function () {
+
+                let product = $(this).find('.selectProduct').val();
+                let qty = parseInt($(this).find('.qty').val()) || 0;
+
+                if (!product || qty <= 0) {
+
+                    valid = false;
+
+                    Swal.fire(
+                        'Error',
+                        'Fill all item details correctly.',
+                        'error'
+                    );
+
+                    return false; // break loop
+                }
+
+            });
+
+            if (!valid) {
+                return;
+            }
+
+            // ===========================
+            // Validate Barcode
+            // ===========================
+            $('#itemsTable tbody tr').each(function () {
+
+                let tracking = $(this).find('.trackingType').text().trim().toUpperCase();
+
+                if (tracking !== 'NONE') {
+
+                    let qty = parseInt($(this).find('.qty').val()) || 0;
+                    let scanned = $(this).find('.hiddenBarcode').length;
+                    console.log({
+                        tracking: tracking,
+                        qty: qty,
+                        scanned: scanned
+                    });
+                    if (qty !== scanned) {
+
+                        valid = false;
+
+                        Swal.fire(
+                            'Error',
+                            'All barcodes must be scanned.',
+                            'error'
+                        );
+
+                        return false; // break loop
+                    }
+                }
+
+            });
+
+            if (!valid) {
+                return;
+            }
+
+            Swal.fire({
+                title: 'Confirm Requisition?',
+                icon: 'warning',
+                showCancelButton: true
+            }).then((result) => {
+
+                if (result.isConfirmed) {
+                    this.submit();
+                }
+
+            });
+
+        });
+
+        function barcodeExists(barcode) {
+
+            let found = false;
+
+            $('.hiddenBarcode').each(function () {
+
+                if ($(this).val() == barcode) {
+
+                    found = true;
+
+                }
+
+            });
+
+            return found;
+
+        }
+
+        function addBarcode(item) {
+
+            // Prevent duplicate barcode
+            if (barcodeExists(item.barcode)) {
+
+                Swal.fire(
+                    'Error',
+                    'Barcode already scanned.',
+                    'error'
+                );
+
+                return;
+            }
+
+            let rowIndex = activeRow.index();
+
+            let selectedProduct = activeRow.find('.selectProduct').val();
+
+            // Product must be selected first
+            if (!selectedProduct) {
+
+                Swal.fire(
+                    'Error',
+                    'Please select a product first.',
+                    'error'
+                );
+
+                return;
+            }
+
+            // Barcode must belong to selected product
+            if (parseInt(selectedProduct) !== parseInt(item.product_id)) {
+
+                Swal.fire(
+                    'Error',
+                    'Barcode belongs to another product.',
+                    'error'
+                );
+
+                return;
+            }
+
+            activeRow.find('.barcodeContainer').append(`
+                                                                                                            <div class="barcodeItem border rounded p-2 mb-2">
+
+                                                                                                                <div class="d-flex justify-content-between align-items-center">
+
+                                                                                                                    <span>${item.barcode}</span>
+
+                                                                                                                    <button
+                                                                                                                        type="button"
+                                                                                                                        class="btn btn-danger btn-sm removeBarcode">
+                                                                                                                        ×
+                                                                                                                    </button>
+
+                                                                                                                </div>
+
+                                                                                                                <input
+                                                                                                                type="hidden"
+                                                                                                                class="hiddenTracking"
+                                                                                                                name="items[${rowIndex}][tracking_ids][]"
+                                                                                                                value="${item.tracking_id}">
+
+                                                                                                                <input
+                                                                                                                    type="hidden"
+                                                                                                                    name="items[${rowIndex}][barcodes][]"
+                                                                                                                    value="${item.barcode}">
+                                                                                                            </div>
+                                                                                                        `);
+
+            updateQty();
+
+            $('#barcodeModal').modal('hide');
+
+            $('#scanBarcode').val('');
+        }
+
+        $(document).on('click', '.removeBarcode', function () {
+
+            $(this).closest('.barcodeItem').remove();
+
+            updateQty();
+
+            refreshIndexes();
+
+        });
+
+        function updateQty() {
+
+            $('#itemsTable tbody tr').each(function () {
+
+                let qty = $(this).find('.hiddenTracking').length;
+
+                let input = $(this).find('.qty');
+
+                if (qty > 0) {
+
+                    input.val(qty)
+                        .prop('readonly', true);
+
+                } else {
+
+                    input.val('')
+                        .prop('readonly', false);
+
+                }
+
+            });
+
+            calculateTotal();
+
+        }
+
+        $(document).on('click', '.removeRow', function () {
+
+            $(this).closest('tr').remove();
+
+            refreshIndexes();
+
+            calculateTotal();
+
+        });
+
+        function refreshIndexes() {
+
+            $('#itemsTable tbody tr').each(function (i) {
+
+                $(this).find('.selectProduct')
+                    .attr('name', 'items[' + i + '][master_item_id]');
+
+                $(this).find('.qty')
+                    .attr('name', 'items[' + i + '][qty]');
+
+                $(this).find('input[name*="[tracking_ids]"]').attr(
+                    'name',
+                    'items[' + i + '][tracking_ids][]'
+                );
+
+                $(this).find('input[name*="[barcodes]"]').attr(
+                    'name',
+                    'items[' + i + '][barcodes][]'
+                );
+
+                $(this).find('.hiddenBarcode').each(function () {
+
+                    $(this).attr(
+                        'name',
+                        'items[' + i + '][barcodes][]'
+                    );
+
+                });
+
+            });
+
+        }
+
+        function fillProduct(item) {
+
+            let select = activeRow.find('.selectProduct');
+            // Already selected
+            if (select.val()) {
+                if (parseInt(select.val()) !== parseInt(item.product_id)) {
+                    Swal.fire(
+                        'Error',
+                        'Barcode belongs to another product.',
+                        'error'
+                    );
+
+                    return;
+                }
+                addBarcode(item);
+
+                return;
+            }
+            let option = new Option(
+                item.product,
+                item.product_id,
+                true,
+                true
+            );
+            select.append(option);
+            select.trigger('change.select2');
+            fetchStock(activeRow);
+            addBarcode(item);
+        }
+
+    </script>
 
 @endsection

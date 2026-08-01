@@ -9,16 +9,16 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="card-title d-inline-block">{{ __('translation.filter') }}</h4>
-                     <div class="d-inline-block">
+                    <div class="d-inline-block">
                         @include('backend.components.exportpdfcsv', [
-                        'pdfId' =>'downloadinventorypdf',    
-                        'pdfRoute' => route('admin.inventory.exportPdf'),
-                        'pdfClass' => 'downloadinventorypdf',
-                        'csvId' =>'downloadinventorycsv',    
-                        'csvRoute' => route('admin.inventory.exportCsv'),
-                        'csvClass' => 'downloadinventorycsv',
-                        ])                 
-                    </div>      
+                            'pdfId' => 'downloadinventorypdf',
+                            'pdfRoute' => route('admin.inventory.exportPdf'),
+                            'pdfClass' => 'downloadinventorypdf',
+                            'csvId' => 'downloadinventorycsv',
+                            'csvRoute' => route('admin.inventory.exportCsv'),
+                            'csvClass' => 'downloadinventorycsv',
+                        ])
+                    </div>
                 </div>
                 <div class="card-body">
                     {{-- Filter Form --}}
@@ -66,7 +66,7 @@
                                         <!-- <td>{{ $stock->low_stock_alert }}</td> -->
                                         <!-- <td>{{ $stock->isLowStock() ? __('translation.low_stock') : __('translation.normal_stock') }}</td> -->
                                         <td>
-                                            <x-href-input action="print_barcode" data-route="{{ route('barcode.form', \App\Helpers\Settings::getEncodeCodeWithHashids($stock->product_id)) }}" data-id="{{ \App\Helpers\Settings::getEncodeCodeWithHashids($stock->product_id) }}"  name="print" label="" href="javascript:void(0);" class="btn btn-sm barcodeBtn" icon="fa fa-print" :nohref="true"  text="Print Barcode" />
+                                            <x-href-input action="print_barcode" data-route="{{ route('barcode.form', \App\Helpers\Settings::getEncodeCodeWithHashids($stock->product_id)) }}" data-id="{{ \App\Helpers\Settings::getEncodeCodeWithHashids($stock->product_id) }}" name="print" label="" href="javascript:void(0);" class="btn btn-sm barcodeBtn" icon="fa fa-print" :nohref="true" text="Print Barcode" />
                                         </td>
                                     </tr>
                                 @empty
@@ -93,11 +93,11 @@
         });
     </script>
     <script>
-$(document).on('click','.barcodeBtn',function(){
-    let id = $(this).data('id');
-    let url = $(this).data('route');
-    $('#barcodeModal').modal('show');
-    $('#barcodeModalBody').load(url);
-});
-</script>
+        $(document).on('click', '.barcodeBtn', function () {
+            let id = $(this).data('id');
+            let url = $(this).data('route');
+            $('#barcodeModal').modal('show');
+            $('#barcodeModalBody').load(url);
+        });
+    </script>
 @endsection

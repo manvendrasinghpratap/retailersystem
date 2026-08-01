@@ -71,6 +71,7 @@ Route::prefix('admin/barcode')->middleware(['auth', 'route.permission', 'subscri
     Route::get('/damage-barcode', [BarcodeController::class, 'index'])->name('admin.damage-barcode');
     Route::get('/deduct-barcode', [BarcodeController::class, 'index'])->name('admin.deduct-barcode');
     Route::post('/validateBarcode', [BarcodeController::class, 'validateBarcode'])->name('admin.barcode.validateBarcode');
+    Route::post('/purchase/validate-barcode', [BarcodeController::class, 'validatePurchaseBarcode'])->name('admin.purchase.validateBarcode');
 });
 
 Route::prefix('admin')->middleware(['auth', 'route.permission', 'subscription'])->group(function () {

@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Requisition;
 use App\Models\RequisitionItem;
 use App\Models\Warehouse;
-use App\Models\MasterItem;
+use App\Models\Inventory;
 use App\Models\ProductStock;
 use App\Services\StockService;
 use App\Helpers\Settings;
@@ -14,6 +14,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\Store;
 use PDF;
+use App\Models\PurchaseItemTracking;
+
 class RequisitionController extends Controller
 {
     protected $breadcrumb;
@@ -181,6 +183,25 @@ class RequisitionController extends Controller
     */
     public function store(Request $request)
     {
+        echo '<pre>';
+        print_r($request->all());
+        echo '</pre>';
+
+        $validated = $request->validate([
+            'from_warehouse_id' => 'required|exists:warehouses,id',
+            'for_store_id' => 'required|exists:stores,id',
+            'date' => 'required',
+            'items' => 'required|array|min:1',
+            'items.*.master_item_id' => 'required|exists:master_items,id',
+            'items.*.qty' => 'required|numeric|min:1',
+        ]);
+
+        foreach ($validated['items'] as $item) {
+            echo '<pre>';
+            print_r($item);
+            echo '</pre>';
+        }
+        die();
         try {
 
             $validated = $request->validate([
@@ -216,7 +237,30 @@ class RequisitionController extends Controller
                 // =========================
                 // CREATE REQUISITION
                 // =========================
+                foreach ($validated['items'] as $item) {
 
+                    if (empty($item['tracking_ids'])) {
+                        continue;
+                    }
+
+                    foreach ($item['tracking_ids'] as $trackingId) {
+
+                        $tracking = PurchaseItemTracking::where('id', $trackingId)
+                            ->status()
+                            ->notSold()
+                            ->first();
+
+                        if (!$tracking) {
+
+                            throw new \Exception(
+                                'One or more scanned barcodes are no longer available.'
+                            );
+
+                        }
+
+                    }
+
+                }
                 $req = Requisition::create([
                     'account_id' => $accountId,
                     'from_warehouse_id' => $validated['from_warehouse_id'],
@@ -286,6 +330,25 @@ class RequisitionController extends Controller
                         'reference_id' => $req->id,
                         'remarks' => 'Requisition OUT #' . $requisitionNo
                     ]);
+                }
+
+                foreach ($validated['items'] as $item) {
+
+                    if (empty($item['tracking_ids'])) {
+                        continue;
+                    }
+
+                    PurchaseItemTracking::whereIn(
+                        'id',
+                        $item['tracking_ids']
+                    )->update([
+
+                                'is_reserved' => 1,
+
+                                'requisition_id' => $req->id,
+
+                            ]);
+
                 }
             });
 
@@ -817,4 +880,139 @@ class RequisitionController extends Controller
             ], 500);
         }
     }
+
+    public function validateRequisitionBarcode(Request $request)
+    {
+        $request->validate([
+            'barcode' => 'required',
+            'warehouse_id' => 'required|exists:warehouses,id',
+            'product_id' => 'required|exists:master_items,id',
+        ]);
+
+        $barcode = PurchaseItemTracking::with([
+            'purchaseItem.purchase',
+            'purchaseItem.masterItem'
+        ])
+            ->where('barcode', trim($request->barcode))
+            ->available()
+            ->first();
+        if (!$barcode) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Barcode not found or unavailable.'
+            ]);
+        }
+        /*
+        |--------------------------------------------------------------------------
+        | Product Validation
+        |--------------------------------------------------------------------------
+        */
+
+        if ($barcode->purchaseItem->master_item_id != $request->product_id) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Scanned barcode belongs to another product.'
+            ]);
+        }
+        /*
+        |--------------------------------------------------------------------------
+        | Warehouse Validation
+        |--------------------------------------------------------------------------
+        */
+        if ($barcode->warehouse_id != $request->warehouse_id) {
+            return response()->json([
+                'status' => false,
+                'message' => 'This barcode is not available in selected warehouse.'
+            ]);
+        }
+        return response()->json([
+            'status' => true,
+            'barcode' => $barcode->barcode,
+            'tracking_id' => $barcode->id,
+            'product_id' => $barcode->purchaseItem->master_item_id,
+            'product' => $barcode->purchaseItem->masterItem->name
+        ]);
+    }
+
+    public function searchBarcode_old(Request $request)
+    {
+        $tracking = PurchaseItemTracking::with([
+            'purchaseItem.masterItem'
+        ])
+            ->where('barcode', trim($request->barcode))
+            ->status()
+            ->notSold()
+            ->whereHas('purchaseItem.purchase', function ($q) use ($request) {
+                $q->where('warehouse_id', $request->warehouse_id)->where('status', 1);
+            })
+            ->first();
+
+        if (!$tracking) {
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Barcode not found in selected warehouse.'
+            ]);
+
+        }
+
+        return response()->json([
+            'success' => true,
+            'tracking_id' => $tracking->id,          // <-- REQUIRED
+            'barcode' => $tracking->barcode,
+            'tracking_type' => $tracking->tracking_type,
+            'product_id' => $tracking->purchaseItem->master_item_id,
+            'product' => $tracking->purchaseItem->masterItem->name,
+        ]);
+    }
+
+    public function searchBarcode(Request $request)
+    {
+        $query = PurchaseItemTracking::with([
+            'purchaseItem.masterItem'
+        ])
+            ->status()
+            ->notSold()
+            ->where('barcode', $request->barcode);
+
+        // Skip already scanned ids in current requisition
+        if (!empty($request->scanned_ids)) {
+
+            $query->whereNotIn(
+                'id',
+                $request->scanned_ids
+            );
+
+        }
+
+        $tracking = $query
+            ->orderBy('id')
+            ->first();
+
+        if (!$tracking) {
+
+            return response()->json([
+                'success' => false,
+                'message' => 'No available barcode found.'
+            ]);
+
+        }
+
+        return response()->json([
+
+            'success' => true,
+
+            'tracking_id' => $tracking->id,
+
+            'barcode' => $tracking->barcode,
+
+            'tracking_type' => $tracking->tracking_type,
+
+            'product_id' => $tracking->purchaseItem->master_item_id,
+
+            'master_item_name' => $tracking->purchaseItem->masterItem->name,
+
+        ]);
+    }
+
 }

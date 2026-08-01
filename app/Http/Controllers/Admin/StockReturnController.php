@@ -16,6 +16,7 @@ use App\Helpers\Settings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use PDF;
+use App\Models\PurchaseItem;
 
 class StockReturnController extends Controller
 {
@@ -377,7 +378,7 @@ class StockReturnController extends Controller
     @method: GET
     @return: json
     */
-    public function getStock(Request $request)
+    public function getStock_delete(Request $request)
     {
         $stock = \App\Models\ProductStock::where([
             'warehouse_id' => $request->warehouse_id,
@@ -387,6 +388,31 @@ class StockReturnController extends Controller
 
         return response()->json([
             'stock' => $stock
+        ]);
+    }
+
+
+
+    public function getStock(Request $request)
+    {
+        $stock = ProductStock::where([
+            'warehouse_id' => $request->warehouse_id,
+            'master_item_id' => $request->master_item_id,
+            'account_id' => auth()->user()->account_id,
+        ])->value('stock') ?? 0;
+
+        $trackingType = PurchaseItem::where('master_item_id', $request->master_item_id)
+            ->whereHas('purchase', function ($q) use ($request) {
+                $q->where('warehouse_id', $request->warehouse_id)
+                    ->where('account_id', auth()->user()->account_id)
+                    ->where('status', 1);
+            })
+            ->latest()
+            ->value('tracking_type') ?? 'none';
+
+        return response()->json([
+            'stock' => $stock,
+            'tracking_type' => $trackingType,
         ]);
     }
 

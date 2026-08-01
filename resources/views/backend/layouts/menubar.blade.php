@@ -18,9 +18,10 @@
 
 <nav class="navbar navbar-light navbar-expand-lg topnav-menu">
     {{-- MOBILE TOGGLE --}}
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topnav-menu-content">
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topnav-menu-content" aria-controls="topnav-menu-content" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
     </button>
+
 
     <div class="collapse navbar-collapse" id="topnav-menu-content">
         <ul class="navbar-nav">

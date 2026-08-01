@@ -45,6 +45,7 @@
                 <tr>
                     <th>{{ __('translation.product') }}</th>
                     <th width="10%" class="text-center">{{ __('translation.quantity') }}</th>
+                    <th width="10%" class="text-center">{{ __('translation.barcode') }}</th>
                     <th width="20%" class="text-end">{{ __('translation.price') }}</th>
                     <th width="20%" class="text-end">{{ __('translation.total') }}</th>
                 </tr>
@@ -54,6 +55,7 @@
                     <tr>
                         <td>{{ $item->masterItem->name ?? 'N/A' }}</td>
                         <td class="text-center">{{ $item->quantity }}</td>
+                        <td class="text-center"> <span class="badge bg-primary">{{ \App\Helpers\Settings::getDataUcfirst($item->tracking_type) }}</span></td>
                         <td class="text-end">{{ __('translation.currency') }}{{ \App\Helpers\Settings::getcustomnumberformat($item->cost_price) }}</td>
                         <td class="text-end fw-bold">{{ __('translation.currency') }}{{ \App\Helpers\Settings::getcustomnumberformat($item->total) }}</td>
                     </tr>

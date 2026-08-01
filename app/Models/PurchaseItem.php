@@ -1,8 +1,10 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+
 class PurchaseItem extends Model
 {
     protected $fillable = [
@@ -10,23 +12,62 @@ class PurchaseItem extends Model
         'master_item_id',
         'quantity',
         'cost_price',
-        'total'
+        'total',
+        'tracking_type'
     ];
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    */
+
+    public function purchase()
+    {
+        return $this->belongsTo(Purchase::class, 'purchase_id', 'id');
+    }
+
+    public function masterItem()
+    {
+        return $this->belongsTo(MasterItem::class, 'master_item_id', 'id');
+    }
 
     public function product()
     {
         return $this->belongsTo(Product::class);
     }
 
-    public function masterItem()
+    /**
+     * Purchase Item
+     *      hasMany
+     * Purchase Item Tracking
+     */
+    // public function trackings()
+    // {
+    //     return $this->hasMany(
+    //         PurchaseItemTracking::class,
+    //         'purchase_item_id',
+    //         'id'
+    //     );
+    // }
+
+    public function trackings()
     {
-        return $this->belongsTo(MasterItem::class, 'master_item_id');
+        return $this->hasMany(
+            PurchaseItemTracking::class,
+            'purchase_item_id',
+            'id'
+        )
+            ->where('status', 1)
+            ->where('is_sold', 0);
     }
 
-    public function purchase()
-    {
-        return $this->belongsTo(Purchase::class);
-    }
+    /*
+    |--------------------------------------------------------------------------
+    | Accessor
+    |--------------------------------------------------------------------------
+    */
+
     protected function quantity(): Attribute
     {
         return Attribute::make(
@@ -34,5 +75,4 @@ class PurchaseItem extends Model
             set: fn($value) => (int) $value,
         );
     }
-
 }
