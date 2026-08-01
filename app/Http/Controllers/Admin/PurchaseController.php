@@ -207,28 +207,6 @@ class PurchaseController extends Controller
                     // ===========================
                     $this->savePurchaseTracking($purchaseItem, $item, $qty);
 
-                    // if (!empty($item['trackings']) && is_array($item['trackings'])) {
-
-                    //     foreach ($item['trackings'] as $tracking) {
-
-                    //         PurchaseItemTracking::create([
-
-                    //             'purchase_item_id' => $purchaseItem->id,
-
-                    //             'barcode' => $tracking['barcode'],
-
-                    //             'batch_no' => $tracking['batch_no'] ?? null,
-
-                    //             'serial_no' => $tracking['serial_no'] ?? null,
-
-                    //             'expiry_date' => $tracking['expiry_date'] ?? null,
-
-                    //         ]);
-                    //         PurchaseItem::where('id', $purchaseItem->id)->update(['tracking_type' => $item['tracking_type'] ?? 'none']);
-                    //     }
-
-                    // }
-
                     // ✅ STOCK IN
                     $stockService->moveStock([
                         'account_id' => $accountId,
@@ -284,7 +262,11 @@ class PurchaseController extends Controller
     {
         $trackingType = $item['tracking_type'] ?? 'none';
 
+        // Purchase details
+        $purchase = $purchaseItem->purchase;
+
         switch ($trackingType) {
+
             /*
             |--------------------------------------------------------------------------
             | Individual
@@ -296,11 +278,17 @@ class PurchaseController extends Controller
 
                     PurchaseItemTracking::create([
                         'purchase_item_id' => $purchaseItem->id,
+                        'warehouse_id' => $purchase->warehouse_id,
+                        'store_id' => null,
                         'barcode' => $tracking['barcode'],
                         'tracking_type' => 'individual',
                         'batch_no' => null,
                         'serial_no' => null,
                         'expiry_date' => null,
+                        'quantity' => 1,
+                        'status' => 1,
+                        'is_reserved' => 0,
+                        'is_sold' => 0,
                     ]);
                 }
 
@@ -319,11 +307,17 @@ class PurchaseController extends Controller
 
                     PurchaseItemTracking::create([
                         'purchase_item_id' => $purchaseItem->id,
+                        'warehouse_id' => $purchase->warehouse_id,
+                        'store_id' => null,
                         'barcode' => $barcode,
                         'tracking_type' => 'batch',
                         'batch_no' => null,
                         'serial_no' => null,
                         'expiry_date' => null,
+                        'quantity' => 1,
+                        'status' => 1,
+                        'is_reserved' => 0,
+                        'is_sold' => 0,
                     ]);
                 }
 
@@ -337,17 +331,26 @@ class PurchaseController extends Controller
             default:
 
                 for ($i = 0; $i < $qty; $i++) {
+
                     do {
                         $barcode = Settings::generateEan13();
-                    } while (PurchaseItemTracking::where('barcode', $barcode)->exists());
+                    } while (
+                        PurchaseItemTracking::where('barcode', $barcode)->exists()
+                    );
 
                     PurchaseItemTracking::create([
                         'purchase_item_id' => $purchaseItem->id,
+                        'warehouse_id' => $purchase->warehouse_id,
+                        'store_id' => null,
                         'barcode' => $barcode,
                         'tracking_type' => 'none',
                         'batch_no' => null,
                         'serial_no' => null,
                         'expiry_date' => null,
+                        'quantity' => 1,
+                        'status' => 1,
+                        'is_reserved' => 0,
+                        'is_sold' => 0,
                     ]);
                 }
 

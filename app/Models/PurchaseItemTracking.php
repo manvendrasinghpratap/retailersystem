@@ -39,7 +39,7 @@ class PurchaseItemTracking extends Model
     }
     public function purchase()
     {
-        return $this->belongsTo(Purchase::class);
+        return $this->purchaseItem?->purchase();
     }
 
     public function masterItem()
