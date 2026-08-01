@@ -57,6 +57,9 @@ Route::get('syncroutes', function () {
     echo 'routes synced';
 });
 Route::get('admin/acl', [\App\Http\Controllers\Administrator\AclController::class, 'index'])->name('acl');
+Route::get('/refresh-csrf', function () {
+    return response()->json(['token' => csrf_token()]);
+});
 
 /*  This is for session management keep alive  begin*/
 

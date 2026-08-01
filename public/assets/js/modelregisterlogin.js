@@ -8,7 +8,7 @@ $(function () {
     });
 
     // Safe, customizable alert helper (falls back to window.alert when SweetAlert2 isn't loaded)
-    
+
     // Reset forms and validation when modal opens
     $('#signin-modal').on('shown.bs.modal', function () {
         let form = this.querySelector('form');
@@ -19,6 +19,10 @@ $(function () {
         if ($('#registration').data('validator')) {
             $('#registration').validate().resetForm();
         }
+        $.get('/refresh-csrf')
+            .fail(function () {
+                location.reload();
+            });
         $('#login-email').trigger('focus');
     });
 
@@ -31,14 +35,14 @@ $(function () {
     $('#registration').validate({
         rules: {
             name: { required: true, minlength: 3 },
-            remail: { 
-                required: true, 
+            remail: {
+                required: true,
                 email: true,
                 remote: {
                     url: "/check-email", // example route
                     type: "post",
                     data: {
-                        email: function() { return $('[name="remail"]').val(); },
+                        email: function () { return $('[name="remail"]').val(); },
                     }
                 }
             },
@@ -53,15 +57,15 @@ $(function () {
         },
         errorElement: 'div',
         errorClass: 'text-danger mt-0',
-        errorPlacement: function(error, element) { error.insertAfter(element); },
-        highlight: function(element) { $(element).addClass('is-invalid'); },
-        unhighlight: function(element) { $(element).removeClass('is-invalid'); },
-        onkeyup: function(element) { this.element(element); },
-        onfocusout: function(element) { this.element(element); }
+        errorPlacement: function (error, element) { error.insertAfter(element); },
+        highlight: function (element) { $(element).addClass('is-invalid'); },
+        unhighlight: function (element) { $(element).removeClass('is-invalid'); },
+        onkeyup: function (element) { this.element(element); },
+        onfocusout: function (element) { this.element(element); }
     });
 
     // Instant password match validation
-    $('[name="rpassword_confirmation"]').on('input', function() {
+    $('[name="rpassword_confirmation"]').on('input', function () {
         $('#registration').validate().element($(this));
     });
 
@@ -83,10 +87,10 @@ $(function () {
         });
     });
     // =======================================
-// HARD STOP: Disable Bootstrap FocusTrap
-// =======================================
-$(document).off('focusin.bs.modal');
-$('.modal').modal({ focus: false });
+    // HARD STOP: Disable Bootstrap FocusTrap
+    // =======================================
+    $(document).off('focusin.bs.modal');
+    $('.modal').modal({ focus: false });
 
     $('.close').on('click', function () {
         $('#signin-modal').modal('hide');
@@ -135,7 +139,7 @@ $('.modal').modal({ focus: false });
             // Reset jQuery Validation state (if attached)
             if ($form.data('validator')) {
                 $form.validate().resetForm();
-            }           
+            }
 
         }
     });
@@ -149,12 +153,12 @@ $('.modal').modal({ focus: false });
             url: $(this).attr('action'),
             method: 'POST',
             data: $(this).serialize(), // send full form (includes _token and email)
-            success: function(res) {
+            success: function (res) {
                 $('#forgot-password-form-error').hide().text(res.message).show();
                 showAlert('Success', res.message, 'success');
                 $('.close').trigger('click');
             },
-            error: function(xhr) {
+            error: function (xhr) {
                 // validation errors
                 if (xhr.status === 422 && xhr.responseJSON) {
                     const json = xhr.responseJSON;
@@ -163,17 +167,17 @@ $('.modal').modal({ focus: false });
                     showAlert('Failed', msg, 'error');
                     $('.close').trigger('click');
                 } else {
-                showAlert('Error', 'Unexpected error. Check console/server logs.', 'error');
+                    showAlert('Error', 'Unexpected error. Check console/server logs.', 'error');
                 }
             },
             complete: function () {
-                $form.find('button[type="submit"]').prop('disabled', false);    
-        }
+                $form.find('button[type="submit"]').prop('disabled', false);
+            }
         });
     });
 
 
-    
+
 
 
 });

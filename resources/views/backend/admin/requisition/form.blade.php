@@ -1,150 +1,60 @@
 @extends('backend.layouts.master-horizontal')
-
 @section('title')
     {{ $breadcrumb['title'] ?? '' }} | {{ $breadcrumb['route1Title'] ?? '' }}
 @endsection
-
 @section('content')
-
     @include('backend.components.breadcrumb')
-
     <div class="row">
         <div class="col-lg-12">
             <div class="card">
-
                 <div class="card-header">
-                    <h4 class="card-title">
-                        {{ request()->route()->getName() == 'admin.requisitions.create'
-        ? $breadcrumb['route1Title']
-        : ($breadcrumb['route3Title'] ?? '') }}
-                    </h4>
+                    <h4 class="card-title">{{ request()->route()->getName() == 'admin.requisitions.create' ? $breadcrumb['route1Title'] : ($breadcrumb['route3Title'] ?? '') }}</h4>
                 </div>
-
                 <div class="card-body">
-
                     <form method="POST" action="{{ route('admin.requisitions.store') }}" id="requisitionForm" novalidate>
-
                         @csrf
                         {{-- Header Information --}}
                         <div class="row">
-
                             <x-select-dropdown name="from_warehouse_id" label="{{ __('translation.from_warehouse') }}" :options="$warehouses" :selected="old('from_warehouse_id')" class="warehouse" id="from_warehouse_id" required />
-
                             <x-select-dropdown name="for_store_id" label="{{ __('translation.for_store') }}" :options="$stores" :selected="old('for_store_id')" class="store" id="for_store_id" required />
-
                             <x-text-input name="date" label="{{ __('translation.date') }}" class="flatdatepickr" id="date" required value="{{ old('date', \App\Helpers\Settings::getFormattedDate(date('Y-m-d'))) }}" />
-
                         </div>
-
                         <hr>
-
                         {{-- Products --}}
                         <div class="table-responsive">
-
                             <table class="table table-bordered align-middle" id="itemsTable">
-
                                 <thead class="table-light">
-
                                     <tr>
-
-                                        <th width="26%">
-                                            {{ __('translation.product') }}
-                                        </th>
-
-                                        <th width="10%" class="text-center">
-                                            {{ __('translation.stock') }}
-                                        </th>
-
-                                        <th width="10%" class="text-center">
-                                            {{ __('translation.quantity') }}
-                                        </th>
-
-                                        <th width="12%" class="text-center">
-                                            {{ __('translation.tracking') }}
-                                        </th>
-
-                                        <th width="34%">
-                                            {{ __('translation.barcodes') }}
-                                        </th>
-
-                                        <th width="8%" class="text-center">
-                                            {{ __('translation.action') }}
-                                        </th>
-
+                                        <th width="26%">{{ __('translation.product') }}</th>
+                                        <th width="10%" class="text-center">{{ __('translation.stock') }}</th>
+                                        <th width="10%" class="text-center">{{ __('translation.quantity') }}</th>
+                                        <th width="12%" class="text-center">{{ __('translation.tracking') }}</th>
+                                        <th width="34%">{{ __('translation.barcodes') }}</th>
+                                        <th width="8%" class="text-center">{{ __('translation.action') }}</th>
                                     </tr>
-
                                 </thead>
-
                                 <tbody>
-
-                                    {{-- Dynamic Rows --}}
-
                                 </tbody>
-
                             </table>
-
                         </div>
-
                         <div class="row mt-3">
-
-                            <div class="col-md-6">
-
-                                <button type="button" id="addRow" class="btn btn-success">
-
-                                    <i class="mdi mdi-plus"></i>
-
-                                    {{ __('translation.add_item') }}
-
-                                </button>
-
+                            <div class="text-center mt-2">
+                                <button type="button" id="addRow" class="btn btn-success"><i class="mdi mdi-plus"></i>{{ __('translation.add_item') }}</button>
                             </div>
-
-                            <div class="col-md-6 text-end">
-
-                                <h5 class="mb-0">
-
-                                    {{ __('translation.total_quantity') }} :
-
-                                    <span id="totalQty" class="badge bg-primary">
-                                        0
-                                    </span>
-
-                                </h5>
-
+                            <div class="col-md-12 text-end">
+                                <h5 class="mb-0">{{ __('translation.total_quantity') }} :<span id="totalQty" class="badge bg-primary"> 0</span></h5>
                             </div>
-
                         </div>
-
                         <hr>
-
                         <div class="d-flex justify-content-end gap-2">
-
-                            <button type="submit" class="btn btn-primary">
-
-                                <i class="mdi mdi-content-save"></i>
-
-                                {{ __('translation.save') }}
-
-                            </button>
-
-                            <a href="{{ route('admin.requisitions.index') }}" class="btn btn-secondary">
-
-                                <i class="mdi mdi-arrow-left"></i>
-
-                                {{ __('translation.cancel') }}
-
-                            </a>
-
+                            <button type="submit" class="btn btn-primary"><i class="mdi mdi-content-save"></i>{{ __('translation.save') }}</button>
+                            <a href="{{ route('admin.requisitions.index') }}" class="btn btn-secondary">{{ __('translation.cancel') }}</a>
                         </div>
-
                     </form>
-
                 </div>
-
             </div>
         </div>
     </div>
-
     @include('backend.admin.requisition.partials.barcode_modal')
 @endsection
 
@@ -154,47 +64,28 @@
         let activeRow = null;
 
         $(document).on('click', '.scanBarcode', function () {
-
             activeRow = $(this).closest('tr');
-
             $('#barcodeModal').modal('show');
-
             $('#scanBarcode').val('');
-
             $('#barcodeMessage').html('');
-
             setTimeout(function () {
-
                 $('#scanBarcode').focus();
-
             }, 300);
-
         });
         $('#scanBarcode').keydown(function (e) {
-
             if (e.which == 13) {
-
                 e.preventDefault();
-
                 searchBarcode();
-
             }
-
         });
-        validateSelect2Form('requisitionForm', [
-            'from_warehouse_id',
-            'for_store_id'
-        ]);
+        validateSelect2Form('requisitionForm', ['from_warehouse_id', 'for_store_id']);
 
 
         function searchBarcode() {
-
             let barcode = $('#scanBarcode').val().trim();
-
             if (barcode == '') {
                 return;
             }
-
             let warehouse = $('#from_warehouse_id').val();
 
             // Already scanned tracking ids
@@ -211,33 +102,22 @@
                     scanned_ids: scannedIds
                 },
                 function (res) {
-
                     if (res.success) {
-
                         fillProduct(res);
                         $('#scanBarcode').val('');
-
                         setTimeout(function () {
-
                             $('#scanBarcode').focus();
-
                         }, 100);
-
                     } else {
-
                         Swal.fire(
                             'Error',
                             res.message,
                             'error'
                         );
-
                     }
-
                 }
             );
-
         }
-
 
         let rowIndex = 0;
 
@@ -280,13 +160,10 @@
         // ========================
         function resetItems() {
             $('#itemsTable tbody').empty();
-
             rowIndex = 0;
-
             if ($('#from_warehouse_id').val()) {
                 addRow();
             }
-
             calculateTotal();
         }
 
@@ -294,77 +171,74 @@
         // ADD ROW
         // ========================
         function addRow() {
-
             let warehouse = $('#from_warehouse_id').val();
-
             if (!warehouse) {
                 Swal.fire('Error', 'Please select warehouse first', 'error');
                 return;
             }
-
             let row = `
-                                                                                                                                                                                                                                                                                                                                                                    <tr class="productRow">
+                                    <tr class="productRow">
 
-                                                                                                                                                                                                                                                                                                                                                                        <td>
-                                                                                                                                                                                                                                                                                                                                                                            <select
-                                                                                                                                                                                                                                                                                                                                                                                name="items[${rowIndex}][master_item_id]"
-                                                                                                                                                                                                                                                                                                                                                                                class="form-control selectProduct"
-                                                                                                                                                                                                                                                                                                                                                                                required>
-                                                                                                                                                                                                                                                                                                                                                                            </select>
-                                                                                                                                                                                                                                                                                                                                                                        </td>
+                                        <td>
+                                            <select
+                                                name="items[${rowIndex}][master_item_id]"
+                                                class="form-control selectProduct"
+                                                required>
+                                            </select>
+                                        </td>
 
-                                                                                                                                                                                                                                                                                                                                                                        <td class="stock text-center fw-bold text-primary">
-                                                                                                                                                                                                                                                                                                                                                                            0
-                                                                                                                                                                                                                                                                                                                                                                        </td>
+                                        <td class="stock text-center fw-bold text-primary">
+                                            0
+                                        </td>
 
-                                                                                                                                                                                                                                                                                                                                                                        <td>
-                                                                                                                                                                                                                                                                                                                                                                            <input
-                                                                                                                                                                                                                                                                                                                                                                                type="number"
-                                                                                                                                                                                                                                                                                                                                                                                name="items[${rowIndex}][qty]"
-                                                                                                                                                                                                                                                                                                                                                                                class="form-control qty"
-                                                                                                                                                                                                                                                                                                                                                                                min="1"
-                                                                                                                                                                                                                                                                                                                                                                                disabled>
-                                                                                                                                                                                                                                                                                                                                                                        </td>
+                                        <td>
+                                            <input
+                                                type="number"
+                                                name="items[${rowIndex}][qty]"
+                                                class="form-control qty"
+                                                min="1"
+                                                disabled>
+                                        </td>
 
-                                                                                                                                                                                                                                                                                                                                                                        <td class="text-center">
+                                        <td class="text-center">
 
-                                                                                                                                                                                                                                                                                                                                                                            <span class="badge bg-secondary trackingType">
-                                                                                                                                                                                                                                                                                                                                                                                NONE
-                                                                                                                                                                                                                                                                                                                                                                            </span>
+                                            <span class="badge bg-secondary trackingType">
+                                                NONE
+                                            </span>
 
-                                                                                                                                                                                                                                                                                                                                                                            <br>
+                                            <br>
 
-                                                                                                                                                                                                                                                                                                                                                                            <button
-                                                                                                                                                                                                                                                                                                                                                                                type="button"
-                                                                                                                                                                                                                                                                                                                                                                                class="btn btn-primary btn-sm mt-2 scanBarcode d-none">
+                                            <button
+                                                type="button"
+                                                class="btn btn-primary btn-sm mt-2 scanBarcode d-none">
 
-                                                                                                                                                                                                                                                                                                                                                                                <i class="mdi mdi-barcode-scan"></i>
+                                                <i class="mdi mdi-barcode-scan"></i>
 
-                                                                                                                                                                                                                                                                                                                                                                                Scan
+                                                Scan
 
-                                                                                                                                                                                                                                                                                                                                                                            </button>
+                                            </button>
 
-                                                                                                                                                                                                                                                                                                                                                                        </td>
+                                        </td>
 
-                                                                                                                                                                                                                                                                                                                                                                        <td>
+                                        <td>
 
-                                                                                                                                                                                                                                                                                                                                                                            <div class="barcodeContainer"></div>
+                                            <div class="barcodeContainer"></div>
 
-                                                                                                                                                                                                                                                                                                                                                                        </td>
+                                        </td>
 
-                                                                                                                                                                                                                                                                                                                                                                        <td>
+                                        <td>
 
-                                                                                                                                                                                                                                                                                                                                                                            <button
-                                                                                                                                                                                                                                                                                                                                                                                type="button"
-                                                                                                                                                                                                                                                                                                                                                                                class="btn btn-danger removeRow">
+                                            <button
+                                                type="button"
+                                                class="btn btn-danger removeRow">
 
-                                                                                                                                                                                                                                                                                                                                                                                <i class="mdi mdi-delete"></i>
+                                                <i class="mdi mdi-delete"></i>
 
-                                                                                                                                                                                                                                                                                                                                                                            </button>
+                                            </button>
 
-                                                                                                                                                                                                                                                                                                                                                                        </td>
+                                        </td>
 
-                                                                                                                                                                                                                                                                                                                                                                    </tr>`;
+                                    </tr>`;
 
             $('#itemsTable tbody').append(row);
 
@@ -382,6 +256,7 @@
         // ========================
         // FETCH STOCK
         // ========================
+
         function fetchStock(row) {
 
             let warehouse_id = $('#from_warehouse_id').val();
@@ -402,55 +277,47 @@
                     let stock = parseFloat(res.stock) || 0;
                     let trackingType = (res.tracking_type || 'none').toLowerCase();
 
-                    // Save tracking type on row
+                    let qty = row.find('.qty');
+                    let scanBtn = row.find('.scanBarcode');
+
+                    // Save tracking type
                     row.attr('data-tracking-type', trackingType);
 
                     // Update UI
                     row.find('.stock').text(stock);
                     row.find('.trackingType').text(trackingType.toUpperCase());
 
-                    let qty = row.find('.qty');
-                    let scanBtn = row.find('.scanBarcode');
+                    // Clear previous values
+                    qty.removeAttr('readonly')
+                        .prop('disabled', false)
+                        .removeAttr('max');
 
-                    // Clear old scanned barcodes
-                    //row.find('.barcodeContainer').html('');
+                    scanBtn.addClass('d-none');
 
+                    // No Stock
                     if (stock <= 0) {
 
                         qty.val('')
                             .prop('disabled', true)
-                            .prop('readonly', true)
-                            .removeAttr('max');
+                            .prop('readonly', true);
 
                         row.find('.barcodeContainer').empty();
-
-                        scanBtn.addClass('d-none');
 
                         calculateTotal();
 
                         return;
                     }
 
-                    qty.prop('disabled', false)
-                        .attr('max', stock);
+                    qty.attr('max', stock);
 
-                    if (trackingType === 'none') {
+                    // INDIVIDUAL / BATCH
+                    scanBtn.removeClass('d-none');
 
-                        // Manual quantity
-                        scanBtn.addClass('d-none');
+                    qty.prop('readonly', true);
 
-                        qty.prop('readonly', false)
-                            .val(1);
+                    let scanned = row.find('.hiddenTracking').length;
 
-                    } else {
-
-                        // Barcode mandatory
-                        scanBtn.removeClass('d-none');
-
-                        qty.prop('readonly', true)
-                            .val('');
-
-                    }
+                    qty.val(scanned);
 
                     calculateTotal();
 
@@ -646,7 +513,7 @@
 
                 let tracking = $(this).find('.trackingType').text().trim().toUpperCase();
 
-                if (tracking !== 'NONE') {
+                if (tracking !== 'none') {
 
                     let qty = parseInt($(this).find('.qty').val()) || 0;
                     let scanned = $(this).find('.hiddenTracking').length;
@@ -764,32 +631,32 @@
             }
 
             activeRow.find('.barcodeContainer').append(`
-                                                                                                                            <div class="barcodeItem border rounded p-2 mb-2">
+                                                                                                                                                                                                                                                                                                                                                                                                <div class="barcodeItem border rounded p-2 mb-2">
 
-                                                                                                                                <div class="d-flex justify-content-between align-items-center">
+                                                                                                                                                                                                                                                                                                                                                                                                    <div class="d-flex justify-content-between align-items-center">
 
-                                                                                                                                    <span>${item.barcode}</span>
+                                                                                                                                                                                                                                                                                                                                                                                                        <span>${item.barcode}</span>
 
-                                                                                                                                    <button
-                                                                                                                                        type="button"
-                                                                                                                                        class="btn btn-danger btn-sm removeBarcode">
-                                                                                                                                        ×
-                                                                                                                                    </button>
+                                                                                                                                                                                                                                                                                                                                                                                                        <button
+                                                                                                                                                                                                                                                                                                                                                                                                            type="button"
+                                                                                                                                                                                                                                                                                                                                                                                                            class="btn btn-danger btn-sm removeBarcode">
+                                                                                                                                                                                                                                                                                                                                                                                                            ×
+                                                                                                                                                                                                                                                                                                                                                                                                        </button>
 
-                                                                                                                                </div>
+                                                                                                                                                                                                                                                                                                                                                                                                    </div>
 
-                                                                                                                                <input
-                                                                                                                                type="hidden"
-                                                                                                                                class="hiddenTracking"
-                                                                                                                                name="items[${rowIndex}][tracking_ids][]"
-                                                                                                                                value="${item.tracking_id}">
+                                                                                                                                                                                                                                                                                                                                                                                                    <input
+                                                                                                                                                                                                                                                                                                                                                                                                    type="hidden"
+                                                                                                                                                                                                                                                                                                                                                                                                    class="hiddenTracking"
+                                                                                                                                                                                                                                                                                                                                                                                                    name="items[${rowIndex}][tracking_ids][]"
+                                                                                                                                                                                                                                                                                                                                                                                                    value="${item.tracking_id}">
 
-                                                                                                                                <input
-                                                                                                                                    type="hidden"
-                                                                                                                                    name="items[${rowIndex}][barcodes][]"
-                                                                                                                                    value="${item.barcode}">
-                                                                                                                            </div>
-                                                                                                                        `);
+                                                                                                                                                                                                                                                                                                                                                                                                    <input
+                                                                                                                                                                                                                                                                                                                                                                                                        type="hidden"
+                                                                                                                                                                                                                                                                                                                                                                                                        name="items[${rowIndex}][barcodes][]"
+                                                                                                                                                                                                                                                                                                                                                                                                        value="${item.barcode}">
+                                                                                                                                                                                                                                                                                                                                                                                                </div>
+                                                                                                                                                                                                                                                                                                                                                                                            `);
 
             updateQty();
             refreshIndexes();
@@ -812,28 +679,19 @@
 
             $('#itemsTable tbody tr').each(function () {
 
-                let qty = $(this).find('.hiddenTracking').length;
-
-                let trackingType = ($(this).attr('data-tracking-type') || 'none');
+                let trackingType = ($(this).attr('data-tracking-type') || 'none').toLowerCase();
 
                 let input = $(this).find('.qty');
 
-                input.val(qty);
+                // Barcode based quantity
+                let qty = $(this).find('.hiddenTracking').length;
 
-                if (trackingType === 'none') {
-
-                    input.prop('readonly', false);
-
-                } else {
-
-                    input.prop('readonly', true);
-
-                }
+                input.val(qty)
+                    .prop('readonly', true);
 
             });
 
             calculateTotal();
-
         }
 
         $(document).on('click', '.removeRow', function () {
