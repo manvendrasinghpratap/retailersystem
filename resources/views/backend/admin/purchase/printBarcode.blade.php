@@ -66,7 +66,6 @@
                                     <tr>
                                         <th width="40"><input type="checkbox" id="checkAll" checked></th>
                                         <th>{{ __('translation.product') }}</th>
-                                        <th>{{ __('translation.barcode') }}</th>
                                         <th width="80">{{ __('translation.quantity') }}</th>
                                         <th width="120">{{ __('translation.tracking') }}</th>
                                         <th width="130">{{ __('translation.print_qty') }}</th>
@@ -77,13 +76,6 @@
                                         <tr>
                                             <td><input type="checkbox" class="itemCheck" name="items[]" value="{{ $item->id }}" checked></td>
                                             <td>{{ $item->masterItem->name }}</td>
-                                            <td>
-                                                @if($item->trackings->isNotEmpty())
-                                                    {!! DNS1D::getBarcodeSVG($item->trackings->first()->barcode, 'C128') !!}
-                                                @else
-                                                    <span class="text-muted">N/A</span>
-                                                @endif
-                                            </td>
                                             <td> {{ $item->trackings->count() }}</td>
                                             <td><span class="badge bg-info"> {{ \App\Helpers\Settings::getDataTitle($item->tracking_type) }} </span></td>
                                             <td><input type="number" class="form-control" name="print_qty[{{ $item->id }}]" min="1" max="{{ $item->trackings->count() }}" value="{{ $item->trackings->count() }}"></td>

@@ -66,7 +66,6 @@
                                     <th>{{ __('translation.vendor') }}</th>
                                     <th>{{ __('translation.warehouse') }}</th>
                                     <th>{{ __('translation.product') }}</th>
-                                    <th>{{ __('translation.barcode') }}</th>
                                     <th>{{ __('translation.quantity') }}</th>
                                     <th>{{ __('translation.tracking') }}</th>
                                     <th>{{ __('translation.date') }}</th>
@@ -81,13 +80,6 @@
                                         <td> {{ $row->purchase->vendor->company_name ?? '-' }}</td>
                                         <td> {{ $row->purchase->warehouse->name ?? '-' }}</td>
                                         <td> {{ $row->masterItem->name ?? '-' }}</td>
-                                        <td>
-                                            @if($row->trackings->isNotEmpty())
-                                                {!! DNS1D::getBarcodeSVG($row->trackings->first()->barcode, 'C128') !!}
-                                            @else
-                                                <span class="text-danger">N/A</span>
-                                            @endif
-                                        </td>
                                         <!-- <td>{{$row->trackings->count() }} <br><small>({{ $row->quantity }})</small></td> -->
                                         <td>{{$row->trackings->count()}}</td>
                                         <td><span class="badge bg-info">{{ \App\Helpers\Settings::getDataTitle($row->tracking_type) }}</span></td>
