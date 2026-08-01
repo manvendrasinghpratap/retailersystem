@@ -1,44 +1,22 @@
 @extends('backend.layouts.master-horizontal')
-
 @section('title')
     {{ $breadcrumb['title'] ?? 'Print Barcode' }}
 @endsection
-
 @section('content')
-
     @include('backend.components.breadcrumb')
-
     <div class="row">
         <div class="col-lg-12">
             <div class="card">
-
                 <div class="card-header">
-                    <h4 class="card-title">
-                        {{ __('translation.purchase') }} # {{ $purchase->purchase_no }}
-                    </h4>
+                    <h4 class="card-title"> {{ __('translation.purchase') }} # {{ $purchase->purchase_no }}</h4>
                 </div>
-
                 <div class="card-body">
-
                     <div class="row mb-3">
-                        <div class="col-md-4">
-                            <strong>{{ __('translation.vendor') }}</strong><br>
-                            {{ $purchase->vendor->company_name ?? '-' }}
-                        </div>
-
-                        <div class="col-md-4">
-                            <strong>{{ __('translation.warehouse') }}</strong><br>
-                            {{ $purchase->warehouse->name ?? '-' }}
-                        </div>
-
-                        <div class="col-md-4">
-                            <strong>{{ __('translation.date') }}</strong><br>
-                            {{ \App\Helpers\Settings::formatDate($purchase->created_at) }}
-                        </div>
+                        <div class="col-md-4"> <strong>{{ __('translation.vendor') }}</strong><br>{{ $purchase->vendor->company_name ?? '-' }}</div>
+                        <div class="col-md-4"> <strong>{{ __('translation.warehouse') }}</strong><br>{{ $purchase->warehouse->name ?? '-' }} </div>
+                        <div class="col-md-4"> <strong>{{ __('translation.date') }}</strong><br>{{ \App\Helpers\Settings::formatDate($purchase->created_at) }} </div>
                     </div>
-
                 </div>
-
             </div>
         </div>
     </div>
@@ -52,8 +30,8 @@
                         <h4 class="card-title mb-0">{{ __('translation.purchase') }} {{ __('translation.product') }}</h4>
                         <div class="d-flex align-items-end gap-2">
                             <div style="width:120px;">
-                                <label>{{ __('translation.copies') }}</label>
-                                <input type="number" class="form-control" name="copies" min="1" value="1">
+                                <!-- <label>{{ __('translation.copies') }}</label> -->
+                                <input type="hidden" class="form-control" name="copies" min="1" value="1" max="2">
                             </div>
                             <button class="btn btn-primary"><i class="mdi mdi-printer"></i> {{ __('translation.print_preview') }}</button>
                             <a href="{{ url()->previous() }}" class="btn btn-secondary"><i class="mdi mdi-arrow-left"></i> {{ __('translation.back') }}</a>
@@ -67,8 +45,8 @@
                                         <th width="40"><input type="checkbox" id="checkAll" checked></th>
                                         <th>{{ __('translation.product') }}</th>
                                         <th width="80">{{ __('translation.quantity') }}</th>
-                                        <th width="120">{{ __('translation.tracking') }}</th>
-                                        <th width="130">{{ __('translation.print_qty') }}</th>
+                                        <th width="150">{{ __('translation.tracking') }}</th>
+                                        <th width="180">{{ __('translation.print_qty') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -89,10 +67,7 @@
             </div>
         </div>
     </form>
-
 @endsection
-
-
 @section('script')
     <script>
         $('#checkAll').on('change', function () {
