@@ -65,7 +65,7 @@
 </table>
 
 <div class="mt-3">
-    <h5 class="text-start pt-3" style="padding: 5px;">
+    <h5 class="text-end pt-3" style="padding: 5px;">
         <strong>{{ __('translation.total_qty') }} : {{ number_format($requisition->total_qty, 2) }}</strong>
     </h5>
 </div>

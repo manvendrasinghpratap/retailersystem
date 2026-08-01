@@ -11,16 +11,16 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="card-title d-inline-block">{{ __('translation.filter') }}</h4>
-                     <div class="d-inline-block">
+                    <div class="d-inline-block">
                         @include('backend.components.exportpdfcsv', [
-                        'pdfId' =>'downloadpendingpostingpdf',    
-                        'pdfRoute' => route('admin.requisitions.pending.posting.pdf'),
-                        'pdfClass' => 'downloadpendingpostingpdf',
-                        'csvId' =>'downloadpendingpostingcsv',    
-                        'csvRoute' => route('admin.requisitions.pending.posting.csv'),
-                        'csvClass' => 'downloadpendingpostingcsv',
-                        ])                 
-                    </div>      
+                            'pdfId' => 'downloadpendingpostingpdf',
+                            'pdfRoute' => route('admin.requisitions.pending.posting.pdf'),
+                            'pdfClass' => 'downloadpendingpostingpdf',
+                            'csvId' => 'downloadpendingpostingcsv',
+                            'csvRoute' => route('admin.requisitions.pending.posting.csv'),
+                            'csvClass' => 'downloadpendingpostingcsv',
+                        ])
+                    </div>
                 </div>
                 <div class="card-body">
                     <form method="GET">
@@ -90,7 +90,7 @@
                                         <td>
                                             {{-- ACTIVE & PENDING --}}
                                             @if($item->status == 1 && is_null($item->accepted_by))
-                                                <x-href-input action="no-barcode" name="no-barcode" label="" class="no-barcode" data-id="{{ \App\Helpers\Settings::getEncodeCode($item->id) }}" href="javascript:void(0);" />
+                                                <!-- <x-href-input action="no-barcode" name="no-barcode" label="" class="no-barcode" data-id="{{ \App\Helpers\Settings::getEncodeCode($item->id) }}" href="javascript:void(0);" /> -->
                                                 <x-href-input action="barcode" name="barcode" label="" class="barcode" data-id="{{ \App\Helpers\Settings::getEncodeCode($item->id) }}" href="javascript:void(0);" />
                                                 <x-href-input action="cancel" name="cancel" label="" class="cancelItem" href="javascript:void(0);" data-id="{{ \App\Helpers\Settings::getEncodeCode($item->id) }}" />
                                                 {{-- CANCELLED --}}
@@ -252,10 +252,10 @@
     </script>
 @endsection
 @section('script')
-<script>
-    $(document).ready(function() {
-       setupPdfDownload('.downloadpendingpostingpdf', 'data-downloadpendingpostingpdf');
-       setupPdfDownload('.downloadpendingpostingcsv', 'data-downloadpendingpostingcsv');
-    });
-</script>
+    <script>
+        $(document).ready(function () {
+            setupPdfDownload('.downloadpendingpostingpdf', 'data-downloadpendingpostingpdf');
+            setupPdfDownload('.downloadpendingpostingcsv', 'data-downloadpendingpostingcsv');
+        });
+    </script>
 @endsection

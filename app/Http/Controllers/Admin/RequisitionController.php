@@ -588,8 +588,82 @@ class RequisitionController extends Controller
     | CANCEL
     |--------------------------------------------------------------------------
     */
-
     public function cancel(Request $request)
+    {
+        try {
+
+            $id = Settings::getDecodeCode($request->id);
+
+            DB::transaction(function () use ($id) {
+
+                $accountId = auth()->user()->account_id;
+
+                $req = Requisition::with('items')
+                    ->where('account_id', $accountId)
+                    ->lockForUpdate()
+                    ->findOrFail($id);
+
+                // ==========================
+                // ALREADY CANCELLED
+                // ==========================
+                if ((int) $req->status === 0) {
+                    throw new \Exception('Requisition already cancelled.');
+                }
+
+                $stockService = app(StockService::class);
+
+                // ==========================
+                // REVERSE STOCK & RELEASE TRACKINGS
+                // ==========================
+                foreach ($req->items as $item) {
+
+                    // Return stock to warehouse
+                    $stockService->moveStock([
+                        'account_id' => $accountId,
+                        'warehouse_id' => $req->from_warehouse_id,
+                        'master_item_id' => $item->master_item_id,
+                        'type' => 'transfer_in',
+                        'qty' => (float) $item->qty,
+                        'reference_id' => $req->id,
+                        'remarks' => 'Cancel Requisition #' . $req->requisition_no,
+                    ]);
+
+                    // Release reserved tracking records
+                    PurchaseItemTracking::where('requisition_item_id', $item->id)
+                        ->lockForUpdate()
+                        ->update([
+                            'is_reserved' => 0,
+                            'requisition_id' => null,
+                            'requisition_item_id' => null,
+                        ]);
+                }
+
+                // ==========================
+                // CANCEL REQUISITION
+                // ==========================
+                $req->update([
+                    'status' => 0,
+                    'cancelled_by' => auth()->id(),
+                    'cancelled_at' => now(),
+                ]);
+
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Requisition cancelled successfully.'
+            ]);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function cancel_delete(Request $request)
     {
         try {
 
