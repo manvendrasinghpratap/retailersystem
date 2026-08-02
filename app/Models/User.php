@@ -101,11 +101,6 @@ class User extends Authenticatable
     |--------------------------------------------------------------------------
     */
 
-    // public function designation()
-    // {
-    //     return $this->belongsTo(Designation::class);
-    // }
-
     public function designation(): BelongsTo
     {
         return $this->belongsTo(Designation::class, 'designation_id');
