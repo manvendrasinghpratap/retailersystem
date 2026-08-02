@@ -12,6 +12,7 @@ class RequisitionItem extends Model
     protected $fillable = [
         'requisition_id',
         'master_item_id',
+        'purchase_item_tracking_id',
         'qty',
 
         // Status

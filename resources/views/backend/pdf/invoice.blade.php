@@ -5,46 +5,103 @@
   <meta charset="utf-8">
   <title>{{ $sale->store->name ?? Config::get('constants.shop_name') }} || {{ __('translation.invoice') }} </title>
   @include('backend.pdf.layouts.pdfcss')
+  <style>
+    .header {
+      border-bottom: 2px solid #2563eb;
+      padding-bottom: 10px;
+      margin-bottom: 15px;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: bold;
+      color: #2563eb;
+      margin-bottom: 8px;
+    }
+
+    .items th {
+      background: #2563eb;
+      color: #fff;
+      padding: 6px;
+    }
+
+    .items td {
+      padding: 6px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .items tr:nth-child(even) {
+      background: #f9fafb;
+    }
+
+    .totals-box {
+      border: 1px solid #ddd;
+      padding: 10px;
+      background: #f3f4f6;
+      border-radius: 6px;
+    }
+
+    .grand-total {
+      background: #2563eb;
+      color: #fff;
+      font-weight: bold;
+      padding: 6px;
+      border-radius: 4px;
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 11px;
+      color: #6b7280;
+      margin-top: 20px;
+    }
+
+    .footer strong {
+      font-size: 13px;
+      color: #111827;
+    }
+  </style>
 </head>
 
 <body>
   <div class="watermark">{{ $sale->store->name ?? Config::get('constants.shop_name') }}</div>
   <!-- HEADER -->
-  <table class="header" width="100%" cellpadding="0" cellspacing="0">
+  <table class="header" width="100%">
     <tr>
-      <!-- Company Details -->
-      <td width="60%" style="vertical-align:top;">
-        @if($sale->store->logo)
+      <td width="60%">
+        <!-- @if($sale->store->logo)
           <img src="{{$sale->store->logo}}" alt="{{ $sale->store->name ?? Config::get('constants.shop_name') }}" width="70" height="70" style="float:left;margin-right:10px" />
-        @endif
-        <div style="font-size:22px; font-weight:bold; color:#2563eb; margin-bottom:5px; float:left; margin-right:10px;">{{ $sale->store->name ?? Config::get('constants.shop_name') }}</div>
-        <div style="font-size:11px; color:#555; line-height:13px;"><strong>{{ __('translation.address') }}:</strong>{{ $sale->store->address ?? '' }}<br><strong>{{ __('translation.phone') }}:</strong>{{ $sale->store->phone ?? '' }} @if(!empty($sale->store->alternate_phone)) || {{ $sale->store->alternate_phone }} @endif<br>
-          @if(!empty($sale->store->email))<strong>{{ __('translation.email') }}:</strong>{{ $sale->store->email }}<br> @endif
-
-          @if(!empty($sale->store->website)) <strong>{{ __('translation.website') }}:</strong>{{ $sale->store->website }} @endif
+        @endif -->
+        <div style="font-size:22px; font-weight:bold; color:#2563eb;">{{ $sale->store->name ?? Config::get('constants.shop_name') }}</div>
+        <div style="font-size:11px; color:#555; line-height:14px;">
+          <strong>{{ __('translation.address') }}:</strong> {{ $sale->store->address ?? '' }}<br>
+          <strong>{{ __('translation.phone') }}:</strong> {{ $sale->store->phone ?? '' }}
+          @if(!empty($sale->store->alternate_phone)) || {{ $sale->store->alternate_phone }} @endif<br>
+          @if(!empty($sale->store->email)) <strong>{{ __('translation.email') }}:</strong> {{ $sale->store->email }}<br> @endif
+          @if(!empty($sale->store->website)) <strong>{{ __('translation.website') }}:</strong> {{ $sale->store->website }} @endif
         </div>
       </td>
-      <!-- Invoice Details -->
-      <td width="40%" class="text-right" style="vertical-align:top;">
-        <div style="font-size:28px; font-weight:bold; color:#111827; margin-bottom:10px;">{{ __('translation.invoice') }}</div>
+      <td width="40%" class="text-right">
+        <div style="font-size:28px; font-weight:bold; color:#111827; border-bottom:2px solid #2563eb; display:inline-block; padding-bottom:5px;">
+          {{ __('translation.invoice') }}
+        </div>
         <table style="font-size:11px; margin-left:auto;">
           <tr>
-            <td style="padding:2px 8px;"><strong>{{ __('translation.invoice_no') }}</strong></td>
-            <td style="padding:2px 0;">: {{ $sale->invoice_no }}</td>
+            <td><strong>{{ __('translation.invoice_no') }}</strong></td>
+            <td>: {{ $sale->invoice_no }}</td>
           </tr>
           <tr>
-            <td style="padding:2px 8px;"><strong>{{ __('translation.date') }}</strong></td>
-            <td style="padding:2px 0;">: {{ \Carbon\Carbon::parse($sale->created_at ?? now())->format(Config::get('constants.dateformat.showdate')) }}</td>
+            <td><strong>{{ __('translation.date') }}</strong></td>
+            <td>: {{ \Carbon\Carbon::parse($sale->created_at ?? now())->format(Config::get('constants.dateformat.showdate')) }}</td>
           </tr>
           <tr>
-            <td style="padding:2px 8px;"><strong>{{ __('translation.time') }}</strong></td>
-            <td style="padding:2px 0;">: {{ \Carbon\Carbon::parse($sale->created_at ?? now())->format(Config::get('constants.dateformat.showtimeAMAPM')) }}
-            </td>
+            <td><strong>{{ __('translation.time') }}</strong></td>
+            <td>: {{ \Carbon\Carbon::parse($sale->created_at ?? now())->format(Config::get('constants.dateformat.showtimeAMAPM')) }}</td>
           </tr>
           @if(!empty($sale->user->name))
             <tr>
-              <td style="padding:2px 8px;"><strong>{{ __('translation.cashier') }}</strong></td>
-              <td style="padding:2px 0;">: {{ $sale->user->name }}</td>
+              <td><strong>{{ __('translation.cashier') }}</strong></td>
+              <td>: {{ $sale->user->name }}</td>
             </tr>
           @endif
         </table>
@@ -122,7 +179,7 @@
       <tr>
         <th class="text-left">#</th>
         <th class="text-left">{{ __('translation.product') }}</th>
-        <th class="text-left">{{ __('translation.description') }}</th>
+        <th class="text-center">{{ __('translation.barcode') }}</th>
         <th class="text-center">{{ __('translation.quantity') }}</th>
         <th class="text-right">{{ __('translation.price') }}</th>
         <th class="text-right">{{ __('translation.total') }}</th>
@@ -133,7 +190,11 @@
         <tr>
           <td>{{ $index + 1 }}</td>
           <td>{{ $item->product->name ?? 'Product' }}</td>
-          <td>{{ $item->product->description ?? '-' }}</td>
+          <td style="padding:2px;">
+            <div style="font-size:8px; line-height:8px;">
+              {!! DNS1D::getBarcodeHTML($item->product->barcode, 'C128', 1, 25) !!}
+            </div>
+          </td>
           <td class="text-center">{{ $item->quantity }}</td>
           <td class="text-right">{{ __('translation.currency') }} {{ App\Helpers\Settings::getcustomnumberformat($item->price) }}</td>
           <td class="text-right">{{ __('translation.currency') }} {{ App\Helpers\Settings::getcustomnumberformat($item->total) }}</td>

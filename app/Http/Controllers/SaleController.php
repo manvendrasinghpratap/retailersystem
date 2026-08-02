@@ -383,7 +383,6 @@ class SaleController extends Controller
             $id = $id[0];
             $pdfHeaderdata = config('constants.downloadinvoicpdf');
             $sale = Sale::with(['customer', 'items.product', 'payments', 'user', 'warehouse', 'creditDuration', 'store'])->findOrFail($id);
-            //$this->pr($sale->store);
             $pdf = Pdf::loadView('backend.pdf.invoice', compact('sale'));
             $pdf = Settings::downloadpdf($pdf);
             $fileName = $pdfHeaderdata['filename'] . '-' . $sale->invoice_no . '.pdf';

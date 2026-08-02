@@ -185,42 +185,25 @@ class RequisitionController extends Controller
     public function store(Request $request)
     {
         try {
-
             $validated = $request->validate([
-
                 'from_warehouse_id' => 'required|exists:warehouses,id',
                 'for_store_id' => 'required|exists:stores,id',
                 'date' => 'required',
-
                 'items' => 'required|array|min:1',
                 'items.*.master_item_id' => 'required|exists:master_items,id',
                 'items.*.qty' => 'required|numeric|min:1',
-
                 'items.*.tracking_ids' => 'nullable|array',
                 'items.*.tracking_ids.*' => 'exists:purchase_item_trackings,id',
-
                 'items.*.barcodes' => 'nullable|array',
                 'items.*.barcodes.*' => 'string',
-
             ]);
-
         } catch (\Illuminate\Validation\ValidationException $e) {
-
-            return Settings::roleRedirect(
-                'requisitions.index',
-                $e->validator->errors()->first(),
-                'error'
-            );
+            return Settings::roleRedirect('requisitions.index', $e->validator->errors()->first(), 'error');
         }
-
         try {
-
             DB::transaction(function () use ($validated) {
-
                 $accountId = auth()->user()->account_id;
-
                 $requisitionNo = 'REQ-' . date('Ymd') . '-' . rand(1000, 9999);
-
                 $totalQty = collect($validated['items'])->sum(function ($item) {
                     return (float) $item['qty'];
                 });
@@ -232,37 +215,27 @@ class RequisitionController extends Controller
                 */
 
                 foreach ($validated['items'] as $item) {
-
                     if (empty($item['tracking_ids'])) {
                         continue;
                     }
-
                     foreach ($item['tracking_ids'] as $trackingId) {
-
                         $tracking = PurchaseItemTracking::where('id', $trackingId)
                             ->where('warehouse_id', $validated['from_warehouse_id'])
                             ->lockForUpdate()
                             ->available()
                             ->first();
-
                         if (!$tracking) {
-
-                            throw new \Exception(
-                                'One or more scanned barcodes are no longer available.'
-                            );
+                            throw new \Exception('One or more scanned barcodes are no longer available.');
 
                         }
                     }
                 }
-
                 /*
                 |--------------------------------------------------------------------------
                 | Validate Warehouse Stock
                 |--------------------------------------------------------------------------
                 */
-
                 foreach ($validated['items'] as $item) {
-
                     $stock = ProductStock::where([
                         'account_id' => $accountId,
                         'warehouse_id' => $validated['from_warehouse_id'],
@@ -270,11 +243,8 @@ class RequisitionController extends Controller
                     ])
                         ->lockForUpdate()
                         ->first();
-
                     if (!$stock) {
-
                         throw new \Exception('Item stock not found.');
-
                     }
 
                     if ((float) $stock->stock < (float) $item['qty']) {
@@ -298,10 +268,7 @@ class RequisitionController extends Controller
                     'from_warehouse_id' => $validated['from_warehouse_id'],
                     'for_store_id' => $validated['for_store_id'],
                     'requisition_no' => $requisitionNo,
-                    'date' => Settings::formatDate(
-                        $validated['date'],
-                        'Y-m-d'
-                    ),
+                    'date' => Settings::formatDate($validated['date'], 'Y-m-d'),
                     'total_qty' => $totalQty,
                     'status' => 1,
                     'created_by' => auth()->id(),
@@ -317,41 +284,28 @@ class RequisitionController extends Controller
                 */
 
                 foreach ($validated['items'] as $item) {
-
                     $qty = (float) $item['qty'];
-
                     /*
                     |--------------------------------------------------------------------------
                     | Save Requisition Item
                     |--------------------------------------------------------------------------
                     */
-
-                    $reqItem = RequisitionItem::create([
-
-                        'requisition_id' => $req->id,
-                        'master_item_id' => $item['master_item_id'],
-                        'qty' => $qty,
-
-                    ]);
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Reserve Tracking
-                    |--------------------------------------------------------------------------
-                    */
-
-                    if (!empty($item['tracking_ids'])) {
-
-                        PurchaseItemTracking::whereIn(
-                            'id',
-                            $item['tracking_ids']
-                        )->update([
-
-                                    'is_reserved' => 1,
-                                    'requisition_id' => $req->id,
-                                    'requisition_item_id' => $reqItem->id,
-
-                                ]);
+                    foreach ($item['barcodes'] as $key => $barcode) {
+                        $reqItem = RequisitionItem::create([
+                            'requisition_id' => $req->id,
+                            'master_item_id' => $item['master_item_id'],
+                            'purchase_item_tracking_id' => $item['tracking_ids'][$key],
+                            'qty' => 1,
+                            'barcode' => $barcode
+                        ]);
+                        /*
+                        |--------------------------------------------------------------------------
+                        | Reserve Tracking
+                        |--------------------------------------------------------------------------
+                        */
+                        if (!empty($item['tracking_ids'])) {
+                            PurchaseItemTracking::where('id', $item['tracking_ids'][$key])->update(['is_reserved' => 1, 'requisition_id' => $req->id, 'requisition_item_id' => $reqItem->id]);
+                        }
                     }
 
                     /*
@@ -361,7 +315,6 @@ class RequisitionController extends Controller
                     */
 
                     $stockService->moveStock([
-
                         'account_id' => $accountId,
                         'warehouse_id' => $validated['from_warehouse_id'],
                         'master_item_id' => $item['master_item_id'],
@@ -1197,87 +1150,6 @@ class RequisitionController extends Controller
             'tracking_id' => $barcode->id,
             'product_id' => $barcode->purchaseItem->master_item_id,
             'product' => $barcode->purchaseItem->masterItem->name
-        ]);
-    }
-
-    public function searchBarcode_old(Request $request)
-    {
-        $tracking = PurchaseItemTracking::with([
-            'purchaseItem.masterItem'
-        ])
-            ->where('barcode', trim($request->barcode))
-            ->status()
-            ->notSold()
-            ->whereHas('purchaseItem.purchase', function ($q) use ($request) {
-                $q->where('warehouse_id', $request->warehouse_id)->where('status', 1);
-            })
-            ->first();
-
-        if (!$tracking) {
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Barcode not found in selected warehouse.'
-            ]);
-
-        }
-
-        return response()->json([
-            'success' => true,
-            'tracking_id' => $tracking->id,          // <-- REQUIRED
-            'barcode' => $tracking->barcode,
-            'tracking_type' => $tracking->tracking_type,
-            'product_id' => $tracking->purchaseItem->master_item_id,
-            'product' => $tracking->purchaseItem->masterItem->name,
-        ]);
-    }
-
-    public function searchBarcodeold(Request $request)
-    {
-        $query = PurchaseItemTracking::with([
-            'purchaseItem.masterItem'
-        ])
-            ->status()
-            ->notSold()
-            ->where('barcode', $request->barcode);
-
-        // Skip already scanned ids in current requisition
-        if (!empty($request->scanned_ids)) {
-
-            $query->whereNotIn(
-                'id',
-                $request->scanned_ids
-            );
-
-        }
-
-        $tracking = $query
-            ->orderBy('id')
-            ->first();
-
-        if (!$tracking) {
-
-            return response()->json([
-                'success' => false,
-                'message' => 'No available barcode found.'
-            ]);
-
-        }
-
-        return response()->json([
-
-            'success' => true,
-
-            'tracking_id' => $tracking->id,
-
-            'barcode' => $tracking->barcode,
-
-            'tracking_type' => $tracking->tracking_type,
-
-            'master_item_id' => $tracking->purchaseItem->master_item_id,
-
-            'master_item_name' => $tracking->purchaseItem->masterItem->name,
-
         ]);
     }
 

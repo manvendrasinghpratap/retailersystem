@@ -31,7 +31,7 @@
             <th>{{ __('translation.product') }}</th>
             <th>{{ __('translation.quantity') }}</th>
             <th>{{ __('translation.accepted_by') }}</th>
-            <th>{{ __('translation.action') }}</th>
+            <!-- <th>{{ __('translation.action') }}</th> -->
         </tr>
     </thead>
     <tbody>
@@ -41,7 +41,7 @@
                 <td>{{ $item->masterItem->name ?? '-' }}</td>
                 <td>{{ $item->qty }}</td>
                 <td>{{ $item->acceptedBy->name ?? 'NO' }}</td>
-                <td>
+                <!-- <td>
                     @if($item->accepted_by == null && $requisition->status == 1)
                         <x-href-input action="no-barcode" name="no-barcode" label="" class="no-barcode" data-id="{{ \App\Helpers\Settings::getEncodeCode($item->id) }}" href="javascript:void(0);" />
                         <x-href-input action="barcode" name="barcode" label="" class="barcode" data-id="{{ \App\Helpers\Settings::getEncodeCode($item->id) }}" href="javascript:void(0);" />
@@ -52,7 +52,7 @@
                     @else
                         <span class="badge bg-success">{{ __('translation.moved_to_store') }}</span>
                     @endif
-                </td>
+                </td> -->
             </tr>
         @empty
             <tr>
