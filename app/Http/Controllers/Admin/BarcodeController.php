@@ -21,11 +21,8 @@ class BarcodeController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
-
         $this->middleware(function ($request, $next) {
-
             $role = Settings::getUserRole(); // admin / staff / etc.
-
             $this->breadcrumbBarcodeReader = [
                 'title' => __('translation.stock_adjustments'),
 
@@ -34,19 +31,6 @@ class BarcodeController extends Controller
                         'route' => 'admin.dashboard',
                         'title' => __('translation.dashboard')
                     ],
-                    // use route NAME only (not route())
-                    // [
-                    //     'route' => $role . '.no-barcode',
-                    //     'title' => __('translation.add_product_without_barcode')
-                    // ],
-                    // [
-                    //     'route' => 'admin.requisitions.pending.posting',
-                    //     'title' => __('translation.add_stock')
-                    // ],
-                    // [
-                    //     'route' => 'admin.sales-barcode',
-                    //     'title' => __('translation.sale_stock')
-                    // ],
                     [
                         'route' => $role . '.return-barcode',
                         'title' => __('translation.return_stock')
@@ -102,8 +86,46 @@ class BarcodeController extends Controller
      */
     public function index(Request $request)
     {
+        if (!$request->has('requisition_item_id') || !$request->has('purchase_item_tracking_barcode')) {
+            return redirect()->route('admin.requisitions.pending.posting')->with('error', __("translation.invalid_barcode"));
+        }
         $breadcrumb = $this->breadcrumbBarcodeReader;
-
+        return view('backend.admin.product.barcodereader.index', [
+            'breadcrumb' => $breadcrumb,
+            'categories' => Category::getCategoriesPluck(),
+            'products' => Product::getProductPluck(),
+        ]);
+    }
+    public function returnBarcode(Request $request)
+    {
+        $breadcrumb = $this->breadcrumbBarcodeReader;
+        return view('backend.admin.product.barcodereader', [
+            'breadcrumb' => $breadcrumb,
+            'categories' => Category::getCategoriesPluck(),
+            'products' => Product::getProductPluck(),
+        ]);
+    }
+    public function salesBarcode(Request $request)
+    {
+        $breadcrumb = $this->breadcrumbBarcodeReader;
+        return view('backend.admin.product.barcodereader', [
+            'breadcrumb' => $breadcrumb,
+            'categories' => Category::getCategoriesPluck(),
+            'products' => Product::getProductPluck(),
+        ]);
+    }
+    public function deductBarcode(Request $request)
+    {
+        $breadcrumb = $this->breadcrumbBarcodeReader;
+        return view('backend.admin.product.barcodereader', [
+            'breadcrumb' => $breadcrumb,
+            'categories' => Category::getCategoriesPluck(),
+            'products' => Product::getProductPluck(),
+        ]);
+    }
+    public function damageBarcode(Request $request)
+    {
+        $breadcrumb = $this->breadcrumbBarcodeReader;
         return view('backend.admin.product.barcodereader', [
             'breadcrumb' => $breadcrumb,
             'categories' => Category::getCategoriesPluck(),
@@ -111,6 +133,101 @@ class BarcodeController extends Controller
         ]);
     }
 
+
+    public function validateBarcodeRequisitionId(Request $request)
+    {
+        // ✅ Step 1: Validate request
+
+        $validator = Validator::make($request->all(), [
+            'barcode' => ['required', 'string'],
+            'routeName' => ['required', 'string'],
+            'requisition_item_id' => ['required', 'integer'],
+            'purchase_item_tracking_barcode' => ['required', 'string'],
+            'returnRoute' => ['required', 'string'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'validation' => true,
+                'redirect' => $request->input('returnRoute'),
+                'message' => $validator->errors()->first(),
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $validated = $validator->validated();
+
+        $barcode = trim($validated['barcode']);
+        $routeName = $validated['routeName'];
+        $requisition_item_id = $validated['requisition_item_id'];
+        $purchase_item_tracking_barcode = $validated['purchase_item_tracking_barcode'];
+        $returnRoute = $validated['returnRoute'];
+
+        // $requisition_item_id = Settings::getDecodeCode($requisition_item_id);
+        $purchase_item_tracking_barcode = Settings::getDecodeCode($purchase_item_tracking_barcode);
+
+
+        // ✅ Step 2: Get adjustment type
+        $adjustmentType = Settings::getAdjustmentIdFromRoute($routeName);
+        $adjustmentData = Settings::getEncodeCode($adjustmentType);
+
+        // ✅ Step 3: Format validation (8–13 digits)
+        if (!preg_match('/^[0-9]{8,13}$/', $barcode)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Barcode must be 8 to 13 digits only.',
+                'adjustmentType' => $adjustmentType,
+                'returnRoute' => $returnRoute
+            ]);
+        }
+
+        // ✅ Step 4: EAN-13 checksum validation
+        if (strlen($barcode) === 13 && !Settings::isValidEAN13($barcode)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Invalid EAN-13 barcode checksum.',
+                'adjustmentType' => $adjustmentType,
+                'returnRoute' => $returnRoute
+            ]);
+        }
+
+        if ($purchase_item_tracking_barcode != $barcode) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Barcode is not matching with purchase item tracking barcode.',
+                'adjustmentType' => $adjustmentType,
+                'returnRoute' => $returnRoute
+            ]);
+        }
+
+        // ✅ Step 5: Find product (optimized query)
+        $product = Product::query()->where('barcode', $barcode)->select(['id', 'barcode', 'name'])->first();
+
+        // ✅ Step 6: Prepare payload
+        $payloadData = [
+            'adjustment' => $adjustmentData,
+            'adjustmentType' => $adjustmentType,
+            'barcode' => $barcode,
+            'product_id' => $product?->id,
+            'requisition_item_id' => $requisition_item_id,
+            'returnRoute' => $returnRoute
+        ];
+
+        $payload = Crypt::encrypt($payloadData);
+
+        // ✅ Step 7: Response
+        return response()->json([
+            'status' => !is_null($product),
+            'message' => $product
+                ? 'Product found.'
+                : 'Product not found. Please add product first.',
+            'product' => $product,
+            'payload' => $payload,
+            'adjustmentType' => $adjustmentType,
+            'returnRoute' => $returnRoute
+        ]);
+    }
     /**
      * Validate barcode and return product info
      */
@@ -182,7 +299,6 @@ class BarcodeController extends Controller
     public function validatePurchaseBarcode(Request $request)
     {
         try {
-
             $validator = Validator::make($request->all(), [
                 'barcode' => 'required|string',
                 'routeName' => 'required|string',

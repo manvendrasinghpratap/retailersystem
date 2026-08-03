@@ -118,4 +118,9 @@ class RequisitionItem extends Model
         );
     }
 
+    public function purchaseItemTracking()
+    {
+        return $this->belongsTo(PurchaseItemTracking::class);
+    }
+
 }

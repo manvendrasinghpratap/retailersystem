@@ -65,12 +65,13 @@ Route::prefix('admin')->middleware(['auth', 'route.permission', 'subscription'])
 
 Route::prefix('admin/barcode')->middleware(['auth', 'route.permission', 'subscription'])->group(function () {
     Route::get('/', [BarcodeController::class, 'index'])->name('admin.barcode');
+    Route::get('/sales-barcode', [BarcodeController::class, 'salesBarcode'])->name('admin.sales-barcode');
+    Route::get('/return-barcode', [BarcodeController::class, 'returnBarcode'])->name('admin.return-barcode');
+    Route::get('/damage-barcode', [BarcodeController::class, 'damageBarcode'])->name('admin.damage-barcode');
+    Route::get('/deduct-barcode', [BarcodeController::class, 'deductBarcode'])->name('admin.deduct-barcode');
     Route::get('/no-barcode', [BarcodeController::class, 'nobarcode'])->name('admin.no-barcode');
-    Route::get('/sales-barcode', [BarcodeController::class, 'index'])->name('admin.sales-barcode');
-    Route::get('/return-barcode', [BarcodeController::class, 'index'])->name('admin.return-barcode');
-    Route::get('/damage-barcode', [BarcodeController::class, 'index'])->name('admin.damage-barcode');
-    Route::get('/deduct-barcode', [BarcodeController::class, 'index'])->name('admin.deduct-barcode');
     Route::post('/validateBarcode', [BarcodeController::class, 'validateBarcode'])->name('admin.barcode.validateBarcode');
+    Route::post('/validateBarcodeRequisitionId', [BarcodeController::class, 'validateBarcodeRequisitionId'])->name('admin.barcode.validateBarcodeRequisitionId');
     Route::post('/purchase/validate-barcode', [BarcodeController::class, 'validatePurchaseBarcode'])->name('admin.purchase.validateBarcode');
 });
 

@@ -44,34 +44,22 @@
                             <thead>
                                 <tr>
                                     <th>#</th>
-                                    <th>{{ __('translation.category_name')}}</th>
-                                    <th>{{ __('translation.product_name')}}</th>
-                                    <th>{{ __('translation.sku')}}</th>
-                                    <th>{{ __('translation.barcode')}}</th>
-                                    <th>{{ __('translation.qty_in_stock')}}</th>
-                                    <!-- <th>{{ __('translation.low_alert')}}</th> -->
-                                    <!-- <th>{{ __('translation.status')}}</th> -->
-                                    <th>{{ __('translation.action')}}</th>
+                                    <th>{{ __('translation.category_name') }}</th>
+                                    <th>{{ __('translation.product_name') }}</th>
+                                    <th>{{ __('translation.qty_in_stock') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse($inventory as $stock)
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
-                                        <td>{!! $stock->product->category->name ?? '' !!}</td>
-                                        <td>{!! $stock->product->name ?? '' !!}</td>
-                                        <td>{!! $stock->product->sku ?? '' !!}</td>
-                                        <td>@if(!empty($stock->product->barcode)){!! DNS1D::getBarcodeSVG($stock->product->barcode, 'C128') !!}@endif</td>
-                                        <td>{{ $stock->stock }}</td>
-                                        <!-- <td>{{ $stock->low_stock_alert }}</td> -->
-                                        <!-- <td>{{ $stock->isLowStock() ? __('translation.low_stock') : __('translation.normal_stock') }}</td> -->
-                                        <td>
-                                            <x-href-input action="print_barcode" data-route="{{ route('barcode.form', \App\Helpers\Settings::getEncodeCodeWithHashids($stock->product_id)) }}" data-id="{{ \App\Helpers\Settings::getEncodeCodeWithHashids($stock->product_id) }}" name="print" label="" href="javascript:void(0);" class="btn btn-sm barcodeBtn" icon="fa fa-print" :nohref="true" text="Print Barcode" />
-                                        </td>
+                                        <td>{{ $stock->category_name }}</td>
+                                        <td>{{ \App\Helpers\Settings::getDataTitle($stock->product_name) }}</td>
+                                        <td>{{ $stock->total_stock }}</td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="8" class="text-center">
+                                        <td colspan="4" class="text-center">
                                             @lang('translation.no_data_found')
                                         </td>
                                     </tr>

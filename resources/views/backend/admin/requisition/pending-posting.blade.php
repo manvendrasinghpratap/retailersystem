@@ -84,6 +84,7 @@
                                             @else
                                                 <span class="badge bg-warning">{{ __('translation.pending_posting') }}</span>
                                             @endif
+                                            {{-- $item->purchaseItemTracking->barcode --}}
                                         </td>
                                         <td>{{ \App\Helpers\Settings::getFormattedDatetime($item->created_at) }}</td>
 
@@ -91,7 +92,7 @@
                                             {{-- ACTIVE & PENDING --}}
                                             @if($item->status == 1 && is_null($item->accepted_by))
                                                 <!-- <x-href-input action="no-barcode" name="no-barcode" label="" class="no-barcode" data-id="{{ \App\Helpers\Settings::getEncodeCode($item->id) }}" href="javascript:void(0);" /> -->
-                                                <x-href-input action="barcode" name="barcode" label="" class="barcode" data-id="{{ \App\Helpers\Settings::getEncodeCode($item->id) }}" href="javascript:void(0);" />
+                                                <x-href-input action="barcode" name="barcode" label="" class="barcode" data-purchase-item-tracking-barcode="{{ $item->purchaseItemTracking->id ? \App\Helpers\Settings::getEncodeCode($item->purchaseItemTracking->barcode) : '' }}" data-return-route="{{ route('admin.requisitions.pending.posting') }}" data-id="{{ \App\Helpers\Settings::getEncodeCode($item->id) }}" href="javascript:void(0);" />
                                                 <x-href-input action="cancel" name="cancel" label="" class="cancelItem" href="javascript:void(0);" data-id="{{ \App\Helpers\Settings::getEncodeCode($item->id) }}" />
                                                 {{-- CANCELLED --}}
                                             @elseif($item->status == 0)
@@ -120,50 +121,30 @@
 @section('script')
     <script>
         // ===============================
-        // NO BARCODE
-        // ===============================
-        $(document).on('click', '.no-barcode', function () {
-
-            let id = $(this).data('id');
-
-            Swal.fire({
-                title: 'Brand Without Barcode?',
-                text: 'This item will use auto generated barcode.',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: 'Proceed',
-                cancelButtonText: 'Cancel'
-            }).then((result) => {
-
-                if (result.isConfirmed) {
-
-                    Swal.fire({
-                        title: 'Redirecting...',
-                        text: 'Opening in same tab',
-                        icon: 'success',
-                        timer: 1000,
-                        showConfirmButton: false
-                    });
-
-                    // redirect to another URL in new tab
-                    window.open(
-                        "{{ route('admin.no-barcode') }}?requisition_item_id=" + id,
-                        '_self'
-                    );
-                }
-            });
-        });
-
-
-        // ===============================
         // WITH BARCODE
         // ===============================
         $(document).on('click', '.barcode', function () {
 
             let id = $(this).data('id');
-
+            let purchaseItemTrackingBarcode = $(this).data('purchase-item-tracking-barcode');
+            if (!purchaseItemTrackingBarcode) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Barcode Missing',
+                    text: 'Barcode is missing. Please contact the warehouse.'
+                });
+                return;
+            }
+            if (!id) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid Request',
+                    text: 'Requisition Item ID is required.'
+                });
+                return;
+            }
             Swal.fire({
-                title: 'Brand With Barcode?',
+                title: 'Product With Barcode?',
                 text: 'Barcode labels will be printed.',
                 icon: 'warning',
                 showCancelButton: true,
@@ -183,7 +164,7 @@
 
                     // redirect to another URL in new tab
                     window.open(
-                        "{{ route('admin.barcode') }}?requisition_item_id=" + id,
+                        "{{ route('admin.barcode') }}?requisition_item_id=" + id + '&purchase_item_tracking_barcode=' + purchaseItemTrackingBarcode,
                         '_self'
                     );
                 }

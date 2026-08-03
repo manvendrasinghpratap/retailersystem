@@ -72,13 +72,12 @@
     window.sessionManager = new SessionManager(window.sessionConfig);
   });
   window.sessionConfig = {
-    timeout: {{ account_setting('general.session_timeout', 10) }},
+    timeout: {{ account_setting('general.session_timeout', 5) }},
     warning: {{ account_setting('general.warning_before', 60) }},
     keepAlive: {{ account_setting('general.keep_alive', 1) }},
     csrf: "{{ csrf_token() }}",
     logoutUrl: "{{ route('logout') }}",
     keepAliveUrl: "{{ route('admin.keepalive') }}"
-
   };
 
 </script>

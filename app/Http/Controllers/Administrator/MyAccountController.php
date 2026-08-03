@@ -48,6 +48,15 @@ class MyAccountController extends Controller
         $this->breadcrumbChangePassword = ['title' => 'Change Password', 'route1' => 'administrator.dashboard', 'route1Title' => 'Dashboard', 'route2' => 'administrator.updatepassword', 'route2Title' => 'Profile', 'reset_route' => 'administrator.dashboard', 'reset_route_title' => __('translation.cancel')];
     }
 
+    /*
+    @description: get all accounts
+    @author: Manvendra
+    @created: 2026-08-03
+    @return: 
+    @access: public
+    @method: GET
+    */
+
     public function index(Request $request)
     {
         $breadcrumb = $this->breadcrumbAddNew;
@@ -71,6 +80,15 @@ class MyAccountController extends Controller
         return view('backend.administrator.account.index', compact("accountList", "updatedAt", 'breadcrumb', 'account_status', 'subscriptionPlan'));
     }
 
+    /*
+    @description: get create account page
+    @author: Manvendra
+    @created: 2026-08-03
+    @return: 
+    @access: public
+    @method: GET
+    */
+
     public function create(Request $request)
     {
         $route = 'add';
@@ -85,133 +103,65 @@ class MyAccountController extends Controller
         return view('backend.administrator.account.form', compact(["designation", "route", 'breadcrumb', 'suffix', 'localGovernment', 'countries', 'state', 'account_status', 'submitText']));
     }
 
+    /*
+    @description: store account
+    @author: Manvendra
+    @created: 2026-08-03
+    @return: 
+    @access: public
+    @method: POST
+    */
+
     public function store(Request $request)
     {
+        $request->validate([
+            'first_name' => 'required',
+            'last_name' => 'required',
+            'office_phone' => 'required',
+            'cell_phone' => 'required',
+            'whatsapp_number' => 'required',
+            'nin' => 'required',
+            'local_government' => 'required',
+            'country_of_origin' => 'required',
+            'state_of_origin' => 'required',
+
+            'email' => 'required|email|max:50|unique:users,email',
+            'username' => 'required|max:20|unique:users,username',
+            'password' => 'required|confirmed|min:8',
+
+            'avatar' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'logo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+        ]);
+
         DB::beginTransaction();
-
         try {
-
-            $request->validate([
-                'first_name' => 'required',
-                'last_name' => 'required',
-                'office_phone' => 'required',
-                'cell_phone' => 'required',
-                'whatsapp_number' => 'required',
-                'nin' => 'required',
-                'local_government' => 'required',
-                'country_of_origin' => 'required',
-                'state_of_origin' => 'required',
-
-                'email' => 'required|email|max:50|unique:users,email',
-                'username' => 'required|max:20|unique:users,username',
-                'password' => 'required|confirmed|min:8',
-
-                'avatar' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-                'logo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-            ]);
-
-            /*
-            |--------------------------------------------------------------------------
-            | Upload Avatar
-            |--------------------------------------------------------------------------
-            */
-
             if ($request->hasFile('avatar')) {
                 Settings::uploadimage($request, 'avatar', 'staff');
             }
-
-            /*
-            |--------------------------------------------------------------------------
-            | Create User
-            |--------------------------------------------------------------------------
-            */
-
             $user = $this->userService->createAdmin($request);
-
-            /*
-            |--------------------------------------------------------------------------
-            | Create Account
-            |--------------------------------------------------------------------------
-            */
-
             $account = Account::createAccount($user, $request);
-
-            $user->update([
-                'account_id' => $account->id,
-                'designation_id' => 2,
-            ]);
-
-            /*
-            |--------------------------------------------------------------------------
-            | Create User Detail
-            |--------------------------------------------------------------------------
-            */
-
-            UserDetail::updateOrCreateDetail($user->id, $request->all());
-
-            /*
-            |--------------------------------------------------------------------------
-            | Create Default Store
-            |--------------------------------------------------------------------------
-            */
-
-            $this->storeService->create(
-                $account,
-                $user,
-                $request
-            );
-
-            DB::commit();
-
-            return Settings::roleRedirect(
-                'accounts',
-                'Account Added Successfully.'
-            );
-
-        } catch (\Exception $e) {
-
-            DB::rollBack();
-
-            return Settings::roleRedirect(
-                'accounts',
-                $e->getMessage(),
-                'error'
-            );
-        }
-    }
-    public function store_working(Request $request)
-    {
-        try {
-            $request->validate([
-                'first_name' => 'required',
-                'last_name' => 'required',
-                'office_phone' => 'required',
-                'cell_phone' => 'required',
-                'whatsapp_number' => 'required',
-                'nin' => 'required',
-                'local_government' => 'required',
-                'country_of_origin' => 'required',
-                'state_of_origin' => 'required',
-                'email' => 'required|unique:users|max:50',
-                'username' => 'required|unique:users|max:20',
-                'password' => 'required|confirmed|min:8',
-                'password_confirmation' => 'required',
-            ]);
-            $filename = 'default.png';
-            if ($request->hasFile('avatar')) {
-                $filename = Settings::uploadimage($request, 'avatar', 'staff');
+            $designation = Designation::where('name', 'Admin')->where('account_id', $account->id)->first();
+            if ($designation) {
+                $user->update(['account_id' => $account->id, 'designation_id' => $designation->id]);
             }
-            $user = $this->userService->createAdmin($request);
-            $account = Account::createAccount($user, $request);
-            $user->account_id = $account->id;
-            $user->designation_id = 2;
-            $user->save();
             UserDetail::updateOrCreateDetail($user->id, $request->all());
+            $this->storeService->create($account, $user, $request);
+            DB::commit();
             return Settings::roleRedirect('accounts', 'Account Added Successfully.');
         } catch (\Exception $e) {
-            return Settings::roleRedirect('accounts', 'Something went wrong!', 'error');
+            DB::rollBack();
+            return Settings::roleRedirect('accounts', $e->getMessage(), 'error');
         }
     }
+
+    /*
+    @description: get edit account page
+    @author: Manvendra
+    @created: 2026-08-03
+    @return: 
+    @access: public
+    @method: GET
+    */
 
     public function edit(Request $request, $id)
     {
@@ -229,19 +179,35 @@ class MyAccountController extends Controller
         return view('backend.administrator.account.form', compact(["designation", "route", 'breadcrumb', 'suffix', 'localGovernment', 'countries', 'state', 'account_status', 'accountdetails', 'submitText']));
     }
 
+    /*
+    @description: update account
+    @author: Manvendra
+    @created: 2026-08-03
+    @return: 
+    @access: public
+    @method: POST
+    */
     public function statusUpdate(Request $request)
     {
         try {
             $id = $request->input('id');
             $status = $request->input('status');
             User::where("hotel_id", $id)->update(["is_active" => $status]);
-            Hotel::where("id", $id)->update(["status" => $status == 0 ? 'inactive' : 'active']);
             Session::flash('success', 'Data update successfully.');
         } catch (\Exception $e) {
             Session::flash('error', 'something went wrong!');
             return redirect()->back()->withInput();
         }
     }
+
+    /*
+    @description: delete account
+    @author: Manvendra
+    @created: 2026-08-03
+    @return: 
+    @access: public
+    @method: POST
+    */
 
     public function delete(Request $request)
     {
@@ -255,6 +221,15 @@ class MyAccountController extends Controller
             return redirect()->back()->withInput();
         }
     }
+
+    /*
+    @description: update account
+    @author: Manvendra
+    @created: 2026-08-03
+    @return: 
+    @access: public
+    @method: POST
+    */
 
     public function update(Request $request)
     {
@@ -312,20 +287,14 @@ class MyAccountController extends Controller
             return Settings::roleRedirect('accounts', 'Something went wrong!', 'error');
         }
     }
-
-
-
-
-
-    public function downloadHotelpdf(Request $request)
-    {
-        $updatedAt = '';
-        $hotelList = Hotel::whereNot('status', 'suspended')->orderBy('id', 'desc')->get();
-        $subscriptionList = SubscriptionPlan::pluck('name', 'id')->toArray();
-        $pdfHeaderdata = \Config::get('constants.downloadhotelpdf');
-        $pdf = PDF::loadView('backend.hotel.downloadpdf', compact("hotelList", "subscriptionList", "updatedAt", 'pdfHeaderdata'))->setOptions(['defaultFont' => 'sans-serif']);
-        return $pdf->stream('hotel-list.pdf');
-    }
+    /*
+    @description: subscribe account
+    @author: Manvendra
+    @created: 2026-08-03
+    @return: 
+    @access: public
+    @method: GET
+    */
 
     public function subscribe(Request $request, $accountId)
     {
@@ -338,6 +307,15 @@ class MyAccountController extends Controller
         $subscriptionplan = SubscriptionPlan::where('status', 1)->whereNull('deleted_at')->pluck('name', 'id')->toArray();
         return view('backend.administrator.account.subscribe', compact(["route", 'breadcrumb', 'subscriptionplan', 'account_status', 'submitText', 'accountId']));
     }
+
+    /*
+    @description: store subscribe account
+    @author: Manvendra
+    @created: 2026-08-03
+    @return: 
+    @access: public
+    @method: POST
+    */
 
     public function storesubscribe(Request $request)
     {
@@ -421,6 +399,14 @@ class MyAccountController extends Controller
     }
 
 
+    /*
+    @description: update administration password
+    @author: Manvendra
+    @created: 2026-08-03
+    @return: 
+    @access: public
+    @method: POST
+    */
 
     public function updateadministrationpassword(Request $request)
     {
@@ -470,7 +456,14 @@ class MyAccountController extends Controller
         }
 
     }
-
+    /*
+    @description: update password
+    @author: Manvendra
+    @created: 2026-08-03
+    @return: 
+    @access: public
+    @method: POST
+    */
     public function updatepassword(Request $request)
     {
 
@@ -487,6 +480,15 @@ class MyAccountController extends Controller
             return redirect()->back()->withInput();
         }
     }
+
+    /*
+    @description: get subscription price
+    @author: Manvendra
+    @created: 2026-08-03
+    @return: 
+    @access: public
+    @method: POST
+    */
     public function getsubscriptionprice(Request $request)
     {
         $request->validate([
@@ -501,6 +503,14 @@ class MyAccountController extends Controller
         }
     }
 
+    /*
+    @description: account subscription payment details
+    @author: Manvendra
+    @created: 2026-08-03
+    @return: 
+    @access: public
+    @method: POST
+    */
     public function accountsubscriptionpaymentdetails(Request $request)
     {
         $request->validate([
@@ -521,6 +531,14 @@ class MyAccountController extends Controller
         }
     }
 
+    /*
+    @description: edit password
+    @author: Manvendra
+    @created: 2026-08-03
+    @return: 
+    @access: public
+    @method: GET
+    */
     public function editPassword()
     {
         $breadcrumb = $this->breadcrumbChangePassword;

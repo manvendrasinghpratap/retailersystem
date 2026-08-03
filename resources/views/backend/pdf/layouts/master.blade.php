@@ -18,11 +18,11 @@
 
 <body>
   <div class="report-header">
-    @if(isset(auth()->user()->store) && auth()->user()->store->logo)
+    <!-- @if(isset(auth()->user()->store) && auth()->user()->store->logo)
       <img src="{{auth()->user()->store->logo}}" alt="{{ auth()->user()->store->name ?? Config::get('constants.shop_name') }}" width="70" height="70" style="float:left;margin-right:10px" />
     @else
       <div> @include('backend.pdf.datalogo') </div>
-    @endif
+    @endif -->
     <h1>{{ auth()->user()->store->name ?? Config::get('constants.shop_name') }}</h1>
     <!-- <p>{{\Config::get('constants.slogan')}}</p> -->
     <p><strong>{!! (!empty($pdfHeaderdata) && (array_key_exists('heading', $pdfHeaderdata))) ? $pdfHeaderdata['heading'] : '' !!}</strong> — {{\App\Helpers\Settings::getFormattedDate(date('Y-m-d'))}} </p>

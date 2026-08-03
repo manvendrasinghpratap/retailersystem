@@ -15,7 +15,7 @@ use App\Models\Warehouse;
 use App\Models\Store;
 use App\Models\RequisitionItem;
 use Illuminate\Support\Facades\Route;
-
+use DB;
 class InventoryController extends Controller
 {
 
@@ -43,28 +43,6 @@ class InventoryController extends Controller
                         'route' => 'admin.inventory',
                         'title' => __('translation.stock_management')
                     ],
-
-                    // use route NAME only (not route())
-                    // [
-                    //     'route' => $role . '.no-barcode',
-                    //     'title' => __('translation.add_product_without_barcode')
-                    // ],
-                    // [
-                    //     'route' => 'admin.requisitions.pending.posting',
-                    //     'title' => __('translation.add_stock')
-                    // ],
-                    // [
-                    //     'route' => $role . '.return-barcode',
-                    //     'title' => __('translation.return_stock')
-                    // ],
-                    // [
-                    //     'route' => $role . '.damage-barcode',
-                    //     'title' => __('translation.damage_stock')
-                    // ],
-                    // [
-                    //     'route' => $role . '.deduct-barcode',
-                    //     'title' => __('translation.deduct_stock')
-                    // ],
                 ],
 
                 'route1' => "admin.inventory.manage/291752",
@@ -121,6 +99,87 @@ class InventoryController extends Controller
 
 
     public function index(Request $request)
+    {
+        $breadcrumb = $this->breadcrumbAddUpdate;
+        $categories = Category::getCategoriesPluck();
+
+        $inventory = Inventory::query()
+            ->join('products', 'products.id', '=', 'inventory.product_id')
+            ->leftJoin('categories', 'categories.id', '=', 'products.category_id')
+            ->select([
+                'products.master_item_id',
+                DB::raw('MAX(products.name) as product_name'),
+                DB::raw('MAX(products.sku) as sku'),
+                DB::raw('MAX(products.barcode) as barcode'),
+                DB::raw('MAX(categories.name) as category_name'),
+                DB::raw('SUM(inventory.stock) as total_stock'),
+            ])
+            ->where('inventory.account_id', auth()->user()->account_id);
+
+        // Product Name Filter
+        if ($request->filled('name')) {
+            $inventory->where('products.name', 'LIKE', '%' . $request->name . '%');
+        }
+
+        // Category Filter
+        if ($request->filled('category_id')) {
+            $inventory->where('products.category_id', $request->category_id);
+        }
+
+        $inventory->groupBy('products.master_item_id')
+            ->orderBy('product_name');
+
+        // PDF Export
+        if ($request->filled('pdf')) {
+            $inventory = $inventory->get();
+            $pdfHeaderdata = config('constants.downloadinventorypdf');
+            $pdf = Pdf::loadView('backend.pdf.stockManagement.stockManagementpdf', compact('inventory', 'pdfHeaderdata'));
+            $pdf = Settings::downloadpdf($pdf);
+            return $pdf->stream(
+                $pdfHeaderdata['filename'] . '-' . now()->format('Y-m-d') . '.pdf'
+            );
+        }
+
+        // CSV Export
+        if ($request->filled('csv')) {
+
+            $inventory = $inventory->get();
+
+            $csvHeaderdata = config('constants.downloadinventorypdf');
+
+            $fileName = $csvHeaderdata['filename'] . '-' . now()->format('Y-m-d') . '.csv';
+
+            $data = [];
+
+            $data[] = [
+                '#',
+                __('translation.category_name'),
+                __('translation.product_name'),
+                __('translation.stock'),
+            ];
+
+            foreach ($inventory as $key => $item) {
+
+                $data[] = [
+                    $key + 1,
+                    $item->category_name,
+                    $item->product_name,
+                    $item->total_stock,
+                ];
+            }
+
+            return Settings::downloadcsvfile($data, $fileName);
+        }
+
+        $inventory = $inventory->paginate(account_setting('general.pagination'));
+
+        return view(
+            'backend.admin.inventory.index',
+            compact('inventory', 'breadcrumb', 'categories')
+        );
+    }
+
+    public function index_delete(Request $request)
     {
         $breadcrumb = $this->breadcrumbAddUpdate;
         $categories = Category::getCategoriesPluck();

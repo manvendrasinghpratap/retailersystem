@@ -178,11 +178,7 @@ class ProductController extends Controller
                 $data = Crypt::decrypt($token);
                 $adjustmentData = Settings::getInventoryAdjustment($data['adjustment']);
                 if (empty($adjustmentData['adjustment'])) {
-                    return Settings::roleRedirect(
-                        'inventory',
-                        'Something went wrong!',
-                        'error'
-                    );
+                    return Settings::roleRedirect('inventory', 'Something went wrong!', 'error');
                 }
                 $route = $adjustmentData['route'];
                 $adjustment = $adjustmentData['adjustment'];

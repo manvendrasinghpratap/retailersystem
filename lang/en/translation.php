@@ -86,6 +86,9 @@ return [
     "b_ngn" => '(₦)',
     'currency' => '(₦)',
     "add_new_account" => 'Add New Client',
+    'amountpayable' => 'Amount Payable',
+    'update_warehouse' => 'Update Warehouse',
+    'invalid_barcode' => 'Invalid Barcode',
 
     "save" => 'Save',
     "close" => 'Close',
