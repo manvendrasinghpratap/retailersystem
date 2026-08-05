@@ -7,9 +7,17 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h4 class="card-title mb-0">
-                        {{ __('translation.filter') }}
-                    </h4>
+                    <h4 class="card-title d-inline-block">{{ __('translation.filter') }}</h4>
+                    <div class="d-inline-block">
+                        @include('backend.components.exportpdfcsv', [
+                            'pdfId' => 'downloadstocklistingpdf',
+                            'pdfRoute' => route('admin.warehouses.exportstocklistingPdf'),
+                            'pdfClass' => 'downloadstocklistingpdf',
+                            'csvId' => 'downloadstocklistingcsv',
+                            'csvRoute' => route('admin.warehouses.exportstocklistingCsv'),
+                            'csvClass' => 'downloadstocklistingcsv',
+                        ])
+                    </div>
                 </div>
                 <div class="card-body">
                     <form method="GET">
@@ -90,23 +98,10 @@
 @endsection
 
 @section('script')
-
     <script>
-
         $(document).ready(function () {
-
-            setupPdfDownload(
-                '.downloadwarehousepdf',
-                'data-downloadroutepdf'
-            );
-
-            setupPdfDownload(
-                '.downloadwarehousecsv',
-                'data-downloadroutepdf'
-            );
-
+            setupPdfDownload('.downloadstocklistingpdf', 'data-downloadroutepdf');
+            setupPdfDownload('.downloadstocklistingcsv', 'data-downloadroutepdf');
         });
-
     </script>
-
 @endsection

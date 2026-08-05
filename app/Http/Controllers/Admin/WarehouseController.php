@@ -582,9 +582,7 @@ class WarehouseController extends Controller
         // FILTER : PRODUCT NAME
         // =========================
         if ($request->filled('product_name')) {
-
             $query->whereHas('masterItem', function ($q) use ($request) {
-
                 $q->where(
                     'name',
                     'LIKE',
@@ -597,7 +595,6 @@ class WarehouseController extends Controller
         // FILTER : WAREHOUSE
         // =========================
         if ($request->filled('warehouse_id')) {
-
             $query->where('warehouse_id', $request->warehouse_id);
         }
 
@@ -605,7 +602,6 @@ class WarehouseController extends Controller
         // FILTER : STOCK
         // =========================
         if ($request->stock_filter == 'in_stock') {
-
             $query->where('stock', '>', 0);
         }
 
@@ -613,10 +609,50 @@ class WarehouseController extends Controller
         // FILTER : LOW STOCK
         // =========================
         if ($request->stock_filter == 'low_stock') {
-
             $query->whereColumn('stock', '<=', 'low_stock_alert');
         }
 
+        if ($request->has('pdf')) {
+            $stocks = $query->latest()->get();
+            $pdfHeaderdata = \Config::get('constants.stocklistingpdf');
+            $pdf = PDF::loadView('backend.pdf.warehouses.stocklistingpdf', compact('stocks', 'pdfHeaderdata', 'breadcrumb'));
+            $pdf = Settings::downloadpdf($pdf);
+            $fileName = $pdfHeaderdata['filename'] . '-' . date('Y-m-d') . '.pdf';
+            return $pdf->stream($fileName);
+        } elseif ($request->has('csv')) {
+            $items = $query->get();
+            $csvHeaderdata = \Config::get('constants.stocklistingpdf');
+            $fileName = $csvHeaderdata['filename'] . '-' . date('Y-m-d') . '.csv';
+            $data = [];
+            $ii = $i = 0;
+            // ✅ Header Row
+            $data[$ii] = [
+                '#',
+                __('translation.warehouse'),
+                __('translation.product'),
+                __('translation.available_qty'),
+                __('translation.last_updated')
+            ];
+            $sum = 0;
+            foreach ($items as $stock) {
+                $sum += $stock->stock;
+                $data[++$ii] = [
+                    $ii,
+                    optional($stock->warehouse)->name ?? '-',
+                    optional($stock->masterItem)->name ?? '-',
+                    $stock->stock,
+                    Settings::getFormattedDatetime($stock->updated_at),
+                ];
+            }
+
+            $data[++$ii] = [
+                '',
+                '',
+                __('translation.total'),
+                $sum
+            ];
+            return Settings::downloadcsvfile($data, $fileName);
+        }
         $stocks = $query
             ->latest()
             ->paginate(config('constants.pagination'))
@@ -629,5 +665,17 @@ class WarehouseController extends Controller
             'backend.admin.warehouses.stock_listing',
             compact('breadcrumb', 'stocks', 'warehouses', 'items')
         );
+    }
+
+    public function exportstocklistingPdf(Request $request)
+    {
+        $request->merge(['pdf' => 1]);
+        return $this->stockListing($request);
+    }
+
+    public function exportstocklistingCsv(Request $request)
+    {
+        $request->merge(['csv' => 1]);
+        return $this->stockListing($request);
     }
 }

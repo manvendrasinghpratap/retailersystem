@@ -28,4 +28,6 @@ Route::middleware(['auth', 'route.permission', 'subscription'])->prefix('admin/w
     Route::get('/stock-listing/export/pdf', [WarehouseController::class, 'stockListingPdf'])->name('stock.listing.pdf');
     // EXPORT CSV
     Route::get('/stock-listing/export/csv', [WarehouseController::class, 'stockListingCsv'])->name('stock.listing.csv');
+    Route::get('/export/exportstocklistingPdf', [WarehouseController::class, 'exportstocklistingPdf'])->name('exportstocklistingPdf');
+    Route::get('/export/exportstocklistingCsv', [WarehouseController::class, 'exportstocklistingCsv'])->name('exportstocklistingCsv');
 });
