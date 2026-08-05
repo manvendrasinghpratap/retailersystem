@@ -15,14 +15,14 @@
                     <h4 class="card-title d-inline-block">{{ __('translation.filter') }}</h4>
                     <div class="d-inline-block">
                         @include('backend.components.exportpdfcsv', [
-                            'showPdf' => false,
-                            'showCsv' => false,
-                            'pdfId' => '',
-                            'pdfRoute' => '',
-                            'pdfClass' => '',
-                            'csvId' => '',
-                            'csvRoute' => '',
-                            'csvClass' => '',
+                            'showPdf' => true,
+                            'showCsv' => true,
+                            'pdfId' => 'downloadpurchasebarcodespdf',
+                            'pdfRoute' => route('admin.purchases.purchase-barcodes-exportPdf'),
+                            'pdfClass' => 'downloadpurchasebarcodespdf',
+                            'csvId' => 'downloadpurchasebarcodescsv',
+                            'csvRoute' => route('admin.purchases.purchase-barcodes-exportCsv'),
+                            'csvClass' => 'downloadpurchasebarcodescsv',
                         ])
                     </div>
                 </div>
@@ -65,10 +65,10 @@
                                     <th>{{ __('translation.purchase_no') }}</th>
                                     <th>{{ __('translation.vendor') }}</th>
                                     <th>{{ __('translation.warehouse') }}</th>
-                                    <th>{{ __('translation.product') }}</th>
+                                    <th>{{ __('translation.products') }}</th>
                                     <th>{{ __('translation.quantity') }}</th>
                                     <th>{{ __('translation.tracking') }}</th>
-                                    <th>{{ __('translation.date') }}</th>
+                                    <th>{{ __('translation.createdat') }}</th>
                                     <th>{{ __('translation.action') }}</th>
                                 </tr>
                             </thead>
@@ -108,14 +108,11 @@
 
     <script>
 
-        $(function () {
 
-            $('.flatdatepickr').flatpickr({
-                dateFormat: 'd/m/Y'
-            });
-
+        $(document).ready(function () {
+            setupPdfDownload('.downloadpurchasebarcodespdf', 'data-downloadroutepdf');
+            setupPdfDownload('.downloadpurchasebarcodescsv', 'data-downloadroutecsv');
         });
-
     </script>
 
 @endsection

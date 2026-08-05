@@ -201,6 +201,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'route.permission', 
         Route::get('/view/ajax/{id}', [PurchaseController::class, 'viewAjax'])->name('view.ajax');
         // Print barcode
         Route::get('/barcodes', [PurchaseController::class, 'purchaseBarcodes'])->name('purchase-barcodes');
+        Route::get('/barcodes/exportpdf', [PurchaseController::class, 'purchaseBarcodesPdf'])->name('purchase-barcodes-exportPdf');
+        Route::get('/barcodes/exportcsv', [PurchaseController::class, 'purchaseBarcodesCsv'])->name('purchase-barcodes-exportCsv');
         Route::post('/barcodes-data', [PurchaseController::class, 'purchaseBarcodesData'])->name('purchase-barcodes-data');
         Route::get('/barcode-print/{purchase}', [PurchaseController::class, 'printBarcode'])->name('printBarcode');
         Route::get('/barcode-preview/{purchase}', [PurchaseController::class, 'barcodePreview'])->name('barcodePreview');

@@ -51,105 +51,50 @@ class PurchaseController extends Controller
     {
         $date = date('Y-m-d');
         $breadcrumb = $this->breadcrumb;
-
-        $vendors = Vendor::ofAccount()
-            ->active()
-            ->orderBy('company_name', 'asc')
-            ->pluck('company_name', 'id');
-
-        $warehouses = Warehouse::ofAccount()
-            ->active()
-            ->orderBy('name', 'asc')
-            ->pluck('name', 'id');
-
-        $query = Purchase::with([
-            'vendor',
-            'warehouse',
-            'items.masterItem',
-            'items.trackings'
-        ])
-            ->withExists([
-                'trackings as has_used_items' => function ($q) {
-                    $q->where(function ($query) {
-                        $query->where('is_sold', 1)
-                            ->orWhere('is_reserved', 1);
-                    });
-                }
-            ])
-            ->ofAccount()
-            ->active();
-
-        // ==========================
-        // Filters
-        // ==========================
-
+        $vendors = Vendor::ofAccount()->active()->orderBy('company_name', 'asc')->pluck('company_name', 'id');
+        $warehouses = Warehouse::ofAccount()->active()->orderBy('name', 'asc')->pluck('name', 'id');
+        $query = Purchase::with(['vendor', 'warehouse', 'items.masterItem', 'items.trackings'])->withExists([
+            'trackings as has_used_items' => function ($q) {
+                $q->where(function ($query) {
+                    $query->where('is_sold', 1)->orWhere('is_reserved', 1);
+                });
+            }
+        ])->ofAccount()->active();
         if ($request->filled('purchase_no')) {
             $query->where('purchase_no', 'LIKE', '%' . trim($request->purchase_no) . '%');
         }
-
         if ($request->filled('warehouse_id')) {
             $query->where('warehouse_id', $request->warehouse_id);
         }
-
         if ($request->filled('vendor_id')) {
             $query->where('vendor_id', $request->vendor_id);
         }
-
         $query = Settings::applyDateRange($query, $request, 'created_at', true);
-
-        // ==========================
-        // PDF
-        // ==========================
-
         if ($request->has('pdf')) {
-
             $data = $query->latest()->get();
-
-            $pdf = Pdf::loadView(
-                'backend.pdf.purchases.purchaseList',
-                compact('data', 'breadcrumb')
-            );
-
-            return Settings::downloadpdf($pdf)
-                ->stream('purchase-list.pdf');
+            $data->transform(function ($purchase) {
+                $purchase->product_names = $purchase->items->pluck('masterItem.name')->filter()->unique()->implode(', ');
+                return $purchase;
+            });
+            $pdfHeaderdata = \Config::get('constants.purchaseListpdf');
+            $pdf = Pdf::loadView('backend.pdf.purchases.purchaseList', compact('data', 'breadcrumb', 'pdfHeaderdata'));
+            return Settings::downloadLandscapepdf($pdf)->stream('purchase-list.pdf');
         }
-
-        // ==========================
-        // CSV
-        // ==========================
-
         if ($request->has('csv')) {
-
             $data = $query->latest()->get();
-
-            $rows[] = [
-                '#',
-                'Purchase No',
-                'Vendor',
-                'Warehouse',
-                'Products',
-                'Total',
-                'Date'
-            ];
-
+            $rows[] = ['#', __('translation.purchase_no'), __('translation.vendor'), __('translation.warehouse'), __('translation.products'), __('translation.currency') . __('translation.total'), __('translation.createdat')];
             foreach ($data as $i => $row) {
-
-                $products = $row->items
-                    ->pluck('masterItem.name')
-                    ->filter()
-                    ->implode(', ');
-
+                $products = $row->items->pluck('masterItem.name')->filter()->implode(', ');
                 $rows[] = [
                     $i + 1,
                     $row->purchase_no,
                     $row->vendor->company_name ?? '',
                     $row->warehouse->name ?? '',
                     $products,
-                    $row->total,
+                    __('translation.currency') . $row->total,
                     Settings::getFormattedDatetime($row->created_at),
                 ];
             }
-
             return Settings::downloadcsvfile($rows, 'purchase-list.csv');
         }
 
@@ -157,38 +102,21 @@ class PurchaseController extends Controller
         // Listing
         // ==========================
 
-        $purchases = $query
-            ->latest()
-            ->paginate(account_setting('general.pagination'));
-
+        $purchases = $query->latest()->paginate(account_setting('general.pagination'));
         $purchases->getCollection()->transform(function ($purchase) {
-
             // Product Names
-            $purchase->product_names = $purchase->items
-                ->pluck('masterItem.name')
-                ->filter()
-                ->implode(', ');
-
+            $purchase->product_names = $purchase->items->pluck('masterItem.name')->filter()->implode(', ');
             // Can Delete
             $purchase->can_delete = true;
-
             foreach ($purchase->items as $item) {
-
-                $available = $item->trackings
-                    ->where('status', 1)
-                    ->where('is_sold', 0)
-                    ->where('is_reserved', 0)
-                    ->sum('quantity');
-
+                $available = $item->trackings->where('status', 1)->where('is_sold', 0)->where('is_reserved', 0)->sum('quantity');
                 if ($available != $item->quantity) {
                     $purchase->can_delete = false;
                     break;
                 }
             }
-
             return $purchase;
         });
-
         return view(
             'backend.admin.purchase.index',
             compact(
@@ -200,81 +128,17 @@ class PurchaseController extends Controller
             )
         );
     }
-    public function index_delete(Request $request)
+
+    public function exportPdf(Request $request)
     {
-        $date = date('Y-m-d');
-        $breadcrumb = $this->breadcrumb;
-        $vendors = Vendor::ofAccount()->active()->orderBy('company_name', 'asc')->pluck('company_name', 'id');
-        $warehouses = Warehouse::ofAccount()->active()->orderBy('name', 'asc')->pluck('name', 'id');
+        $request->merge(['pdf' => 1]);
+        return $this->index($request);
+    }
 
-        $query = Purchase::with([
-            'vendor',
-            'warehouse'
-        ])->withExists([
-                    'trackings as has_used_items' => function ($q) {
-                        $q->where(function ($query) {
-                            $query->where('is_sold', 1)
-                                ->orWhere('is_reserved', 1);
-                        });
-                    }
-                ])->ofAccount()->active();
-
-        if ($request->purchase_no) {
-            $query->where('purchase_no', 'LIKE', '%' . trim($request->purchase_no) . '%');
-        }
-        if ($request->warehouse_id) {
-            $query->where('warehouse_id', $request->warehouse_id);
-        }
-        if ($request->vendor_id) {
-            $query->where('vendor_id', $request->vendor_id);
-        }
-        $query = Settings::applyDateRange($query, $request, 'created_at', true);
-
-        // PDF Export
-        if ($request->has('pdf')) {
-            $data = $query->get();
-            $pdf = Pdf::loadView('backend.pdf.purchases.purchaseList', compact('data', 'breadcrumb'));
-            return Settings::downloadpdf($pdf)->stream('purchase-list.pdf');
-        }
-
-        // CSV Export
-        if ($request->has('csv')) {
-            $data = $query->get();
-            $rows[] = ['#', 'Purchase No', 'Vendor', 'Warehouse', 'Total', 'Date'];
-            foreach ($data as $i => $row) {
-                $rows[] = [
-                    $i + 1,
-                    $row->purchase_no,
-                    $row->vendor->name ?? '',
-                    $row->warehouse->name ?? '',
-                    $row->total,
-                    $row->created_at
-                ];
-            }
-            return Settings::downloadcsvfile($rows, 'purchase-list.csv');
-        }
-        $purchases = $query->latest()->paginate(account_setting('general.pagination'));
-        $purchases->getCollection()->transform(function ($purchase) {
-
-            $purchase->can_delete = true;
-
-            foreach ($purchase->items as $item) {
-
-                $available = $item->trackings
-                    ->where('status', 1)
-                    ->where('is_sold', 0)
-                    ->where('is_reserved', 0)
-                    ->sum('quantity');
-
-                if ($available != $item->quantity) {
-                    $purchase->can_delete = false;
-                    break;
-                }
-            }
-
-            return $purchase;
-        });
-        return view('backend.admin.purchase.index', compact('purchases', 'breadcrumb', 'vendors', 'warehouses', 'date'));
+    public function exportCsv(Request $request)
+    {
+        $request->merge(['csv' => 1]);
+        return $this->index($request);
     }
 
     /*
@@ -597,7 +461,6 @@ class PurchaseController extends Controller
     | destroy and restore all the function
     |--------------------------------------------------------------------------
     */
-
     public function destroy(Request $request)
     {
         try {
@@ -758,106 +621,6 @@ class PurchaseController extends Controller
         }
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Destroy Old
-    |--------------------------------------------------------------------------
-    */
-    public function destroy_old(Request $request)
-    {
-        try {
-
-            $id = Settings::getDecodeCode($request->id);
-
-            DB::transaction(function () use ($id) {
-                $purchase = Purchase::with('items')->findOrFail($id);
-
-                // Already cancelled
-                if ($purchase->status == 0) {
-                    throw new \Exception(__('translation.purchase_already_cancelled'));
-                }
-
-                $stockService = app(StockService::class);
-
-                /*
-                |--------------------------------------------------------------------------
-                | Reverse Stock
-                |--------------------------------------------------------------------------
-                */
-                foreach ($purchase->items as $item) {
-
-                    $stockService->moveStock([
-                        'account_id' => $purchase->account_id,
-                        'warehouse_id' => $purchase->warehouse_id,
-                        'master_item_id' => $item->master_item_id,
-                        'type' => 3,
-                        'qty' => -$item->quantity,
-                        'reference_id' => $purchase->id,
-                        'remarks' => 'Cancel Purchase #' . $purchase->purchase_no,
-                    ]);
-                }
-
-                /*
-                |--------------------------------------------------------------------------
-                | Update Vendor Balance
-                |--------------------------------------------------------------------------
-                */
-                $vendor = Vendor::lockForUpdate()->findOrFail($purchase->vendor_id);
-
-                $newBalance = (float) $vendor->current_balance - (float) $purchase->total;
-
-                $vendor->update([
-                    'current_balance' => $newBalance
-                ]);
-
-                /*
-                |--------------------------------------------------------------------------
-                | Vendor Ledger
-                |--------------------------------------------------------------------------
-                */
-                VendorLedger::create([
-                    'account_id' => $purchase->account_id,
-                    'vendor_id' => $vendor->id,
-                    'type' => 3,
-                    'reference_id' => $purchase->id,
-                    'debit' => 0,
-                    'credit' => $purchase->total,
-                    'balance' => $newBalance,
-                    'remarks' => 'Cancel Purchase #' . $purchase->purchase_no,
-                ]);
-
-                /*
-                |--------------------------------------------------------------------------
-                | Cancel Purchase
-                |--------------------------------------------------------------------------
-                */
-                $purchase->update([
-                    'status' => 0
-                ]);
-
-                /*
-                |--------------------------------------------------------------------------
-                | Disable all Barcodes of this Purchase
-                |--------------------------------------------------------------------------
-                */
-                $this->updatePurchaseTrackingStatus($purchase->id, 0);
-
-            });
-
-            return response()->json([
-                'success' => true,
-                'message' => __('translation.purchase_cancelled_successfully')
-            ]);
-
-        } catch (\Exception $e) {
-
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 500);
-        }
-    }
-
 
     public function printBarcode($id)
     {
@@ -935,10 +698,46 @@ class PurchaseController extends Controller
             $q->ofAccount()->ofActiveStatus();
         });
 
+        if ($request->has('pdf')) {
+            $data = $query->latest()->get();
+            $pdfHeaderdata = \Config::get('constants.barcodesListpdf');
+            $pdf = Pdf::loadView('backend.pdf.purchases.barcodesListpdf', compact('data', 'breadcrumb', 'pdfHeaderdata'));
+            return Settings::downloadLandscapepdf($pdf)->stream($pdfHeaderdata['filename'] . '-' . date('Y-m-d') . '.pdf');
+        }
+        if ($request->has('csv')) {
+            $pdfHeaderdata = \Config::get('constants.barcodesListpdf');
+            $data = $query->latest()->get();
+            $rows[] = ['#', __('translation.purchase_no'), __('translation.vendor'), __('translation.warehouse'), __('translation.products'), __('translation.quantity'), __('translation.tracking'), __('translation.createdat')];
+            foreach ($data as $i => $row) {
+                $rows[] = [
+                    $i + 1,
+                    $row->purchase->purchase_no,
+                    $row->purchase->vendor->company_name ?? '-',
+                    $row->purchase->warehouse->name ?? '-',
+                    $row->masterItem->name ?? '-',
+                    $row->trackings->count(),
+                    Settings::getDataTitle($row->tracking_type),
+                    Settings::getFormattedDatetime($row->created_at),
+                ];
+            }
+            return Settings::downloadcsvfile($rows, $pdfHeaderdata['filename'] . '-' . date('Y-m-d') . '.csv');
+        }
+
         $items = $query->latest()->paginate(account_setting('general.pagination'));
         return view(
             'backend.admin.purchase.purchase_barcodes.index',
             compact('breadcrumb', 'items', 'vendors', 'warehouses', 'today')
         );
     }
+    public function purchaseBarcodesPdf(Request $request)
+    {
+        $request->merge(['pdf' => 1]);
+        return $this->purchaseBarcodes($request);
+    }
+    public function purchaseBarcodesCsv(Request $request)
+    {
+        $request->merge(['csv' => 1]);
+        return $this->purchaseBarcodes($request);
+    }
+
 }

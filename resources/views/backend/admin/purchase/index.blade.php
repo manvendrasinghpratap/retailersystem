@@ -12,8 +12,8 @@
                     <h4 class="card-title d-inline-block">{{ __('translation.filter') }}</h4>
                     <div class="d-inline-block">
                         @include('backend.components.exportpdfcsv', [
-                            'showPdf' => false,
-                            'showCsv' => false,
+                            'showPdf' => true,
+                            'showCsv' => true,
                             'pdfId' => 'downloadpurchasespdf',
                             'pdfRoute' => route('admin.purchases.exportPdf'),
                             'pdfClass' => 'downloadpurchasespdf',
@@ -178,6 +178,11 @@
             $.get("{{ route('admin.purchases.view.ajax', ':id') }}".replace(':id', id), function (res) {
                 $('#purchaseDetails').html(res);
             });
+        });
+
+        $(document).ready(function () {
+            setupPdfDownload('.downloadpurchasespdf', 'data-downloadroutepdf');
+            setupPdfDownload('.downloadpurchasescsv', 'data-downloadroutecsv');
         });
     </script>
 @endsection
