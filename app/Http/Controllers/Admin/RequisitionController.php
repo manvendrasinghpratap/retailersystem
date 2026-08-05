@@ -83,7 +83,7 @@ class RequisitionController extends Controller
         $breadcrumb = $this->breadcrumb;
         $warehouses = Warehouse::ofAccount()->active()->orderBy('name', 'asc')->pluck('name', 'id');
         $stores = Store::ofAccount()->active()->orderBy('name', 'asc')->pluck('name', 'id');
-        $requisitions = Requisition::with(['fromWarehouse', 'toWarehouse'])->ofAccount()->latest();
+        $requisitions = Requisition::with(['fromWarehouse', 'toWarehouse', 'items.masterItem'])->ofAccount()->latest();
         // =========================
         // FILTERS
         // =========================
@@ -98,13 +98,21 @@ class RequisitionController extends Controller
         }
         if ($request->filled('status')) {
             $requisitions->where('status', $request->status);
-        } else {
-            $requisitions->active();
         }
         $requisitions = Settings::applyDateRange($requisitions, $request, 'created_at', true);
 
         if ($request->has('pdf')) {
             $requisitions = $requisitions->get();
+            $requisitions->getCollection()->transform(function ($requisition) {
+
+                $requisition->product_names = $requisition->items
+                    ->pluck('masterItem.name')
+                    ->filter()
+                    ->unique()
+                    ->implode(', ');
+
+                return $requisition;
+            });
             $pdfHeaderdata = \Config::get('constants.requisitionListpdf');
             $pdf = PDF::loadView('backend.pdf.requisitions.requisitionListpdf', compact('requisitions', 'pdfHeaderdata', 'breadcrumb'));
             $pdf = Settings::downloadpdf($pdf);
@@ -113,6 +121,16 @@ class RequisitionController extends Controller
         }
         if ($request->has('csv')) {
             $requisitions = $requisitions->get();
+            $requisitions->getCollection()->transform(function ($requisition) {
+
+                $requisition->product_names = $requisition->items
+                    ->pluck('masterItem.name')
+                    ->filter()
+                    ->unique()
+                    ->implode(', ');
+
+                return $requisition;
+            });
             $csvHeaderdata = \Config::get('constants.requisitionListpdf');
             $fileName = $csvHeaderdata['filename'] . '-' . date('Y-m-d') . '.csv';
             $data = [];
@@ -149,6 +167,16 @@ class RequisitionController extends Controller
             return Settings::downloadcsvfile($data, $fileName);
         }
         $requisitions = $requisitions->paginate(account_setting('general.pagination'))->withQueryString();
+        $requisitions->getCollection()->transform(function ($requisition) {
+
+            $requisition->product_names = $requisition->items
+                ->pluck('masterItem.name')
+                ->filter()
+                ->unique()
+                ->implode(', ');
+
+            return $requisition;
+        });
         return view('backend.admin.requisition.index', compact('requisitions', 'breadcrumb', 'warehouses', 'stores'));
     }
 
@@ -544,14 +572,11 @@ class RequisitionController extends Controller
     | CANCEL
     |--------------------------------------------------------------------------
     */
-    public function cancel(Request $request)
+    public function cancel_working_delete(Request $request)
     {
         try {
-
             $id = Settings::getDecodeCode($request->id);
-
             DB::transaction(function () use ($id) {
-
                 $accountId = auth()->user()->account_id;
 
                 $req = Requisition::with('items')
@@ -683,6 +708,99 @@ class RequisitionController extends Controller
                 'success' => false,
                 'message' => $e->getMessage()
             ], 500);
+        }
+    }
+
+    public function cancel(Request $request)
+    {
+        try {
+
+            $id = Settings::getDecodeCode($request->id);
+            $accountId = auth()->user()->account_id;
+
+            DB::transaction(function () use ($id, $accountId) {
+
+                $req = Requisition::with('items')
+                    ->where('account_id', $accountId)
+                    ->lockForUpdate()
+                    ->findOrFail($id);
+
+                /*
+                |--------------------------------------------------------------------------
+                | Allow only Active Requisition
+                |--------------------------------------------------------------------------
+                */
+                if ((int) $req->status !== 1) {
+
+                    $message = match ((int) $req->status) {
+                        0 => __('translation.requisition_already_cancelled'),
+                        2 => __('translation.requisition_partially_completed'),
+                        3 => __('translation.requisition_already_completed'),
+                        default => __('translation.invalid_requisition_status'),
+                    };
+
+                    throw new \Exception($message);
+                }
+
+                $stockService = app(StockService::class);
+
+                /*
+                |--------------------------------------------------------------------------
+                | Reverse Stock & Release Reserved Tracking
+                |--------------------------------------------------------------------------
+                */
+                foreach ($req->items as $item) {
+
+                    // Return stock to warehouse
+                    $stockService->moveStock([
+                        'account_id' => $accountId,
+                        'warehouse_id' => $req->from_warehouse_id,
+                        'master_item_id' => $item->master_item_id,
+                        'type' => 'transfer_in',
+                        'qty' => (float) $item->qty,
+                        'reference_id' => $req->id,
+                        'remarks' => 'Cancel Requisition #' . $req->requisition_no,
+                    ]);
+
+                    // Release Reserved Tracking
+                    PurchaseItemTracking::where('requisition_item_id', $item->id)
+                        ->lockForUpdate()
+                        ->update([
+                            'is_reserved' => 0,
+                            'requisition_id' => null,
+                            'requisition_item_id' => null,
+                        ]);
+
+                    // Update Requisition Item
+                    $item->update([
+                        'status' => 0,
+                    ]);
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Cancel Requisition
+                |--------------------------------------------------------------------------
+                */
+                $req->update([
+                    'status' => 0,
+                    'cancelled_by' => auth()->id(),
+                    'cancelled_at' => now(),
+                ]);
+
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => __('translation.requisition_cancelled_successfully'),
+            ]);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
         }
     }
     /*

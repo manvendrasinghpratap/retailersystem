@@ -65,6 +65,7 @@
                                     <th>{{ __('translation.requisition_no') }}</th>
                                     <th>{{ __('translation.from_warehouse') }}</th>
                                     <th>{{ __('translation.for_store') }}</th>
+                                    <th>{{ __('translation.products') }}</th>
                                     <th>{{ __('translation.total_qty') }}</th>
                                     <th>{{ __('translation.status') }}</th>
                                     <th>{{ __('translation.requester') }}</th>
@@ -79,6 +80,7 @@
                                         <td>{{ $req->requisition_no }}</td>
                                         <td>{{ $req->fromWarehouse->name ?? '-' }}</td>
                                         <td>{{ $req->store->name ?? '-' }}</td>
+                                        <td>{{ $req->product_names }}</td>
                                         <td>{{ $req->total_qty }}</td>
                                         <td>
                                             @if($req->status == 3)
@@ -122,11 +124,7 @@
 @section('script')
 
     <script>
-        validateSelect2Form('requisitionForm', [
-            'from_warehouse_id',
-            'for_store_id',
-            'status'
-        ]);
+        validateSelect2Form('requisitionForm', ['from_warehouse_id', 'for_store_id', 'status']);
         // =======================
         // VIEW MODAL
         // =======================

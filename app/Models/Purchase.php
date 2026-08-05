@@ -55,6 +55,18 @@ class Purchase extends Model
         return $this->hasMany(PurchaseItem::class, 'purchase_id', 'id');
     }
 
+    public function trackings()
+    {
+        return $this->hasManyThrough(
+            PurchaseItemTracking::class,
+            PurchaseItem::class,
+            'purchase_id',      // Foreign key on purchase_items
+            'purchase_item_id', // Foreign key on purchase_item_trackings
+            'id',               // Local key on purchases
+            'id'                // Local key on purchase_items
+        );
+    }
+
     public function vendor()
     {
         return $this->belongsTo(Vendor::class, 'vendor_id', 'id');

@@ -51,10 +51,173 @@ class PurchaseController extends Controller
     {
         $date = date('Y-m-d');
         $breadcrumb = $this->breadcrumb;
+
+        $vendors = Vendor::ofAccount()
+            ->active()
+            ->orderBy('company_name', 'asc')
+            ->pluck('company_name', 'id');
+
+        $warehouses = Warehouse::ofAccount()
+            ->active()
+            ->orderBy('name', 'asc')
+            ->pluck('name', 'id');
+
+        $query = Purchase::with([
+            'vendor',
+            'warehouse',
+            'items.masterItem',
+            'items.trackings'
+        ])
+            ->withExists([
+                'trackings as has_used_items' => function ($q) {
+                    $q->where(function ($query) {
+                        $query->where('is_sold', 1)
+                            ->orWhere('is_reserved', 1);
+                    });
+                }
+            ])
+            ->ofAccount()
+            ->active();
+
+        // ==========================
+        // Filters
+        // ==========================
+
+        if ($request->filled('purchase_no')) {
+            $query->where('purchase_no', 'LIKE', '%' . trim($request->purchase_no) . '%');
+        }
+
+        if ($request->filled('warehouse_id')) {
+            $query->where('warehouse_id', $request->warehouse_id);
+        }
+
+        if ($request->filled('vendor_id')) {
+            $query->where('vendor_id', $request->vendor_id);
+        }
+
+        $query = Settings::applyDateRange($query, $request, 'created_at', true);
+
+        // ==========================
+        // PDF
+        // ==========================
+
+        if ($request->has('pdf')) {
+
+            $data = $query->latest()->get();
+
+            $pdf = Pdf::loadView(
+                'backend.pdf.purchases.purchaseList',
+                compact('data', 'breadcrumb')
+            );
+
+            return Settings::downloadpdf($pdf)
+                ->stream('purchase-list.pdf');
+        }
+
+        // ==========================
+        // CSV
+        // ==========================
+
+        if ($request->has('csv')) {
+
+            $data = $query->latest()->get();
+
+            $rows[] = [
+                '#',
+                'Purchase No',
+                'Vendor',
+                'Warehouse',
+                'Products',
+                'Total',
+                'Date'
+            ];
+
+            foreach ($data as $i => $row) {
+
+                $products = $row->items
+                    ->pluck('masterItem.name')
+                    ->filter()
+                    ->implode(', ');
+
+                $rows[] = [
+                    $i + 1,
+                    $row->purchase_no,
+                    $row->vendor->company_name ?? '',
+                    $row->warehouse->name ?? '',
+                    $products,
+                    $row->total,
+                    Settings::getFormattedDatetime($row->created_at),
+                ];
+            }
+
+            return Settings::downloadcsvfile($rows, 'purchase-list.csv');
+        }
+
+        // ==========================
+        // Listing
+        // ==========================
+
+        $purchases = $query
+            ->latest()
+            ->paginate(account_setting('general.pagination'));
+
+        $purchases->getCollection()->transform(function ($purchase) {
+
+            // Product Names
+            $purchase->product_names = $purchase->items
+                ->pluck('masterItem.name')
+                ->filter()
+                ->implode(', ');
+
+            // Can Delete
+            $purchase->can_delete = true;
+
+            foreach ($purchase->items as $item) {
+
+                $available = $item->trackings
+                    ->where('status', 1)
+                    ->where('is_sold', 0)
+                    ->where('is_reserved', 0)
+                    ->sum('quantity');
+
+                if ($available != $item->quantity) {
+                    $purchase->can_delete = false;
+                    break;
+                }
+            }
+
+            return $purchase;
+        });
+
+        return view(
+            'backend.admin.purchase.index',
+            compact(
+                'purchases',
+                'breadcrumb',
+                'vendors',
+                'warehouses',
+                'date'
+            )
+        );
+    }
+    public function index_delete(Request $request)
+    {
+        $date = date('Y-m-d');
+        $breadcrumb = $this->breadcrumb;
         $vendors = Vendor::ofAccount()->active()->orderBy('company_name', 'asc')->pluck('company_name', 'id');
         $warehouses = Warehouse::ofAccount()->active()->orderBy('name', 'asc')->pluck('name', 'id');
 
-        $query = Purchase::with(['vendor', 'warehouse'])->ofAccount()->active();
+        $query = Purchase::with([
+            'vendor',
+            'warehouse'
+        ])->withExists([
+                    'trackings as has_used_items' => function ($q) {
+                        $q->where(function ($query) {
+                            $query->where('is_sold', 1)
+                                ->orWhere('is_reserved', 1);
+                        });
+                    }
+                ])->ofAccount()->active();
 
         if ($request->purchase_no) {
             $query->where('purchase_no', 'LIKE', '%' . trim($request->purchase_no) . '%');
@@ -77,9 +240,7 @@ class PurchaseController extends Controller
         // CSV Export
         if ($request->has('csv')) {
             $data = $query->get();
-
             $rows[] = ['#', 'Purchase No', 'Vendor', 'Warehouse', 'Total', 'Date'];
-
             foreach ($data as $i => $row) {
                 $rows[] = [
                     $i + 1,
@@ -90,12 +251,29 @@ class PurchaseController extends Controller
                     $row->created_at
                 ];
             }
-
             return Settings::downloadcsvfile($rows, 'purchase-list.csv');
         }
-
         $purchases = $query->latest()->paginate(account_setting('general.pagination'));
+        $purchases->getCollection()->transform(function ($purchase) {
 
+            $purchase->can_delete = true;
+
+            foreach ($purchase->items as $item) {
+
+                $available = $item->trackings
+                    ->where('status', 1)
+                    ->where('is_sold', 0)
+                    ->where('is_reserved', 0)
+                    ->sum('quantity');
+
+                if ($available != $item->quantity) {
+                    $purchase->can_delete = false;
+                    break;
+                }
+            }
+
+            return $purchase;
+        });
         return view('backend.admin.purchase.index', compact('purchases', 'breadcrumb', 'vendors', 'warehouses', 'date'));
     }
 
@@ -119,10 +297,6 @@ class PurchaseController extends Controller
     */
     public function store(Request $request)
     {
-        // echo '<pre>';
-        // print_r($request->all());
-        // echo '</pre>';
-        // exit;
         try {
 
             // ============================
@@ -152,47 +326,30 @@ class PurchaseController extends Controller
         try {
 
             DB::transaction(function () use ($validated) {
-
                 $accountId = auth()->user()->account_id;
-
                 // ============================
                 // ✅ GENERATE PURCHASE NO
                 // ============================
                 $purchaseNo = 'PUR-' . date('Ymd') . '-' . rand(1000, 9999);
-
                 // ============================
                 // ✅ CALCULATE TOTAL
                 // ============================
                 $totalAmount = 0;
-
                 foreach ($validated['items'] as $item) {
                     $totalAmount += ((float) $item['qty'] * (float) $item['price']);
                 }
-
                 // ============================
                 // ✅ CREATE PURCHASE
                 // ============================
-                $purchase = Purchase::create([
-                    'account_id' => $accountId,
-                    'vendor_id' => $validated['vendor_id'],
-                    'warehouse_id' => $validated['warehouse_id'],
-                    'purchase_no' => $purchaseNo,
-                    'total' => $totalAmount,
-                    'status' => 1,
-                    'created_by' => auth()->id()
-                ]);
-
+                $purchase = Purchase::create(['account_id' => $accountId, 'vendor_id' => $validated['vendor_id'], 'warehouse_id' => $validated['warehouse_id'], 'purchase_no' => $purchaseNo, 'total' => $totalAmount, 'status' => 1, 'created_by' => auth()->id()]);
                 $stockService = app(StockService::class);
-
                 // ============================
                 // ✅ SAVE ITEMS + STOCK IN
                 // ============================
                 foreach ($validated['items'] as $item) {
-
                     $masterItemId = $item['product_id'];
                     $qty = (float) $item['qty'];
                     $price = (float) $item['price'];
-
                     $purchaseItem = PurchaseItem::create([
                         'purchase_id' => $purchase->id,
                         'master_item_id' => $masterItemId, // ✅ IMPORTANT CHANGE
@@ -244,9 +401,7 @@ class PurchaseController extends Controller
                     'current_balance' => $newBalance
                 ]);
             });
-
             return Settings::roleRedirect('purchases.index', 'Purchase Created Successfully.');
-
         } catch (\Exception $e) {
 
             return Settings::roleRedirect('purchases.index', $e->getMessage(), 'error');
@@ -394,18 +549,9 @@ class PurchaseController extends Controller
     public function softdelete(Request $request)
     {
         try {
-
             $id = Settings::getDecodeCode($request->id);
-
-            $deleted = Purchase::where('account_id', auth()->user()->account_id)
-                ->where('id', $id)
-                ->update([
-                    'status' => 0,
-                    'updated_by' => auth()->id()
-                ]);
-
+            $deleted = Purchase::ofAccount()->ofActiveStatus()->where('id', $id)->update(['status' => 0, 'updated_by' => auth()->id()]);
             return response()->json(['success' => $deleted ? true : false]);
-
         } catch (\Exception $e) {
             return response()->json(['success' => false], 500);
         }
@@ -451,7 +597,173 @@ class PurchaseController extends Controller
     | destroy and restore all the function
     |--------------------------------------------------------------------------
     */
+
     public function destroy(Request $request)
+    {
+        try {
+
+            $id = Settings::getDecodeCode($request->id);
+
+            $purchase = Purchase::with([
+                'items.masterItem',
+                'items.trackings'
+            ])->findOrFail($id);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Already Cancelled
+            |--------------------------------------------------------------------------
+            */
+            if ($purchase->status == 0) {
+
+                return response()->json([
+                    'success' => false,
+                    'message' => __('translation.purchase_already_cancelled')
+                ]);
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Check Sold / Reserved Items
+            |--------------------------------------------------------------------------
+            */
+            $errors = [];
+
+            foreach ($purchase->items as $item) {
+
+                $soldCount = $item->trackings
+                    ->where('is_sold', 1)
+                    ->count();
+
+                $reservedCount = $item->trackings
+                    ->where('is_reserved', 1)
+                    ->count();
+
+                if ($soldCount || $reservedCount) {
+
+                    $reason = [];
+
+                    if ($soldCount) {
+                        $reason[] = $soldCount . ' Sold';
+                    }
+
+                    if ($reservedCount) {
+                        $reason[] = $reservedCount . ' Reserved';
+                    }
+
+                    $errors[] = $item->masterItem->name .
+                        ' (' . implode(', ', $reason) . ')';
+                }
+            }
+
+            if (!empty($errors)) {
+
+                return response()->json([
+                    'success' => false,
+                    'message' =>
+                        '<strong>' . __('translation.purchase_cannot_be_cancelled') . '</strong><br><br>' .
+                        __('translation.following_items_are_already_used') .
+                        '<br><br>• ' .
+                        implode('<br>• ', $errors)
+                ]);
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Start Transaction
+            |--------------------------------------------------------------------------
+            */
+            DB::transaction(function () use ($purchase) {
+
+                $stockService = app(StockService::class);
+
+                /*
+                |--------------------------------------------------------------------------
+                | Reverse Stock
+                |--------------------------------------------------------------------------
+                */
+                foreach ($purchase->items as $item) {
+
+                    $stockService->moveStock([
+                        'account_id' => $purchase->account_id,
+                        'warehouse_id' => $purchase->warehouse_id,
+                        'master_item_id' => $item->master_item_id,
+                        'type' => 3,
+                        'qty' => -$item->quantity,
+                        'reference_id' => $purchase->id,
+                        'remarks' => 'Cancel Purchase #' . $purchase->purchase_no,
+                    ]);
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Update Vendor Balance
+                |--------------------------------------------------------------------------
+                */
+                $vendor = Vendor::lockForUpdate()->findOrFail($purchase->vendor_id);
+
+                $newBalance = $vendor->current_balance - $purchase->total;
+
+                $vendor->update([
+                    'current_balance' => $newBalance
+                ]);
+
+                /*
+                |--------------------------------------------------------------------------
+                | Vendor Ledger
+                |--------------------------------------------------------------------------
+                */
+                VendorLedger::create([
+                    'account_id' => $purchase->account_id,
+                    'vendor_id' => $vendor->id,
+                    'type' => 3,
+                    'reference_id' => $purchase->id,
+                    'debit' => 0,
+                    'credit' => $purchase->total,
+                    'balance' => $newBalance,
+                    'remarks' => 'Cancel Purchase #' . $purchase->purchase_no,
+                ]);
+
+                /*
+                |--------------------------------------------------------------------------
+                | Cancel Purchase
+                |--------------------------------------------------------------------------
+                */
+                $purchase->update([
+                    'status' => 0
+                ]);
+
+                /*
+                |--------------------------------------------------------------------------
+                | Disable Purchase Tracking
+                |--------------------------------------------------------------------------
+                */
+                $this->updatePurchaseTrackingStatus($purchase->id, 0);
+
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => __('translation.purchase_cancelled_successfully')
+            ]);
+
+        } catch (\Throwable $e) {
+
+            \Log::error($e);
+
+            return response()->json([
+                'success' => false,
+                'message' => __('translation.something_went_wrong')
+            ], 500);
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Destroy Old
+    |--------------------------------------------------------------------------
+    */
+    public function destroy_old(Request $request)
     {
         try {
 
@@ -545,83 +857,7 @@ class PurchaseController extends Controller
             ], 500);
         }
     }
-    public function destroy_delete(Request $request)
-    {
-        try {
-            $id = Settings::getDecodeCode($request->id);
-            DB::transaction(function () use ($id) {
-                $purchase = Purchase::with('items')->findOrFail($id);
-                $this->updatePurchaseTrackingStatus($purchase->id, 0);
-                // ❌ Already cancelled
-                if ($purchase->status == 0) {
-                    throw new \Exception('Purchase already cancelled');
-                }
-                $stockService = app(StockService::class);
-                // =========================
-                // 1. REVERSE STOCK (CORRECT)
-                // =========================
-                foreach ($purchase->items as $item) {
-                    $stockService->moveStock([
-                        'account_id' => $purchase->account_id,
-                        'warehouse_id' => $purchase->warehouse_id,
-                        'master_item_id' => $item->master_item_id,
-                        'type' => 3,
-                        'qty' => -$item->quantity,
-                        'reference_id' => $purchase->id,
-                        'remarks' => 'Cancel Purchase #' . $purchase->purchase_no
-                    ]);
-                }
 
-                // =========================
-                // 2. UPDATE VENDOR BALANCE
-                // =========================
-                $vendor = Vendor::lockForUpdate()->findOrFail($purchase->vendor_id);
-
-                $oldBalance = (float) ($vendor->current_balance ?? 0);
-                $newBalance = $oldBalance - (float) $purchase->total;
-
-                $vendor->update([
-                    'current_balance' => $newBalance
-                ]);
-
-                // =========================
-                // 3. LEDGER ENTRY (REVERSAL)
-                // =========================
-                VendorLedger::create([
-                    'account_id' => $purchase->account_id,
-                    'vendor_id' => $vendor->id,
-
-                    // ✅ correct type
-                    'type' => 3, /// purchase cancel coming from types table purshase_cancel type id is 3
-
-                    'reference_id' => $purchase->id,
-                    'debit' => 0,
-                    'credit' => $purchase->total,
-                    'balance' => $newBalance,
-                    'remarks' => 'Cancel Purchase #' . $purchase->purchase_no
-                ]);
-
-                // =========================
-                // 4. MARK AS CANCELLED
-                // =========================
-                $purchase->update([
-                    'status' => 0
-                ]);
-            });
-
-            return response()->json([
-                'success' => true,
-                'message' => __('translation.purchase_cancelled_successfully')
-            ]);
-
-        } catch (\Exception $e) {
-
-            return response()->json([
-                'success' => false,
-                'message' => $e->getMessage()
-            ], 500);
-        }
-    }
 
     public function printBarcode($id)
     {

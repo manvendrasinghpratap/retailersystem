@@ -35,6 +35,7 @@
                 <th>#</th>
                 <th>{{ __('translation.product') }}</th>
                 <th>{{ __('translation.quantity') }}</th>
+				<th style="width:200px;">{{ __('translation.barcode') }}</th>
                 <th>{{ __('translation.accepted_by') }}</th>
                 <th>{{ __('translation.action') }}</th>
             </tr>
@@ -45,12 +46,11 @@
                     <td>{{ $loop->iteration }}</td>
                     <td>{{ $item->masterItem->name ?? '-' }}</td>
                     <td>{{ $item->qty }}</td>
+					<td>{!! DNS1D::getBarcodeHTML($item->purchaseItemTracking->barcode, 'C128') !!} <small>
+                        <center>{{ $item->purchaseItemTracking->barcode }}</center>
+                    </small></td>
                     <td>{{ $item->acceptedBy->name ?? 'NO' }}</td>
-                    <td>
-                        @if($item->accepted_by == null && $requisition->status == 1)
-                            <x-href-input action="no-barcode" name="no-barcode" label="" class="no-barcode" data-id="{{ \App\Helpers\Settings::getEncodeCode($item->id) }}" href="javascript:void(0);" />
-                            <x-href-input action="barcode" name="barcode" label="" class="barcode" data-id="{{ \App\Helpers\Settings::getEncodeCode($item->id) }}" href="javascript:void(0);" />
-                        @elseif($item->accepted_by == null && $requisition->status == 0)
+                    <td>@if($item->accepted_by == null && $requisition->status == 0)
                             <span class="badge bg-danger">{{ __('translation.cancelled') }}</span>
                         @elseif($item->accepted_by != null && $requisition->status == 1)
                             <span class="badge bg-success">{{ __('translation.accepted') }}</span>

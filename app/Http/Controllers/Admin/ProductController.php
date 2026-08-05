@@ -168,7 +168,7 @@ class ProductController extends Controller
     }
 
 
-    public function create(Request $request, $token = null)
+    public function create_working_delete_this(Request $request, $token = null)
     {
         $barcode = $productId = $route = $adjustment = $requisition_item_id = null;
         $masterItemName = null;
@@ -198,11 +198,11 @@ class ProductController extends Controller
                     $qty = $requisitionItem->qty;
                     $categoryId = $requisitionItem->masterItem->category_id ?? null;
                     $costPrice = $requisitionItem->purchaseItemTracking->purchaseItem->cost_price ?? 0;
+                    $this->checkRequisitionStatus($requisitionItem);
+
                 }
             } catch (\Exception $e) {
-                return redirect()
-                    ->route('admin.barcode')
-                    ->with('error', 'Invalid link');
+                return redirect()->route('admin.barcode')->with('error', 'Invalid link');
             }
         }
         $breadcrumb = $this->breadcrumbListing;
@@ -226,6 +226,100 @@ class ProductController extends Controller
         );
     }
 
+    public function create(Request $request, $token = null)
+    {
+        $barcode = $productId = $route = $adjustment = $requisition_item_id = null;
+        $masterItemName = null;
+        $qty = $categoryId = $description = null;
+        $costPrice = 0;
+
+        if ($token) {
+            try {
+
+                $data = Crypt::decrypt($token);
+
+                $adjustmentData = Settings::getInventoryAdjustment($data['adjustment']);
+
+                if (empty($adjustmentData['adjustment'])) {
+                    return Settings::roleRedirect('inventory', 'Something went wrong!', 'error');
+                }
+
+                $route = $adjustmentData['route'];
+                $adjustment = $adjustmentData['adjustment'];
+                $barcode = $data['barcode'];
+                $productId = $data['product_id'];
+                $requisition_item_id = $data['requisition_item_id'];
+
+                // ==========================
+                // GET REQUISITION ITEM
+                // ==========================
+                $requisitionItem = RequisitionItem::with([
+                    'masterItem',
+                    'purchaseItemTracking.purchaseItem'
+                ])->find(Settings::getDecodeCode($requisition_item_id));
+
+                if ($requisitionItem) {
+
+                    // Check requisition status
+                    if ($response = $this->checkRequisitionStatus($requisitionItem)) {
+                        return $response;
+                    }
+
+                    $masterItemName = $requisitionItem->masterItem->name ?? null;
+                    $description = $requisitionItem->masterItem->description ?? null;
+                    $qty = $requisitionItem->qty;
+                    $categoryId = $requisitionItem->masterItem->category_id ?? null;
+                    $costPrice = $requisitionItem->purchaseItemTracking?->purchaseItem?->cost_price ?? 0;
+                }
+
+            } catch (\Exception $e) {
+
+                return redirect()
+                    ->route('admin.barcode')
+                    ->with('error', 'Invalid link');
+            }
+        }
+
+        $breadcrumb = $this->breadcrumbListing;
+        $categories = Category::getCategoriesPluck();
+
+        return view(
+            'backend.admin.product.form',
+            compact(
+                'categories',
+                'breadcrumb',
+                'barcode',
+                'productId',
+                'route',
+                'adjustment',
+                'requisition_item_id',
+                'masterItemName',
+                'qty',
+                'categoryId',
+                'costPrice',
+                'description'
+            )
+        );
+    }
+
+    private function checkRequisitionStatus(RequisitionItem $requisitionItem)
+    {
+        $status = (int) $requisitionItem->requisition->status;
+
+        if ((int) $requisitionItem->status === 3) {
+            return redirect()
+                ->route('admin.requisitions.pending-posting')
+                ->with('error', __('translation.requisition_already_completed'));
+        }
+
+        if ($status === 0) {
+            return redirect()
+                ->route('admin.requisitions.pending-posting')
+                ->with('error', __('translation.requisition_rejected'));
+        }
+
+        return null;
+    }
 
     public function store(Request $request)
     {
