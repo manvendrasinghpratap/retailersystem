@@ -89,6 +89,9 @@ return [
     'amountpayable' => 'Amount Payable',
     'update_warehouse' => 'Update Warehouse',
     'invalid_barcode' => 'Invalid Barcode',
+    'purchased_qty' => 'Purchased Qty',
+    'available_qty' => 'Available Qty',
+    'print_qty' => 'Print Qty',
 
     "save" => 'Save',
     "close" => 'Close',

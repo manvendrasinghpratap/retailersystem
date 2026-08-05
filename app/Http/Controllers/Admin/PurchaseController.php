@@ -645,7 +645,7 @@ class PurchaseController extends Controller
         $purchase = Purchase::with([
             'items.masterItem',
             'items.trackings' => function ($q) {
-                $q->status()->notSold();
+                $q->status()->available();
             }
         ])->findOrFail($purchaseId);
         $pdfHeaderdata = \Config::get('constants.barcodePdf');

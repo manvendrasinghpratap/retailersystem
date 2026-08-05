@@ -122,4 +122,9 @@ class Category extends Model
         return Category::ofAccount()->active()->notDeleted()->latest();
     }
 
+    public function masterItems()
+    {
+        return $this->hasMany(MasterItem::class);
+    }
+
 }

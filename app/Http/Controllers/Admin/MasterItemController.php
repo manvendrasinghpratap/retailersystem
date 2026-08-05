@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\MasterItem;
 use Illuminate\Http\Request;
 use App\Helpers\Settings;
+use App\Models\Category;
 use Illuminate\Database\QueryException;
 use PDF;
 
@@ -66,6 +67,7 @@ class MasterItemController extends Controller
             $data[$ii] = [
                 '#',
                 __('translation.code'),
+                __('translation.category'),
                 __('translation.name'),
                 __('translation.description'),
                 __('translation.status'),
@@ -75,6 +77,7 @@ class MasterItemController extends Controller
                 $data[++$ii] = [
                     $ii,
                     $item->code,
+                    $item->category->name,
                     $item->name,
                     $item->description,
                     $item->status == 1 ? __('translation.active') : __('translation.inactive'),
@@ -101,12 +104,14 @@ class MasterItemController extends Controller
 
     public function create()
     {
-        return view('backend.admin.master_items.form', ['breadcrumb' => $this->breadcrumb]);
+        $categories = Category::getCategoriesPluck();
+        return view('backend.admin.master_items.form', ['breadcrumb' => $this->breadcrumb, 'categories' => $categories]);
     }
 
     public function storeAjax(Request $request)
     {
         $request->validate([
+            'category_id' => 'required|exists:categories,id',
             'name' => 'required|string|max:255',
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
@@ -122,6 +127,7 @@ class MasterItemController extends Controller
             $imageName = Settings::uploadimage($request, 'image', 'master_item');
         }
         $item = MasterItem::create([
+            'category_id' => $request->category_id,
             'name' => $request->name,
             'code' => $request->code,
             'description' => $request->description,
@@ -141,6 +147,7 @@ class MasterItemController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'category_id' => 'required|exists:categories,id',
             'name' => 'required|string|max:255',
             'status' => 'required|boolean',
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
@@ -154,6 +161,7 @@ class MasterItemController extends Controller
             }
 
             MasterItem::create([
+                'category_id' => $request->category_id,
                 'name' => $request->name,
                 'code' => $request->code,
                 'description' => $request->description,
@@ -165,7 +173,7 @@ class MasterItemController extends Controller
 
             return redirect()
                 ->route('admin.master_items.index')
-                ->with('success', 'Item added successfully');
+                ->with('success', 'Master Item Created Successfully');
 
         } catch (QueryException $e) {
 
@@ -174,7 +182,7 @@ class MasterItemController extends Controller
                 return redirect()
                     ->back()
                     ->withInput()
-                    ->with('error', 'Item name already exists!');
+                    ->with('error', 'Master Item name already exists!');
             }
 
             return redirect()
@@ -187,12 +195,12 @@ class MasterItemController extends Controller
     public function edit($id)
     {
         $id = Settings::getDecodeCode($id);
-
+        $categories = Category::getCategoriesPluck();
         $item = MasterItem::account()->findOrFail($id);
-
         return view('backend.admin.master_items.form', [
             'breadcrumb' => $this->breadcrumb,
-            'item' => $item
+            'item' => $item,
+            'categories' => $categories,
         ]);
     }
 
@@ -213,6 +221,7 @@ class MasterItemController extends Controller
             );
         }
         $item->update([
+            'category_id' => $request->category_id,
             'name' => $request->name,
             'description' => $request->description,
             'status' => $request->status,

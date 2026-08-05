@@ -355,8 +355,9 @@
                 @csrf
                 <div class="modal-body">
                     <div class="row">
-                        <x-text-input name="name" label="Name" value="{{ $item->name ?? '' }}" required />
-                        <x-text-input name="description" label="Description" value="{{ $item->description ?? '' }}" mainrows="4" />
+                        <x-select-dropdown name="category_id" label="Category" :options="\App\Models\Category::getCategoriesPluck()" :required="true" class="category" />
+                        <x-text-input name="name" label="Name" value="" required />
+                        <x-text-input name="description" label="Description" value="" mainrows="4" />
                         <x-file-input name="image" :preview="false" label="Product Image" :value="$item->image ?? null" accept="image/png,image/jpeg,image/webp" :mainrows="4" />
                         <input type="text" name="status" value="1" required hidden="true" />
                     </div>
@@ -479,6 +480,16 @@
                 xhr.responseJSON?.message || 'Something went wrong.'
             );
 
+        });
+
+    });
+    $('#masterItemModal').on('shown.bs.modal', function () {
+
+        $('.category').select2('destroy');
+
+        $('.category').select2({
+            dropdownParent: $('#masterItemModal'),
+            width: '100%'
         });
 
     });

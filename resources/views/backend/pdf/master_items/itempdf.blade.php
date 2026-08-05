@@ -7,6 +7,7 @@
                 <th>#</th>
                 <th>{{ __('translation.image') }}</th>
                 <th>{{ __('translation.code') }}</th>
+                <th>{{ __('translation.category') }}</th>
                 <th>{{ __('translation.name') }}</th>
                 <th>{{ __('translation.description') }}</th>
                 <th>{{ __('translation.status') }}</th>
@@ -19,6 +20,7 @@
                         <td>{{ $loop->iteration }}</td>
                         <td> <img src="{{ (!empty($item->image) && file_exists(public_path(Config::get('main_constants.image_path') . $item->image))) ? asset(Config::get('main_constants.image_path') . $item->image) : asset(Config::get('main_constants.no_image')) }}" width="80" height="60" alt="Master Item Image"></td>
                         <td>{{ $item->code }}</td>
+                        <td>{{ $item->category->name ?? '' }}</td>
                         <td>{{ $item->name }}</td>
                         <td>{{ $item->description }}</td>
                         <td>

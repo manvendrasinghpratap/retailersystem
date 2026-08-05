@@ -75,4 +75,14 @@ class PurchaseItem extends Model
             set: fn($value) => (int) $value,
         );
     }
+
+
+    public function getAvailableQtyAttribute()
+    {
+        return $this->trackings
+            ->where('status', 1)
+            ->where('is_sold', 0)
+            ->where('is_reserved', 0)
+            ->sum('quantity');
+    }
 }

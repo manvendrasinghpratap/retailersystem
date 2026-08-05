@@ -14,10 +14,11 @@
         </div>
 
         <div class="card-body">
-            <form method="POST" action="{{ request()->route()->getName() == 'admin.master_items.create' ? route('admin.master_items.store') : route('admin.master_items.update') }}" enctype="multipart/form-data" class="needs-validation" novalidate>
+            <form id="master_item" method="POST" action="{{ request()->route()->getName() == 'admin.master_items.create' ? route('admin.master_items.store') : route('admin.master_items.update') }}" enctype="multipart/form-data" class="needs-validation" novalidate>
                 @csrf
                 <input type="hidden" name="id" value="{{ isset($item) ? \App\Helpers\Settings::getEncodeCode($item->id) : '' }}">
                 <div class="row">
+                    <x-select-dropdown name="category_id" label="Category" :options="$categories" :selected="old('category_id', $item->category_id)" required class="category" />
                     <x-text-input name="name" label="Name" value="{{ $item->name ?? '' }}" required />
                     <x-text-input name="description" label="Description" value="{{ $item->description ?? '' }}" mainrows="4" />
                     {{-- Image Upload --}}
@@ -33,3 +34,12 @@
         </div>
     </div>
 @endsection
+@push('scripts')
+    <script>
+        $(document).ready(function () {
+
+            // Initialize Select2 validation (only if applicable)
+            validateSelect2Form('master_item', ['category_id']);
+        });
+    </script>
+@endpush

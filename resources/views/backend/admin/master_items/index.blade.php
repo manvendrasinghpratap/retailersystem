@@ -11,15 +11,15 @@
                     <h4 class="card-title d-inline-block">{{ __('translation.filter') }}</h4>
                     <div class="d-inline-block">
                         @include('backend.components.exportpdfcsv', [
-                            'showPdf'=>true,
-                            'showCsv'=>true,
-                            'pdfId' =>'downloadmasteritempdf',    
+                            'showPdf' => true,
+                            'showCsv' => true,
+                            'pdfId' => 'downloadmasteritempdf',
                             'pdfRoute' => route('admin.master_items.exportPdf'),
                             'pdfClass' => 'downloadmasteritempdf',
-                            'csvId' =>'downloadmasteritemcsv',    
+                            'csvId' => 'downloadmasteritemcsv',
                             'csvRoute' => route('admin.master_items.exportCsv'),
                             'csvClass' => 'downloadmasteritemcsv',
-                        ])                 
+                        ])
                     </div>
                 </div>
                 <div class="card-body">
@@ -51,34 +51,36 @@
                         <table class="table table-striped align-middle">
                             <thead>
                                 <tr>
-                                <th>#</th>
-                                <th>{{ __('translation.image') }}</th>
-                                <th>{{ __('translation.code') }}</th>
-                                <th>{{ __('translation.name') }}</th>
-                                <th>{{ __('translation.description') }}</th>
-                                <th>{{ __('translation.status') }}</th>
-                                <th>{{ __('translation.action') }}</th>
+                                    <th>#</th>
+                                    <th>{{ __('translation.image') }}</th>
+                                    <th>{{ __('translation.code') }}</th>
+                                    <th>{{ __('translation.category') }}</th>
+                                    <th>{{ __('translation.name') }}</th>
+                                    <th>{{ __('translation.description') }}</th>
+                                    <th>{{ __('translation.status') }}</th>
+                                    <th>{{ __('translation.action') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
-                            @foreach($items as $item)
-                            <tr>
-                                <td>{{ $loop->iteration }}</td>
-                                <td> <img src="{{ (!empty($item->image) && file_exists(public_path(Config::get('main_constants.image_path') . $item->image))) ? asset(Config::get('main_constants.image_path') . $item->image) : asset(Config::get('main_constants.no_image')) }}" width="80" height="60" alt="Master Item Image"></td>
-                                <td>{{ $item->code }}</td>
-                                <td>{{ $item->name }}</td>
-                                <td>{{ $item->description }}</td>
-                                <td>
-                                    <span class="badge {{ $item->status ? 'bg-success':'bg-danger' }}">
-                                        {{ $item->status ? __('translation.active'):__('translation.inactive') }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <x-href-input name="edit" label="Edit" required href="{{ route('admin.master_items.edit', ['id' => \App\Helpers\Settings::getEncodeCode($item->id)]) }}" />
-                                    <x-deletehref-input name="DeleteButton" label="Delete" required href="javascript:void(0)" class="deleteData" data-deleteid="{{ \App\Helpers\Settings::getEncodeCode($item->id) }}" data-routeurl="{{ route('admin.master_items.delete', $item->id) }}" />
-                                </td>
-                            </tr>
-                            @endforeach
+                                @foreach($items as $item)
+                                    <tr>
+                                        <td>{{ $loop->iteration }}</td>
+                                        <td> <img src="{{ (!empty($item->image) && file_exists(public_path(Config::get('main_constants.image_path') . $item->image))) ? asset(Config::get('main_constants.image_path') . $item->image) : asset(Config::get('main_constants.no_image')) }}" width="80" height="60" alt="Master Item Image"></td>
+                                        <td>{{ $item->code }}</td>
+                                        <td>{{ $item->category->name ?? '' }}</td>
+                                        <td>{{ $item->name }}</td>
+                                        <td>{{ $item->description }}</td>
+                                        <td>
+                                            <span class="badge {{ $item->status ? 'bg-success' : 'bg-danger' }}">
+                                                {{ $item->status ? __('translation.active') : __('translation.inactive') }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <x-href-input name="edit" label="Edit" required href="{{ route('admin.master_items.edit', ['id' => \App\Helpers\Settings::getEncodeCode($item->id)]) }}" />
+                                            <x-deletehref-input name="DeleteButton" label="Delete" required href="javascript:void(0)" class="deleteData" data-deleteid="{{ \App\Helpers\Settings::getEncodeCode($item->id) }}" data-routeurl="{{ route('admin.master_items.delete', $item->id) }}" />
+                                        </td>
+                                    </tr>
+                                @endforeach
                             </tbody>
                         </table>
                     </div>
@@ -99,5 +101,3 @@
         });
     </script>
 @endsection
-
-

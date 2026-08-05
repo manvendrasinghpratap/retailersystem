@@ -15,6 +15,7 @@ class MasterItem extends Model
     protected $table = 'master_items';
 
     protected $fillable = [
+        'category_id',
         'account_id',
         'name',
         'code',
@@ -135,5 +136,10 @@ class MasterItem extends Model
     public function stocks()
     {
         return $this->hasMany(ProductStock::class, 'master_item_id');
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
     }
 }

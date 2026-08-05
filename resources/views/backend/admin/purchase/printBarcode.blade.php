@@ -44,7 +44,8 @@
                                     <tr>
                                         <th width="40"><input type="checkbox" id="checkAll" checked></th>
                                         <th>{{ __('translation.product') }}</th>
-                                        <th width="80">{{ __('translation.quantity') }}</th>
+                                        <th width="150">{{ __('translation.purchased_qty') }}</th>
+                                        <th width="150">{{ __('translation.available_qty') }}</th>
                                         <th width="150">{{ __('translation.tracking') }}</th>
                                         <th width="180">{{ __('translation.print_qty') }}</th>
                                     </tr>
@@ -54,9 +55,10 @@
                                         <tr>
                                             <td><input type="checkbox" class="itemCheck" name="items[]" value="{{ $item->id }}" checked></td>
                                             <td>{{ $item->masterItem->name }}</td>
-                                            <td> {{ $item->trackings->count() }}</td>
+                                            <td>{{ $item->quantity }}</td>
+                                            <td>{{ $item->available_qty }}</td>
                                             <td><span class="badge bg-info"> {{ \App\Helpers\Settings::getDataTitle($item->tracking_type) }} </span></td>
-                                            <td><input type="number" class="form-control" name="print_qty[{{ $item->id }}]" min="1" max="{{ $item->trackings->count() }}" value="{{ $item->trackings->count() }}"></td>
+                                            <td><input type="number" class="form-control" name="print_qty[{{ $item->id }}]" min="1" max="{{ $item->available_qty }}" value="{{ $item->available_qty }}"></td>
                                         </tr>
                                     @endforeach
                                 </tbody>
