@@ -83,7 +83,7 @@ class RequisitionController extends Controller
         $breadcrumb = $this->breadcrumb;
         $warehouses = Warehouse::ofAccount()->active()->orderBy('name', 'asc')->pluck('name', 'id');
         $stores = Store::ofAccount()->active()->orderBy('name', 'asc')->pluck('name', 'id');
-        $requisitions = Requisition::with(['fromWarehouse', 'toWarehouse'])->where('account_id', auth()->user()->account_id)->latest();
+        $requisitions = Requisition::with(['fromWarehouse', 'toWarehouse'])->ofAccount()->latest();
         // =========================
         // FILTERS
         // =========================
@@ -98,8 +98,11 @@ class RequisitionController extends Controller
         }
         if ($request->filled('status')) {
             $requisitions->where('status', $request->status);
+        } else {
+            $requisitions->active();
         }
         $requisitions = Settings::applyDateRange($requisitions, $request, 'created_at', true);
+
         if ($request->has('pdf')) {
             $requisitions = $requisitions->get();
             $pdfHeaderdata = \Config::get('constants.requisitionListpdf');

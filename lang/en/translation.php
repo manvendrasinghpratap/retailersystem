@@ -525,7 +525,7 @@ return [
     'closed' => 'Closed',
     'total_amount' => 'Total Amount',
     'remaining_amount' => 'Remaining Amount',
-    'accepted_by' => 'Accepted By',
+    'accepted_by' => 'Received By',
     'requester' => 'Requester',
     'pending_posting' => 'Store Receiving',
     'pending_posting_history' => 'Store Receiving History',

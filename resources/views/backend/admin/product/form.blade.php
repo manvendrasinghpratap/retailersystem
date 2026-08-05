@@ -23,11 +23,11 @@
                         <input type="hidden" name="adjustment" value="{{ $adjustment ?? '' }}">
                         <input type="hidden" name="requisition_item_id" value="{{ $requisition_item_id ?? '' }}">
                         <div class="row">
-                            <x-select-dropdown name="category_id" label="{{ __('translation.category')}}" :options="$categories" :selected="$product->category_id ?? ''" class="category" required />
+                            <x-select-dropdown name="category_id" label="{{ __('translation.category')}}" :options="$categories" :selected="$product->category_id ?? $categoryId" class="category" required />
                             <x-text-input name="name" label="{{ __('translation.product_name')}}" value="{{ $masterItemName ?? @$product->name }}" required readonly />
-                            <x-text-input name="description" label="{{ __('translation.description')}}" value="{{ @$product->description }}" />
+                            <x-text-input name="description" label="{{ __('translation.description')}}" value="{{ @$product->description ?? @$description }}" />
                             <!-- <x-text-input name="cost_price" :label="__('translation.cost_price') . ' ' . __('translation.b_ngn')" value="{{ $product->cost_price ?? '' }}" class='onlydecimal' required /> -->
-                            <x-text-input name="selling_price" :label="__('translation.selling_price') . ' ' . __('translation.b_ngn')" value="{{ $product->selling_price ?? '' }}" required class='onlydecimal' />
+                            <x-text-input name="selling_price" :label="__('translation.selling_price') . ' ' . __('translation.b_ngn')" value="{{ $product->selling_price ?? '' }}" required class='onlydecimal' placeholder="{{ @$costPrice  }}" />
                             <x-select-dropdown name="status" label="{{ __('translation.status')}}" :options="config('constants.accountstatus')" :selected="$product->status ?? 1" required class="status" />
                         </div>
                         @if($route == 'Add')

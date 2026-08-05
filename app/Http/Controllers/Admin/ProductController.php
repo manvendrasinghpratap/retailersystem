@@ -172,7 +172,9 @@ class ProductController extends Controller
     {
         $barcode = $productId = $route = $adjustment = $requisition_item_id = null;
         $masterItemName = null;
-        $qty = null;
+        $qty = $categoryId = $description = null;
+        $costPrice = 0;
+
         if ($token) {
             try {
                 $data = Crypt::decrypt($token);
@@ -192,7 +194,10 @@ class ProductController extends Controller
                 $requisitionItem = RequisitionItem::with('masterItem')->find(Settings::getDecodeCode($requisition_item_id));
                 if ($requisitionItem) {
                     $masterItemName = $requisitionItem->masterItem->name ?? null;
+                    $description = $requisitionItem->masterItem->description ?? null;
                     $qty = $requisitionItem->qty;
+                    $categoryId = $requisitionItem->masterItem->category_id ?? null;
+                    $costPrice = $requisitionItem->purchaseItemTracking->purchaseItem->cost_price ?? 0;
                 }
             } catch (\Exception $e) {
                 return redirect()
@@ -213,7 +218,10 @@ class ProductController extends Controller
                 'adjustment',
                 'requisition_item_id',
                 'masterItemName',
-                'qty'
+                'qty',
+                'categoryId',
+                'costPrice',
+                'description',
             )
         );
     }
