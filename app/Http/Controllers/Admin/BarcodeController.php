@@ -268,10 +268,7 @@ class BarcodeController extends Controller
         }
 
         // ✅ Step 5: Find product (optimized query)
-        $product = Product::query()
-            ->where('barcode', $barcode)
-            ->select(['id', 'barcode', 'name'])
-            ->first();
+        $product = Product::query()->where('barcode', $barcode)->select(['id', 'barcode', 'name'])->first();
 
         // ✅ Step 6: Prepare payload
         $payloadData = [

@@ -129,4 +129,9 @@ class Sale extends Model
         }
         return $query;
     }
+
+    public function returns()
+    {
+        return $this->hasMany(SaleReturn::class);
+    }
 }

@@ -73,7 +73,7 @@
                                         <td>{{ $row->vendor->company_name ?? '' }}</td>
                                         <td>{{ $row->warehouse->name ?? '' }}</td>
                                         <td style="max-width:250px; white-space:normal; word-break:break-word;">
-                                            {{ $row->product_names }}
+                                            {!! $row->product_names !!}
                                         </td>
                                         <td>{{__('translation.currency')}} {{ $row->total }}</td>
                                         <td>{{ \App\Helpers\Settings::formatDate($row->created_at, Config::get('constants.dateformat.slashdmy')) }}</td>
@@ -93,7 +93,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="8" class="text-center">{{ __('translation.no_data_found')}}</td>
+                                        <td colspan="9" class="text-center">{{ __('translation.no_data_found')}}</td>
                                     </tr>
                                 @endforelse
                             </tbody>

@@ -90,8 +90,117 @@ class StockAdjustmentController extends Controller
         }
     }
 
+    public function customerReturn(Request $request)
+    {
+        // echo '<pre>';
+        // print_r($request->all());
+        // die();
+        $stockService = app(StockService::class);
+
+        DB::beginTransaction();
+
+        try {
+
+            $request->validate([
+                'product_id' => 'required|exists:products,id',
+                'quantity' => 'required|integer|min:1',
+                'barcode' => 'nullable|string',
+                'reference_id' => 'nullable|integer',
+                'note' => 'nullable|string',
+            ]);
+
+            $accountId = auth()->user()->account_id;
+            $storeId = auth()->user()->store_id;
+
+            if (!$storeId) {
+                throw new \Exception('Store not found.');
+            }
+
+            $product = Product::findOrFail($request->product_id);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Barcode Return
+            |--------------------------------------------------------------------------
+            */
+
+            // if ($request->filled('barcode')) {
+
+            //     $tracking = PurchaseItemTracking::where('barcode', $request->barcode)
+            //         ->where('is_sold', 1)
+            //         ->lockForUpdate()
+            //         ->first();
+
+            //     if (!$tracking) {
+            //         throw new \Exception(
+            //             'This barcode is not currently marked as sold.'
+            //         );
+            //     }
+
+            //     $tracking->update([
+            //         'is_sold' => 0,
+            //         'sold_at' => null,
+            //         'is_reserved' => 0,
+            //     ]);
+            // }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Add Stock Back To Store
+            |--------------------------------------------------------------------------
+            */
+
+            $stockService->moveStock([
+                'account_id' => $accountId,
+                'store_id' => $storeId,
+                'master_item_id' => $product->master_item_id,
+                'type' => 'return',
+                'qty' => $request->quantity,
+                'reference_id' => $request->reference_id,
+                'remarks' => 'Customer Return'
+                    . ($request->note ? ' | ' . $request->note : ''),
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Stock Adjustment
+            |--------------------------------------------------------------------------
+            */
+
+            StockAdjustment::create([
+                'account_id' => $accountId,
+                'product_id' => $request->product_id,
+                'type' => 'return',
+                'quantity' => $request->quantity,
+                'reference_id' => $request->reference_id,
+                'note' => 'Customer Return'
+                    . ($request->note ? ' | ' . $request->note : ''),
+                'created_by' => auth()->id(),
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Product returned to store successfully.',
+            ]);
+
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+    }
+
     public function store(Request $request)
     {
+        echo '<pre>';
+        print_r($request->all());
+        die();
         $stockService = app(StockService::class);
 
         DB::beginTransaction();
@@ -191,6 +300,108 @@ class StockAdjustmentController extends Controller
             return back()
                 ->withInput()
                 ->with('error', $e->getMessage());
+        }
+    }
+    public function customerReturn__(Request $request)
+    {
+        $stockService = app(StockService::class);
+
+        DB::beginTransaction();
+
+        try {
+
+            $request->validate([
+                'product_id' => 'required|exists:products,id',
+                'quantity' => 'required|integer|min:1',
+                'barcode' => 'nullable|string',
+                'reference_id' => 'nullable|integer',
+                'note' => 'nullable|string',
+            ]);
+
+            $accountId = auth()->user()->account_id;
+            $storeId = auth()->user()->store_id;
+
+            if (!$storeId) {
+                throw new \Exception('Store not found.');
+            }
+
+            $product = Product::findOrFail($request->product_id);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Barcode Return
+            |--------------------------------------------------------------------------
+            */
+
+            if ($request->filled('barcode')) {
+
+                $tracking = PurchaseItemTracking::where('barcode', $request->barcode)
+                    ->where('is_sold', 1)
+                    ->lockForUpdate()
+                    ->first();
+
+                if (!$tracking) {
+                    throw new \Exception(
+                        'This barcode is not currently marked as sold.'
+                    );
+                }
+
+                $tracking->update([
+                    'is_sold' => 0,
+                    'sold_at' => null,
+                    'is_reserved' => 0,
+                ]);
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Add Stock Back To Store
+            |--------------------------------------------------------------------------
+            */
+
+            $stockService->moveStock([
+                'account_id' => $accountId,
+                'store_id' => $storeId,
+                'master_item_id' => $product->master_item_id,
+                'type' => 'return',
+                'qty' => $request->quantity,
+                'reference_id' => $request->reference_id,
+                'remarks' => 'Customer Return'
+                    . ($request->note ? ' | ' . $request->note : ''),
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Stock Adjustment
+            |--------------------------------------------------------------------------
+            */
+
+            StockAdjustment::create([
+                'account_id' => $accountId,
+                'product_id' => $request->product_id,
+                'type' => 'return',
+                'quantity' => $request->quantity,
+                'reference_id' => $request->reference_id,
+                'note' => 'Customer Return'
+                    . ($request->note ? ' | ' . $request->note : ''),
+                'created_by' => auth()->id(),
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Product returned to store successfully.',
+            ]);
+
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
         }
     }
     public function storeworking(Request $request)

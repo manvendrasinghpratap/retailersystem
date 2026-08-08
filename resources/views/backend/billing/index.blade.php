@@ -19,17 +19,9 @@
                                     <th>{{ __('translation.product_name') }}</th>
                                     <th width="80">{{ __('translation.stock') }}</th>
                                     <th width="100">{{ __('translation.quantity') }}</th>
-                                    <th width="120">
-                                        {{ __('translation.b_ngn') }}
-                                        {{ __('translation.price') }}
-                                    </th>
-                                    <th width="140">
-                                        {{ __('translation.b_ngn') }}
-                                        {{ __('translation.total') }}
-                                    </th>
-                                    <th width="60">
-                                        {{ __('translation.action') }}
-                                    </th>
+                                    <th width="120">{{ __('translation.b_ngn') }} {{ __('translation.price') }}</th>
+                                    <th width="140">{{ __('translation.b_ngn') }} {{ __('translation.total') }}</th>
+                                    <th width="60">{{ __('translation.action') }}</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -393,7 +385,7 @@
                     let stock = parseInt(item.stock) || 0;
                     let total = qty * price;
 
-                    html += `<tr><td>${item.category_name}</td><td>${item.name}</td><td class="${stock <= 5 ? 'text-danger' : ''}">${stock}</td><td><input type="number" value="${qty}" min="1" max="${stock}" style="width:80px" onchange="updateQuantity(${index}, this.value, this)"></td><td>${currency} ${price.toFixed(2)}</td><td class="item-total">${currency} ${total.toFixed(2)}</td><td><button onclick="removeItem(${index})" class="btn btn-danger btn-sm">X</button></td></tr>`;
+                    html += `<tr><td>${item.category_name}</td><td>${item.name}</td><td class="${stock <= 5 ? 'text-danger' : ''}">${stock}</td><td><input type="number" value="${qty}" min="1" max="${stock}" style="width:80px" onchange="updateQuantity(${index}, this.value, this)"  readonly></td><td>${currency} ${price.toFixed(2)}</td><td class="item-total">${currency} ${total.toFixed(2)}</td><td><button onclick="removeItem(${index})" class="btn btn-danger btn-sm">X</button></td></tr>`;
                 });
             }
 

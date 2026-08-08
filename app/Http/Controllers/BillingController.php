@@ -18,6 +18,8 @@ use App\Models\CreditDuration;
 use App\Models\SalePayment;
 use App\Models\PaymentMethod;
 use App\Helpers\AccountSettingHelper;
+use App\Models\PurchaseItemTracking;
+use App\Models\SaleItemTracking;
 
 class BillingController extends Controller
 {
@@ -143,51 +145,32 @@ class BillingController extends Controller
             'items.*.id' => 'required|integer',
             'items.*.quantity' => 'required|numeric|min:1',
             'items.*.price' => 'required|numeric|min:0',
-
             'subtotal' => 'required|numeric',
             'tax' => 'nullable|numeric',
             'discount' => 'nullable|numeric',
             'total' => 'required|numeric',
-
             'payment_type' => 'required|in:full,partial,credit',
-
             'payments' => 'nullable|array',
             'payments.*.amount' => 'required|numeric|min:0',
             'payments.*.method' => 'required_with:payments.*.amount|string',
-
             'customer_id' => 'required_if:payment_type,credit|nullable|integer',
-
             'credit_duration_id' => 'required_if:payment_type,credit|nullable|integer',
         ]);
 
         try {
 
             $storeId = auth()->user()->store_id ?? 0;
-
             if ($storeId == 0) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Store not found.'
-                ]);
+                return response()->json(['status' => false, 'message' => 'Store not found.']);
             }
 
-            if (
-                $request->payment_type === 'credit' &&
-                empty($request->customer_id)
-            ) {
-                throw ValidationException::withMessages([
-                    'customer_id' => 'Customer is required for credit sales.'
-                ]);
+            if ($request->payment_type === 'credit' && empty($request->customer_id)) {
+                throw ValidationException::withMessages(['customer_id' => 'Customer is required for credit sales.']);
             }
 
             $sale = DB::transaction(function () use ($request) {
-
                 $total = round($request->total, 2);
-
-                $totalPaid = round(
-                    collect($request->payments ?? [])->sum('amount'),
-                    2
-                );
+                $totalPaid = round(collect($request->payments ?? [])->sum('amount'), 2);
 
                 $creditDuration = null;
                 $dueDate = null;
@@ -204,12 +187,8 @@ class BillingController extends Controller
                 */
                 if ($request->payment_type === 'credit') {
 
-                    $creditDuration = CreditDuration::ofAccount()
-                        ->active()
-                        ->findOrFail($request->credit_duration_id);
-
+                    $creditDuration = CreditDuration::ofAccount()->active()->findOrFail($request->credit_duration_id);
                     $interestRate = $creditDuration->interest;
-
                     $interestAmount = $request->interest_amount ?? 0; //round(($total * $interestRate) / 100, 2);
                     $payableAmount = $request->payable_amount ?? 0; //round($total + $interestAmount, 2);
                     $balanceAmount = $payableAmount;
@@ -265,32 +244,21 @@ class BillingController extends Controller
                     'subtotal' => $request->subtotal,
                     'tax' => $request->tax ?? 0,
                     'discount' => $request->discount ?? 0,
-
                     'total' => $total,
-
                     'paid_amount' => $totalPaid,
                     'balance_amount' => $balanceAmount,
-
                     'change_amount' => 0,
-
-                    'payment_method' => $request->payment_type === 'full'
-                        ? ($request->payments[0]['method'] ?? null)
-                        : null,
-
+                    'payment_method' => $request->payment_type === 'full' ? ($request->payments[0]['method'] ?? null) : null,
                     'status' => $status,
                     'payment_status' => $payment_status,
-
                     'payment_type' => $request->payment_type,
-
                     // Credit Fields
                     'credit_duration_id' => $creditDuration?->id,
                     'due_date' => $dueDate,
                     'interest_rate' => $interestRate,
                     'interest_amount' => $interestAmount,
                     'payable_amount' => $payableAmount,
-
                     'user_id' => auth()->id()
-
                 ]);
 
                 /*
@@ -300,34 +268,57 @@ class BillingController extends Controller
                 */
                 foreach ($request->items as $item) {
 
-                    $inventory = Inventory::where(
-                        'product_id',
-                        $item['id']
-                    )
-                        ->lockForUpdate()
-                        ->first();
+                    $inventory = Inventory::where('product_id', $item['id'])->lockForUpdate()->first();
 
                     if (!$inventory) {
-                        throw new \Exception(
-                            'Inventory not found for product ID: ' .
-                            $item['id']
-                        );
+                        throw new \Exception('Inventory not found for product ID: ' . $item['id']);
                     }
 
                     if ($inventory->stock < $item['quantity']) {
-                        throw new \Exception(
-                            'Insufficient stock for product ID: ' .
-                            $item['id']
-                        );
+                        throw new \Exception('Insufficient stock for product ID: ' . $item['id']);
                     }
 
-                    SaleItem::create([
+                    $saleItem = SaleItem::create([
                         'sale_id' => $sale->id,
                         'product_id' => $item['id'],
                         'quantity' => $item['quantity'],
                         'price' => $item['price'],
                         'total' => $item['quantity'] * $item['price'],
                     ]);
+
+                    if (!empty($item['tracking_ids'])) {
+
+                        foreach ($item['tracking_ids'] as $trackingId) {
+
+                            $tracking = PurchaseItemTracking::where(
+                                'id',
+                                $trackingId
+                            )
+                                ->lockForUpdate()
+                                ->firstOrFail();
+
+                            if ((int) $tracking->is_sold !== 0) {
+
+                                throw new \Exception(
+                                    "Barcode {$tracking->barcode} is already sold."
+                                );
+                            }
+
+                            SaleItemTracking::create([
+                                'sale_item_id' =>
+                                    $saleItem->id,
+
+                                'purchase_item_tracking_id' =>
+                                    $tracking->id,
+                            ]);
+
+                            $tracking->update([
+                                'is_sold' => 1,
+                                'sold_at' => now(),
+                                'store_id' => auth()->user()->store_id,
+                            ]);
+                        }
+                    }
 
                     // Uncomment when stock deduction is required
                     // $inventory->decrement(
@@ -357,11 +348,7 @@ class BillingController extends Controller
             });
 
             $sale->load('items');
-
-            $customer = $request->customer_id
-                ? Customer::find($request->customer_id)
-                : null;
-
+            $customer = $request->customer_id ? Customer::find($request->customer_id) : null;
             /*
             |--------------------------------------------------------------------------
             | Email Invoice
@@ -387,19 +374,10 @@ class BillingController extends Controller
                 // );
             }
 
-            return response()->json([
-                'success' => true,
-                'sale_id' => $sale->id,
-                'message' => 'Sale completed successfully'
-            ]);
+            return response()->json(['success' => true, 'sale_id' => $sale->id, 'message' => 'Sale completed successfully']);
 
         } catch (\Exception $e) {
-
-            return response()->json([
-                'success' => false,
-                'sale_id' => null,
-                'message' => $e->getMessage()
-            ], 400);
+            return response()->json(['success' => false, 'sale_id' => null, 'message' => $e->getMessage()], 400);
         }
     }
 

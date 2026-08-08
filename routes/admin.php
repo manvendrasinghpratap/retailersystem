@@ -59,6 +59,8 @@ Route::prefix('admin')->middleware(['auth', 'route.permission', 'subscription'])
     Route::get('inventory/manage/{id?}', [InventoryController::class, 'create'])->name('admin.inventory.manage');
     Route::get('inventory/manage/update/{token}', [InventoryController::class, 'update'])->name('admin.inventory.update');
     Route::post('stock-adjust', [StockAdjustmentController::class, 'store'])->name('admin.stock.adjust');
+    Route::post('stock-adjust/customerReturn', [StockAdjustmentController::class, 'customerReturn'])->name('admin.stock.adjust.customerReturn');
+
     Route::get('inventory/export-pdf', [InventoryController::class, 'exportPdf'])->name('admin.inventory.exportPdf');
     Route::get('inventory/export-csv', [InventoryController::class, 'exportCsv'])->name('admin.inventory.exportCsv');
 });

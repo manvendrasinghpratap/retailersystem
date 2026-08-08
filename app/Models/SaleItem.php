@@ -81,4 +81,34 @@ class SaleItem extends Model
     {
         return $query->where('account_id', auth()->user()->account_id);
     }
+
+    public function trackingRecords()
+    {
+        return $this->hasMany(SaleItemTracking::class);
+    }
+
+    public function returnedItems()
+    {
+        return $this->hasMany(
+            SaleReturnItem::class,
+            'sale_item_id'
+        );
+    }
+
+    public function getReturnedQtyAttribute()
+    {
+        return $this->returnedItems()->sum('quantity');
+    }
+
+    public function getReturnableQtyAttribute()
+    {
+        return max(
+            0,
+            (float) $this->quantity -
+            (float) $this->returned_qty
+        );
+    }
+
+
+
 }

@@ -43,9 +43,13 @@ class PurchaseController extends Controller
     }
 
     /*
-    |--------------------------------------------------------------------------
-    | LISTING
-    |--------------------------------------------------------------------------
+    @description:This function is used to get the list of purchases
+    @throws
+    @access:public
+    @method:GET
+    @route:admin.purchases.index
+    @return:view
+    @auther 
     */
     public function index(Request $request)
     {
@@ -98,15 +102,16 @@ class PurchaseController extends Controller
             return Settings::downloadcsvfile($rows, 'purchase-list.csv');
         }
 
-        // ==========================
-        // Listing
-        // ==========================
-
         $purchases = $query->latest()->paginate(account_setting('general.pagination'));
         $purchases->getCollection()->transform(function ($purchase) {
-            // Product Names
-            $purchase->product_names = $purchase->items->pluck('masterItem.name')->filter()->implode(', ');
-            // Can Delete
+            $purchase->product_names = $purchase->items
+                ->pluck('masterItem.name')
+                ->filter()
+                ->unique()
+                ->map(function ($name) {
+                    return '<span class="badge bg-info me-1 mb-1">' . e($name) . '</span>';
+                })
+                ->implode(' ');
             $purchase->can_delete = true;
             foreach ($purchase->items as $item) {
                 $available = $item->trackings->where('status', 1)->where('is_sold', 0)->where('is_reserved', 0)->sum('quantity');

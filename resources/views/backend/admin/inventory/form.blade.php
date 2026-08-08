@@ -14,7 +14,7 @@
                     </h4>
                 </div>
                 <div class="card-body">
-                    <form name="addcustomerform" id="addnewstockform" method="POST" action="{{ route('admin.stock.adjust') }}" enctype="multipart/form-data" class="needs-validation" novalidate autocomplete="off">
+                    <form name="addcustomerform" id="addnewstockform" method="POST" action="{{ route('admin.stock.adjust.customerReturn') }}" enctype="multipart/form-data" class="needs-validation" novalidate autocomplete="off">
                         @csrf
                         <div class="row">
                             {{-- Hidden Fields --}}
