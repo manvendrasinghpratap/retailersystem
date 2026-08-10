@@ -20,35 +20,58 @@ use Illuminate\Validation\ValidationException;
 
 class SaleReturnController extends Controller
 {
+    protected $breadcrumbAddUpdate;
+    protected $breadcrumbListing;
+
+    public function __construct()
+    {
+        $this->middleware('auth');
+
+        $this->middleware(function ($request, $next) {
+
+            $role = Settings::getUserRole(); // admin / staff / etc.
+            $this->breadcrumbListing = [
+                'title' => __('translation.customer_returns'),
+                'breadcrumb' => [
+                    [
+                        'route' => 'admin.dashboard',
+                        'title' => __('translation.dashboard')
+                    ],
+                    [
+                        'route' => 'admin.sale-returns',
+                        'title' => __('translation.customer_returns')
+                    ],
+                    [
+                        'route' => $role . '.sale-returns.create',
+                        'title' => __('translation.create_customer_return_stock')
+                    ]
+                ],
+
+                'route1' => 'admin.inventory',
+                'route1Title' => __('translation.stock_management'),
+                'route2' => 'admin.sale-returns',
+                'reset_route_title' => __('translation.cancel'),
+                'reset_route' => 'admin.sale-returns',
+            ];
+
+            return $next($request);
+        });
+    }
+
     public function index(Request $request)
     {
-        $breadcrumb = $this->breadcrumb ?? [];
+        $breadcrumb = $this->breadcrumbListing ?? [];
 
-        $query = SaleReturn::with([
-            'sale',
-            'customer',
-            'items.product',
-        ])
-            ->where('account_id', auth()->user()->account_id)
-            ->latest();
+        $query = SaleReturn::with(['sale', 'customer', 'items.product'])->where('account_id', auth()->user()->account_id)->latest();
 
         if ($request->filled('return_no')) {
-            $query->where(
-                'return_no',
-                'LIKE',
-                '%' . trim($request->return_no) . '%'
-            );
+            $query->where('return_no', 'LIKE', '%' . trim($request->return_no) . '%');
         }
 
         if ($request->filled('invoice_no')) {
             $invoiceNo = trim($request->invoice_no);
-
             $query->whereHas('sale', function ($q) use ($invoiceNo) {
-                $q->where(
-                    'invoice_no',
-                    'LIKE',
-                    '%' . $invoiceNo . '%'
-                );
+                $q->where('invoice_no', 'LIKE', '%' . $invoiceNo . '%');
             });
         }
 
@@ -60,34 +83,15 @@ class SaleReturnController extends Controller
             $query->where('status', $request->status);
         }
 
-        $returns = $query->paginate(
-            account_setting('general.pagination')
-        )->withQueryString();
-
-        return view(
-            'backend.admin.sale-return.index',
-            compact(
-                'returns',
-                'breadcrumb'
-            )
-        );
+        $returns = $query->paginate(account_setting('general.pagination'))->withQueryString();
+        return view('backend.admin.sale-return.index', compact('returns', 'breadcrumb'));
     }
 
     public function create()
     {
-        $breadcrumb = $this->breadcrumb ?? [];
-
-        $paymentMethods = PaymentMethod::query()
-            ->where('status', 1)
-            ->pluck('name', 'id');
-
-        return view(
-            'backend.admin.sale-return.create',
-            compact(
-                'breadcrumb',
-                'paymentMethods'
-            )
-        );
+        $breadcrumb = $this->breadcrumbListing ?? [];
+        $paymentMethods = PaymentMethod::query()->where('status', 1)->pluck('name', 'id');
+        return view('backend.admin.sale-return.create', compact('breadcrumb', 'paymentMethods'));
     }
 
     /**
@@ -746,15 +750,7 @@ class SaleReturnController extends Controller
                         );
                     }
 
-                    $stockService->moveStock([
-                        'account_id' => $accountId,
-                        'store_id' => $storeId,
-                        'master_item_id' => $product->master_item_id,
-                        'type' => 'return',
-                        'qty' => $quantity,
-                        'reference_id' => $saleReturn->id,
-                        'remarks' => 'Customer Return #' . $returnNo,
-                    ]);
+
                 }
 
                 /*

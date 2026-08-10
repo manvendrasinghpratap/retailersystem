@@ -173,23 +173,62 @@ class BarcodeController extends Controller
         $adjustmentData = Settings::getEncodeCode($adjustmentType);
 
         // ✅ Step 3: Format validation (8–13 digits)
-        if (!preg_match('/^[0-9]{8,13}$/', $barcode)) {
+        // if (!preg_match('/^[0-9]{8,13}$/', $barcode)) {
+        //     return response()->json([
+        //         'status' => false,
+        //         'message' => 'Barcode must be 8 to 13 digits only.',
+        //         'adjustmentType' => $adjustmentType,
+        //         'returnRoute' => $returnRoute
+        //     ]);
+        // }
+
+        // ✅ Step 4: EAN-13 checksum validation
+        // if (strlen($barcode) === 13 && !Settings::isValidBarcode($barcode)) {
+        //     return response()->json([
+        //         'status' => false,
+        //         'message' => 'Invalid EAN-13 barcode checksum.',
+        //         'adjustmentType' => $adjustmentType,
+        //         'returnRoute' => $returnRoute
+        //     ]);
+        // }
+
+        // Clean barcode received from scanner
+        $barcode = trim($barcode);
+
+        // Step 3: Allow only UPC-A (12 digits) or EAN-13 (13 digits)
+        if (!preg_match('/^(?:[0-9]{12}|[0-9]{13})$/', $barcode)) {
             return response()->json([
                 'status' => false,
-                'message' => 'Barcode must be 8 to 13 digits only.',
+                'message' => 'Barcode must be a valid 12 or 13 digit barcode.',
                 'adjustmentType' => $adjustmentType,
                 'returnRoute' => $returnRoute
             ]);
         }
 
-        // ✅ Step 4: EAN-13 checksum validation
-        if (strlen($barcode) === 13 && !Settings::isValidEAN13($barcode)) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Invalid EAN-13 barcode checksum.',
-                'adjustmentType' => $adjustmentType,
-                'returnRoute' => $returnRoute
-            ]);
+        // Step 4: Validate checksum
+        if (strlen($barcode) === 12) {
+
+            // UPC-A validation
+            if (!Settings::isValidBarcode($barcode)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Invalid UPC-A barcode checksum.',
+                    'adjustmentType' => $adjustmentType,
+                    'returnRoute' => $returnRoute
+                ]);
+            }
+
+        } elseif (strlen($barcode) === 13) {
+
+            // EAN-13 validation
+            if (!Settings::isValidUPC_A($barcode)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Invalid EAN-13 barcode checksum.',
+                    'adjustmentType' => $adjustmentType,
+                    'returnRoute' => $returnRoute
+                ]);
+            }
         }
 
         if ($purchase_item_tracking_barcode != $barcode) {
@@ -250,21 +289,57 @@ class BarcodeController extends Controller
         $adjustmentData = Settings::getEncodeCode($adjustmentType);
 
         // ✅ Step 3: Format validation (8–13 digits)
-        if (!preg_match('/^[0-9]{8,13}$/', $barcode)) {
+        // if (!preg_match('/^[0-9]{8,13}$/', $barcode)) {
+        //     return response()->json([
+        //         'status' => false,
+        //         'message' => 'Barcode must be 8 to 13 digits only.',
+        //         'adjustmentType' => $adjustmentType
+        //     ]);
+        // }
+
+        // ✅ Step 4: EAN-13 checksum validation
+        // if (strlen($barcode) === 13 && !Settings::isValidBarcode($barcode)) {
+        //     return response()->json([
+        //         'status' => false,
+        //         'message' => 'Invalid EAN-13 barcode checksum.',
+        //         'adjustmentType' => $adjustmentType
+        //     ]);
+        // }
+
+        // Clean barcode received from scanner
+        $barcode = trim($barcode);
+
+        // Step 3: Allow only UPC-A (12 digits) or EAN-13 (13 digits)
+        if (!preg_match('/^(?:[0-9]{12}|[0-9]{13})$/', $barcode)) {
             return response()->json([
                 'status' => false,
-                'message' => 'Barcode must be 8 to 13 digits only.',
-                'adjustmentType' => $adjustmentType
+                'message' => 'Barcode must be a valid 12 or 13 digit barcode.',
+                'adjustmentType' => $adjustmentType,
             ]);
         }
 
-        // ✅ Step 4: EAN-13 checksum validation
-        if (strlen($barcode) === 13 && !Settings::isValidEAN13($barcode)) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Invalid EAN-13 barcode checksum.',
-                'adjustmentType' => $adjustmentType
-            ]);
+        // Step 4: Validate checksum
+        if (strlen($barcode) === 12) {
+
+            // UPC-A validation
+            if (!Settings::isValidBarcode($barcode)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Invalid UPC-A barcode checksum.',
+                    'adjustmentType' => $adjustmentType,
+                ]);
+            }
+
+        } elseif (strlen($barcode) === 13) {
+
+            // EAN-13 validation
+            if (!Settings::isValidUPC_A($barcode)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Invalid EAN-13 barcode checksum.',
+                    'adjustmentType' => $adjustmentType,
+                ]);
+            }
         }
 
         // ✅ Step 5: Find product (optimized query)
@@ -311,23 +386,56 @@ class BarcodeController extends Controller
             $barcode = trim($request->barcode);
 
             // Example validation
-            if (strlen($barcode) !== 13) {
+            // if (strlen($barcode) !== 13) {
+            //     return response()->json([
+            //         'status' => false,
+            //         'message' => 'Invalid barcode.'
+            //     ]);
+            // }
+            // if (strlen($barcode) == 13 && !Settings::isValidBarcode($barcode)) {
+            //     return response()->json([
+            //         'status' => false,
+            //         'message' => 'Invalid barcode checksum.'
+            //     ]);
+            // }
+
+            // Clean barcode received from scanner
+            $barcode = trim($barcode);
+
+            // Step 3: Allow only UPC-A (12 digits) or EAN-13 (13 digits)
+            if (!preg_match('/^(?:[0-9]{12}|[0-9]{13})$/', $barcode)) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Invalid barcode.'
+                    'message' => 'Barcode must be a valid 12 or 13 digit barcode.',
                 ]);
             }
-            if (strlen($barcode) == 13 && !Settings::isValidEAN13($barcode)) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Invalid barcode checksum.'
-                ]);
+
+            // Step 4: Validate checksum
+            if (strlen($barcode) === 12) {
+
+                // UPC-A validation
+                if (!Settings::isValidBarcode($barcode)) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Invalid UPC-A barcode checksum.',
+                    ]);
+                }
+
+            } elseif (strlen($barcode) === 13) {
+
+                // EAN-13 validation
+                if (!Settings::isValidUPC_A($barcode)) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Invalid EAN-13 barcode checksum.',
+                    ]);
+                }
             }
 
             // SUCCESS
             return response()->json([
                 'status' => true,
-                'message' => 'Bardddddcode is valid.',
+                'message' => 'Barcode is valid.',
                 'barcode' => $barcode
             ]);
 

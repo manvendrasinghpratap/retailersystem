@@ -687,4 +687,14 @@ return [
     'module_added_successfully' => 'Module Added Successfully.',
     'module_updated_successfully' => 'Module Updated Successfully.',
     'no_modules_available' => 'No Modules Available',
+    'customer_returns' => 'Customer Returns',
+    'create_customer_return_stock' => 'Create Customer Return Stock',
+    'return_amount' => 'Return Amount',
+    'refund' => 'Refund',
+    'sold_qty' => 'Sold Qty',
+    'returned_qty' => 'Returned Qty',
+    'enter_invoice_number_to_load_sale_items' => 'Enter invoice number to load sale items.',
+    'refund_type' => 'Refund Type',
+    'total_return_amount' => 'Total Return Amount'
+
 ];

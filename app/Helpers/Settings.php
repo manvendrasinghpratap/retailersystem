@@ -266,10 +266,52 @@ class Settings
         return $map[$id] ?? ['route' => null, 'adjustment' => null];
     }
 
-    public static function isValidEAN13($barcode)
+    public static function isValidBarcode($barcode)
     {
-        // Must be exactly 13 digits
-        if (!preg_match('/^[0-9]{13}$/', $barcode)) {
+        $barcode = trim($barcode);
+
+        // UPC-A: exactly 12 digits
+        if (preg_match('/^[0-9]{12}$/', $barcode)) {
+
+            $sum = 0;
+
+            for ($i = 0; $i < 11; $i++) {
+                $digit = (int) $barcode[$i];
+
+                $sum += ($i % 2 === 0)
+                    ? $digit * 3
+                    : $digit;
+            }
+
+            $checkDigit = (10 - ($sum % 10)) % 10;
+
+            return (int) $barcode[11] === $checkDigit;
+        }
+
+        // EAN-13: exactly 13 digits
+        if (preg_match('/^[0-9]{13}$/', $barcode)) {
+
+            $sum = 0;
+
+            for ($i = 0; $i < 12; $i++) {
+                $digit = (int) $barcode[$i];
+
+                $sum += ($i % 2 === 0)
+                    ? $digit
+                    : $digit * 3;
+            }
+
+            $checkDigit = (10 - ($sum % 10)) % 10;
+
+            return (int) $barcode[12] === $checkDigit;
+        }
+
+        return false;
+    }
+    public static function isValidUPC_A($barcode)
+    {
+        // Must be exactly 12 digits
+        if (!preg_match('/^[0-9]{12}$/', $barcode)) {
             return false;
         }
 

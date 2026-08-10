@@ -13,6 +13,7 @@ use App\Models\Requisition;
 use Illuminate\Support\Facades\DB;
 use App\Services\StockService;
 use App\Models\Product;
+use App\Models\PurchaseItemTracking;
 class StockAdjustmentController extends Controller
 {
 
@@ -124,25 +125,27 @@ class StockAdjustmentController extends Controller
             |--------------------------------------------------------------------------
             */
 
-            // if ($request->filled('barcode')) {
+            if ($request->filled('barcode')) {
 
-            //     $tracking = PurchaseItemTracking::where('barcode', $request->barcode)
-            //         ->where('is_sold', 1)
-            //         ->lockForUpdate()
-            //         ->first();
+                $tracking = PurchaseItemTracking::where('barcode', $request->barcode)
+                    ->where('is_sold', 1)
+                    ->lockForUpdate()
+                    ->first();
 
-            //     if (!$tracking) {
-            //         throw new \Exception(
-            //             'This barcode is not currently marked as sold.'
-            //         );
-            //     }
+                if (!$tracking) {
+                    throw new \Exception(
+                        'This barcode is not currently marked as sold.'
+                    );
+                }
 
-            //     $tracking->update([
-            //         'is_sold' => 0,
-            //         'sold_at' => null,
-            //         'is_reserved' => 0,
-            //     ]);
-            // }
+                $tracking->update([
+                    'is_sold' => 0,
+                    'sold_at' => null,
+                    'is_reserved' => 0,
+                ]);
+            }
+
+
 
             /*
             |--------------------------------------------------------------------------
@@ -150,16 +153,23 @@ class StockAdjustmentController extends Controller
             |--------------------------------------------------------------------------
             */
 
-            $stockService->moveStock([
-                'account_id' => $accountId,
-                'store_id' => $storeId,
-                'master_item_id' => $product->master_item_id,
-                'type' => 'return',
-                'qty' => $request->quantity,
-                'reference_id' => $request->reference_id,
-                'remarks' => 'Customer Return'
-                    . ($request->note ? ' | ' . $request->note : ''),
-            ]);
+            if ($request->reason_id) {
+                $product = Product::find($request->product_id);
+
+                $stockService->moveStock([
+                    'account_id' => $request->to_account_id,
+                    'warehouse_id' => $request->warehouse_id,
+                    'master_item_id' => $product->master_item_id,
+                    'type' => 'transfer_in',
+                    'qty' => $request->quantity,
+                    'reference_id' => $request->reference_id,
+                    'remarks' => 'Received From Store : '
+                        . ($request->reason_id ?? '')
+                        . ' | '
+                        . ($request->note ?? ''),
+
+                ]);
+            }
 
             /*
             |--------------------------------------------------------------------------
@@ -195,8 +205,111 @@ class StockAdjustmentController extends Controller
             ], 422);
         }
     }
-
     public function store(Request $request)
+    {
+        $stockService = app(StockService::class);
+
+        DB::beginTransaction();
+
+        try {
+
+            $request->validate([
+
+                'product_id' => 'required|exists:products,id',
+                'quantity' => 'required|integer|min:1',
+                'from_account_id' => 'nullable|exists:accounts,id',
+                'to_account_id' => 'nullable|exists:accounts,id',
+                'store_id' => 'nullable|exists:stores,id',
+                'warehouse_id' => 'nullable|exists:warehouses,id',
+                'reason_id' => 'nullable|string|max:255',
+                'note' => 'nullable|string',
+
+            ]);
+
+            if ($request->route == 'Add') {
+                $id = Settings::getDecodeCode($request->requisition_item_id);
+
+                $requisitionItem = RequisitionItem::with('masterItem')
+                    ->lockForUpdate()
+                    ->find($id);
+
+                if (!$requisitionItem) {
+                    throw new \Exception('Invalid requisition item');
+                }
+
+                if (!empty($requisitionItem->accepted_by)) {
+
+                    throw new \Exception(
+                        'This requisition item is already accepted by another user.'
+                    );
+                }
+
+                $requisition = Requisition::find($requisitionItem->requisition_id);
+                $requisition->updateStatusByItems();
+
+                $requisitionItem->update(['accepted_by' => auth()->id()]);
+            }
+
+            if ($request->from_account_id && in_array($request->type, Config::get('constants.subtractfrominventory'))) {
+                $storeInventory = Inventory::where(['account_id' => $request->from_account_id, 'product_id' => $request->product_id])->lockForUpdate()->first();
+                if (!$storeInventory || $storeInventory->stock < $request->quantity) {
+                    DB::rollBack();
+                    return back()->withInput()->with('error', 'Not enough stock in store');
+                }
+            }
+
+            StockAdjustment::create([
+                'product_id' => $request->product_id,
+                'type' => $request->type,
+                'quantity' => $request->quantity,
+                'reference_id' => $request->reference_id,
+                'note' => 'Returned To Warehouse : '
+                    . ($request->reason_id ?? '')
+                    . ' | '
+                    . ($request->note ?? ''),
+                'created_by' => auth()->id(),
+            ]);
+
+            // ===================================================
+            // ADD STOCK TO WAREHOUSE
+            // ===================================================
+
+            if ($request->reason_id) {
+                $product = Product::find($request->product_id);
+
+                $stockService->moveStock([
+                    'account_id' => $request->to_account_id,
+                    'warehouse_id' => $request->warehouse_id,
+                    'master_item_id' => $product->master_item_id,
+                    'type' => 'transfer_in',
+                    'qty' => $request->quantity,
+                    'reference_id' => $request->reference_id,
+                    'remarks' => 'Received From Store : '
+                        . ($request->reason_id ?? '')
+                        . ' | '
+                        . ($request->note ?? ''),
+
+                ]);
+            }
+
+            DB::commit();
+
+            return Settings::roleRedirect(
+                'inventory',
+                'Stock Adjusted Successfully.'
+            );
+
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return back()
+                ->withInput()
+                ->with('error', $e->getMessage());
+        }
+    }
+
+    public function store_old(Request $request)
     {
         echo '<pre>';
         print_r($request->all());

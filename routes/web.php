@@ -295,7 +295,7 @@ Route::prefix('admin')
         Route::get(
             'sale-returns',
             [SaleReturnController::class, 'index']
-        )->name('admin.sale-returns.index');
+        )->name('admin.sale-returns');
 
         Route::get(
             'sale-returns/create',
