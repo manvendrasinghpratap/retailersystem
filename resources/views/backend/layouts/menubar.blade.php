@@ -65,7 +65,7 @@
                     <a href="{{ route('admin.requisitions.pending.posting') }}" class="dropdown-item"><i data-feather="plus-square" class="menu-icon-sm"></i>@lang('translation.add_update_stock')</a>
                     <div class="dropdown-divider"></div>
                     <h6 class="dropdown-header">@lang('translation.stock_adjustments')</h6>
-                    <a href="{{ route($role . '.return-barcode') }}" class="dropdown-item"><i data-feather="rotate-ccw" class="menu-icon-sm"></i>@lang('translation.return_stock')</a>
+                    <!-- <a href="{{ route($role . '.return-barcode') }}" class="dropdown-item"><i data-feather="rotate-ccw" class="menu-icon-sm"></i>@lang('translation.return_stock')</a> -->
                     <a href="{{ route($role . '.damage-barcode') }}" class="dropdown-item"><i data-feather="alert-triangle" class="menu-icon-sm"></i>@lang('translation.damage_stock')</a>
                     <a href="{{ route($role . '.deduct-barcode') }}" class="dropdown-item"><i data-feather="minus-circle" class="menu-icon-sm"></i>@lang('translation.deduct_stock')</a>
                 </div>
