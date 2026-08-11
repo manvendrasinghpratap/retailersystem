@@ -14,16 +14,14 @@
         </div>
 
         <div class="card-body">
-            <form id="master_item" method="POST" action="{{ request()->route()->getName() == 'admin.master_items.create' ? route('admin.master_items.store') : route('admin.master_items.update') }}" enctype="multipart/form-data" class="needs-validation" novalidate>
+            <form id="master_item" name="master_item" method="POST" action="{{ request()->route()->getName() == 'admin.master_items.create' ? route('admin.master_items.store') : route('admin.master_items.update') }}" enctype="multipart/form-data" class="needs-validation" novalidate>
                 @csrf
                 <input type="hidden" name="id" value="{{ isset($item) ? \App\Helpers\Settings::getEncodeCode($item->id) : '' }}">
                 <div class="row">
-                    <x-select-dropdown name="category_id" label="Category" :options="$categories" :selected="old('category_id', $item->category_id)" required class="category" />
+                    <x-select-dropdown name="categoryId" label="Category" :options="$categories" :selected="$item->category_id ?? ''" required class="category_id" id="categoryId" />
                     <x-text-input name="name" label="Name" value="{{ $item->name ?? '' }}" required />
                     <x-text-input name="description" label="Description" value="{{ $item->description ?? '' }}" mainrows="4" />
-                    {{-- Image Upload --}}
                     <x-file-input name="image" :preview="false" label="Product Image" :value="$item->image ?? null" accept="image/png,image/jpeg,image/webp" :mainrows="4" />
-
                     <x-select-dropdown name="status" label="Status" :options="\Config::get('constants.accountstatus')" :selected="isset($item) ? $item->status : 1" class="accountstatus" required />
                 </div>
                 <div class="row">
@@ -34,12 +32,10 @@
         </div>
     </div>
 @endsection
-@push('scripts')
+@section('script')
     <script>
-        $(document).ready(function () {
-
-            // Initialize Select2 validation (only if applicable)
-            validateSelect2Form('master_item', ['category_id']);
-        });
+        validateSelect2Form('master_item', [
+            'categoryId'
+        ]);
     </script>
-@endpush
+@endsection

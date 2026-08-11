@@ -221,10 +221,10 @@ class BarcodeController extends Controller
         } elseif (strlen($barcode) === 13) {
 
             // EAN-13 validation
-            if (!Settings::isValidUPC_A($barcode)) {
+            if (!Settings::isValidEAN13($barcode)) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Invalid EAN-13 barcode checksum.',
+                    'message' => 'Invalid EAN-13 barcode checksum. validateBarcodeRequisitionId',
                     'adjustmentType' => $adjustmentType,
                     'returnRoute' => $returnRoute
                 ]);
@@ -336,7 +336,7 @@ class BarcodeController extends Controller
             if (!Settings::isValidUPC_A($barcode)) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Invalid EAN-13 barcode checksum.',
+                    'message' => 'Invalid EAN-13 barcode checksum. validateBarcode',
                     'adjustmentType' => $adjustmentType,
                 ]);
             }

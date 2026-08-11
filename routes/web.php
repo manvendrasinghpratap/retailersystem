@@ -72,7 +72,7 @@ Route::middleware('auth')->post('/keep-alive', KeepAliveController::class)->name
 //     $message->to('m8005029425@gmail.com')
 //         ->subject('Test Mail');
 // });
-
+Route::get('logout', [KeepAliveController::class, 'logout'])->name('logout');
 Route::get('/generate-barcode', [BarcodeController::class, 'index']);
 Route::get('/', function () {
     return view('welcome');
@@ -288,38 +288,14 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
 
 });
 
-Route::prefix('admin')
-    ->middleware(['auth'])
-    ->group(function () {
-
-        Route::get(
-            'sale-returns',
-            [SaleReturnController::class, 'index']
-        )->name('admin.sale-returns');
-
-        Route::get(
-            'sale-returns/create',
-            [SaleReturnController::class, 'create']
-        )->name('admin.sale-returns.create');
-
-        Route::post(
-            'sale-returns/search-invoice',
-            [SaleReturnController::class, 'searchInvoice']
-        )->name('admin.sale-returns.search-invoice');
-
-        Route::post(
-            'sale-returns/find-barcode',
-            [SaleReturnController::class, 'findBarcode']
-        )->name('admin.sale-returns.find-barcode');
-
-        Route::post(
-            'sale-returns/store',
-            [SaleReturnController::class, 'store']
-        )->name('admin.sale-returns.store');
-
-        Route::get(
-            'sale-returns/{id}',
-            [SaleReturnController::class, 'show']
-        )->name('admin.sale-returns.show');
-    });
+Route::prefix('admin')->middleware(['auth'])->group(function () {
+    Route::get('sale-returns', [SaleReturnController::class, 'index'])->name('admin.sale-returns');
+    Route::get('sale-returns/create', [SaleReturnController::class, 'create'])->name('admin.sale-returns.create');
+    Route::post('sale-returns/search-invoice', [SaleReturnController::class, 'searchInvoice'])->name('admin.sale-returns.search-invoice');
+    Route::post('sale-returns/find-barcode', [SaleReturnController::class, 'findBarcode'])->name('admin.sale-returns.find-barcode');
+    Route::post('sale-returns/store', [SaleReturnController::class, 'store'])->name('admin.sale-returns.store');
+    Route::get('sale-returns/{id}', [SaleReturnController::class, 'show'])->name('admin.sale-returns.show');
+    Route::get('sales-return/scan-barcode', [SaleReturnController::class, 'scanBarcode'])->name('admin.sales-return.scan-barcode');
+    Route::post('sales-return/assign-customer', [SaleReturnController::class, 'assignCustomer'])->name('admin.sales-return.assign-customer');
+});
 

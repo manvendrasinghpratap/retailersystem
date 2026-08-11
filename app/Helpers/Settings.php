@@ -308,22 +308,80 @@ class Settings
 
         return false;
     }
+    /*
+     public static function isValidUPC_A($barcode)
+     {
+         // Must be exactly 12 digits
+         if (!preg_match('/^[0-9]{12}$/', $barcode)) {
+             return false;
+         }
+
+         $sum = 0;
+
+         for ($i = 0; $i < 12; $i++) {
+             $digit = (int) $barcode[$i];
+             $sum += ($i % 2 === 0) ? $digit : $digit * 3;
+         }
+
+         $checkDigit = (10 - ($sum % 10)) % 10;
+
+         return (int) $barcode[12] === $checkDigit;
+     }
+
+     */
+
     public static function isValidUPC_A($barcode)
     {
-        // Must be exactly 12 digits
+        // UPC-A must be exactly 12 digits
         if (!preg_match('/^[0-9]{12}$/', $barcode)) {
             return false;
         }
 
         $sum = 0;
 
-        for ($i = 0; $i < 12; $i++) {
+        // First 11 digits
+        for ($i = 0; $i < 11; $i++) {
             $digit = (int) $barcode[$i];
-            $sum += ($i % 2 === 0) ? $digit : $digit * 3;
+
+            // Positions 1,3,5,7,9,11 are multiplied by 3
+            $sum += ($i % 2 === 0)
+                ? $digit * 3
+                : $digit;
         }
 
+        // Calculate check digit
         $checkDigit = (10 - ($sum % 10)) % 10;
 
+        // Compare with 12th digit
+        return (int) $barcode[11] === $checkDigit;
+    }
+
+
+    public static function isValidEAN13($barcode)
+    {
+        // EAN-13 must be exactly 13 digits
+        if (!preg_match('/^[0-9]{13}$/', $barcode)) {
+            return false;
+        }
+
+        $sum = 0;
+
+        // First 12 digits
+        for ($i = 0; $i < 12; $i++) {
+            $digit = (int) $barcode[$i];
+
+            // EAN-13:
+            // Even indexes (0,2,4...) => x1
+            // Odd indexes (1,3,5...)  => x3
+            $sum += ($i % 2 === 0)
+                ? $digit
+                : $digit * 3;
+        }
+
+        // Calculate check digit
+        $checkDigit = (10 - ($sum % 10)) % 10;
+
+        // Compare with 13th digit
         return (int) $barcode[12] === $checkDigit;
     }
 

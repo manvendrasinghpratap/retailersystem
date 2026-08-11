@@ -330,7 +330,6 @@
         // 🔹 ADD TO CART
         // =========================
         function addToCart(product) {
-
             let stock = parseInt(product.stock) || 0;
             let price = parseFloat(product.price) || 0;
 
@@ -358,7 +357,9 @@
                     category_name: product.category_name || '-',
                     quantity: 1,
                     price: price,
-                    stock: stock
+                    stock: stock,
+                    tracking_ids: product.tracking_id ? [product.tracking_id] : [],
+                    barcodes: product.barcode ? [product.barcode] : []
                 });
             }
 

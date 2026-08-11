@@ -154,7 +154,7 @@ class PurchaseController extends Controller
     public function create()
     {
         $breadcrumb = $this->breadcrumb;
-        $vendors = Vendor::ofAccount()->active()->orderBy('name', 'asc')->pluck('name', 'id');
+        $vendors = Vendor::ofAccount()->active()->orderBy('company_name', 'asc')->pluck('company_name', 'id');
         $warehouses = Warehouse::ofAccount()->active()->orderBy('name', 'asc')->pluck('name', 'id');
         return view('backend.admin.purchase.form', compact('vendors', 'warehouses', 'breadcrumb'));
     }

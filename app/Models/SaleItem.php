@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use App\Models\SaleItemTracking;
 
 class SaleItem extends Model
 {
@@ -59,16 +60,26 @@ class SaleItem extends Model
     */
 
     // Item belongs to sale
+    // public function sale()
+    // {
+    //     return $this->belongsTo(Sale::class);
+    // }
+
     public function sale()
     {
-        return $this->belongsTo(Sale::class);
+        return $this->belongsTo(Sale::class, 'sale_id');
+    }
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class, 'product_id');
     }
 
     // Item belongs to product
-    public function product()
-    {
-        return $this->belongsTo(Product::class);
-    }
+    // public function product()
+    // {
+    //     return $this->belongsTo(Product::class);
+    // }
 
     /*
     |--------------------------------------------------------------------------
@@ -108,7 +119,8 @@ class SaleItem extends Model
             (float) $this->returned_qty
         );
     }
-
-
-
+    public function trackings()
+    {
+        return $this->hasMany(SaleItemTracking::class, 'sale_item_id');
+    }
 }

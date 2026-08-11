@@ -98,5 +98,10 @@ class PurchaseItemTracking extends Model
             ->sum('quantity');
     }
 
+    public function saleItemTrackings()
+    {
+        return $this->hasMany(SaleItemTracking::class, 'purchase_item_tracking_id');
+    }
+
 
 }

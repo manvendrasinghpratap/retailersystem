@@ -10,9 +10,11 @@ class SaleReturnItem extends Model
         'sale_return_id',
         'sale_item_id',
         'product_id',
+        'purchase_item_tracking_id',
         'quantity',
         'price',
         'total',
+        'reason',
     ];
 
     protected $casts = [
@@ -41,6 +43,13 @@ class SaleReturnItem extends Model
         return $this->hasMany(
             SaleReturnTracking::class,
             'sale_return_item_id'
+        );
+    }
+    public function purchaseItemTracking()
+    {
+        return $this->belongsTo(
+            PurchaseItemTracking::class,
+            'purchase_item_tracking_id'
         );
     }
 }

@@ -147,7 +147,7 @@ class MasterItemController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'category_id' => 'required|exists:categories,id',
+            'categoryId' => 'required|exists:categories,id',
             'name' => 'required|string|max:255',
             'status' => 'required|boolean',
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
@@ -161,7 +161,7 @@ class MasterItemController extends Controller
             }
 
             MasterItem::create([
-                'category_id' => $request->category_id,
+                'category_id' => $request->categoryId,
                 'name' => $request->name,
                 'code' => $request->code,
                 'description' => $request->description,
@@ -209,6 +209,7 @@ class MasterItemController extends Controller
         $id = Settings::getDecodeCode($request->id);
         $item = MasterItem::account()->findOrFail($id);
         $request->validate([
+            'categoryId' => 'required|exists:categories,id',
             'name' => 'required'
         ]);
         $imagePath = $item->image;
@@ -221,7 +222,7 @@ class MasterItemController extends Controller
             );
         }
         $item->update([
-            'category_id' => $request->category_id,
+            'category_id' => $request->categoryId,
             'name' => $request->name,
             'description' => $request->description,
             'status' => $request->status,
