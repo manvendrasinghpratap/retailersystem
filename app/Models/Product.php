@@ -124,4 +124,8 @@ class Product extends Model
     {
         return $this->hasMany(StockMovement::class);
     }
+    public function purchaseItemTrackings()
+    {
+        return $this->hasMany(PurchaseItemTracking::class, 'product_id', 'id');
+    }
 }

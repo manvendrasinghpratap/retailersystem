@@ -103,7 +103,17 @@ class ProductController extends Controller
     {
         $breadcrumb = $this->breadcrumbAddNew;
         $categories = Category::getCategoriesPluck();
-        $products = Product::getProducts();
+        // $products = Product::getProducts();
+        $products = Product::getProducts()
+            ->whereNotExists(function ($query) {
+                $query->select(\DB::raw(1))
+                    ->from('purchase_item_trackings')
+                    ->whereColumn(
+                        'purchase_item_trackings.barcode',
+                        'products.barcode'
+                    )
+                    ->where('purchase_item_trackings.is_sold', 1);
+            });
 
         if (request('name')) {
             $products->where('name', 'LIKE', '%' . request('name') . '%');
@@ -232,74 +242,41 @@ class ProductController extends Controller
         $masterItemName = null;
         $qty = $categoryId = $description = null;
         $costPrice = 0;
-
         if ($token) {
             try {
-
                 $data = Crypt::decrypt($token);
-
                 $adjustmentData = Settings::getInventoryAdjustment($data['adjustment']);
-
                 if (empty($adjustmentData['adjustment'])) {
                     return Settings::roleRedirect('inventory', 'Something went wrong!', 'error');
                 }
-
                 $route = $adjustmentData['route'];
                 $adjustment = $adjustmentData['adjustment'];
                 $barcode = $data['barcode'];
                 $productId = $data['product_id'];
                 $requisition_item_id = $data['requisition_item_id'];
-
                 // ==========================
                 // GET REQUISITION ITEM
                 // ==========================
-                $requisitionItem = RequisitionItem::with([
-                    'masterItem',
-                    'purchaseItemTracking.purchaseItem'
-                ])->find(Settings::getDecodeCode($requisition_item_id));
-
+                $requisitionItem = RequisitionItem::with(['masterItem', 'purchaseItemTracking.purchaseItem'])->find(Settings::getDecodeCode($requisition_item_id));
                 if ($requisitionItem) {
-
                     // Check requisition status
                     if ($response = $this->checkRequisitionStatus($requisitionItem)) {
                         return $response;
                     }
-
                     $masterItemName = $requisitionItem->masterItem->name ?? null;
                     $description = $requisitionItem->masterItem->description ?? null;
                     $qty = $requisitionItem->qty;
                     $categoryId = $requisitionItem->masterItem->category_id ?? null;
                     $costPrice = $requisitionItem->purchaseItemTracking?->purchaseItem?->cost_price ?? 0;
                 }
-
             } catch (\Exception $e) {
-
-                return redirect()
-                    ->route('admin.barcode')
-                    ->with('error', 'Invalid link');
+                return redirect()->route('admin.barcode')->with('error', 'Invalid link');
             }
         }
-
         $breadcrumb = $this->breadcrumbListing;
         $categories = Category::getCategoriesPluck();
-
-        return view(
-            'backend.admin.product.form',
-            compact(
-                'categories',
-                'breadcrumb',
-                'barcode',
-                'productId',
-                'route',
-                'adjustment',
-                'requisition_item_id',
-                'masterItemName',
-                'qty',
-                'categoryId',
-                'costPrice',
-                'description'
-            )
-        );
+        $breadcrumb['reset_route'] = 'admin.requisitions.pending.posting';
+        return view('backend.admin.product.form', compact('categories', 'breadcrumb', 'barcode', 'productId', 'route', 'adjustment', 'requisition_item_id', 'masterItemName', 'qty', 'categoryId', 'costPrice', 'description'));
     }
 
     private function checkRequisitionStatus(RequisitionItem $requisitionItem)
@@ -423,8 +400,6 @@ class ProductController extends Controller
         $breadcrumb = $this->breadcrumbListing;
         $product = Product::where('account_id', auth()->user()->account_id)->findOrFail($id);
         $categories = Category::ofAccount()->notDeleted()->pluck('name', 'id');
-
-
         return view('backend.admin.product.form', compact('product', 'categories', 'breadcrumb', 'route'));
     }
 
