@@ -27,7 +27,7 @@ class AccountSettingService
     protected function load(): array
     {
         $accountId = $this->accountId();
-        // $this->clearCache($accountId);
+        //$this->clearCache($accountId);
         // Already loaded during this request
         if (isset(self::$loadedSettings[$accountId])) {
             return self::$loadedSettings[$accountId];

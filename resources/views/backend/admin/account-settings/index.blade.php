@@ -32,8 +32,9 @@
                                     <tr>
                                         <td>{{ $index + 1 }}</td>
                                         <td>{{ ucwords(str_replace('_', ' ', $setting->module)) }}</td>
-                                        <td>{{-- count($setting->settings ?? []) --}}<!--<br>-->
-                                            {{ implode(', ', array_keys($setting->settings ?? [])) }}
+                                        <td>{{ implode(', ', array_intersect(array_keys($setting->settings ?? []), ['tax', 'session_timeout', 'warning_before', 'pagination']))}} {{-- count($setting->settings ?? []) --}}
+                                            {{-- <br> --}}
+                                            {{-- {{ implode(', ', array_keys($setting->settings ?? [])) }} --}}
                                         </td>
                                         <td>{{ App\Helpers\Settings::getFormattedDatetime($setting->updated_at)}}</td>
                                         <td class="text-center">

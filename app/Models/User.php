@@ -230,17 +230,31 @@ class User extends Authenticatable
 
     public function hasDesignation()
     {
-        return in_array($this->designation_id, [1, 2]);
+        if (session('is_admin') == 1 || session('is_cashier') == 1) {
+            return true;
+        }
+        return false;
     }
 
     public function isAdmin()
     {
-        return $this->designation_id == 2;
+        if (session('is_admin') == 1) {
+            return true;
+        }
+        return false;
     }
 
     public function isStaff()
     {
         return $this->is_staff == 1;
+    }
+
+    public function isCashier()
+    {
+        if (session('is_cashier') == 1) {
+            return true;
+        }
+        return false;
     }
 
     /*

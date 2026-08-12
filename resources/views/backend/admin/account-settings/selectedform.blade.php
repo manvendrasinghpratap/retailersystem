@@ -39,31 +39,28 @@
                                     <tr>
                                         <th width="35%"> {{ __('translation.setting_key') }}</th>
                                         <th> {{ __('translation.setting_value') }}</th>
-                                        <th width="80"> {{ __('translation.action') }}</th>
+                                        <!-- <th width="80"> {{ __('translation.action') }}</th> -->
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @if(isset($accountSetting) && !empty($accountSetting->settings))
+                                        @php
+                                            $allowedSettings = ['tax', 'session_timeout', 'warning_before', 'pagination'];
+                                        @endphp
                                         @foreach($accountSetting->settings as $key => $value)
-                                            <tr>
-                                                <td><input type="text" name="keys[]" class="form-control" value="{{ $key }}" required readonly></td>
-                                                <td><input type="text" name="values[]" class="form-control" value="{{ $value }}"></td>
-                                                <td class="text-center">
-                                                    <button type="button" class="btn btn-danger btn-sm removeRow">
-                                                        <i class="bx bx-trash"></i>
-                                                    </button>
-                                                </td>
-                                            </tr>
+                                            @if(in_array($key, $allowedSettings))
+                                                <tr>
+                                                    <td><input type="text" name="keys[]" class="form-control" value="{{ $key }}" required readonly></td>
+                                                    <td><input type="text" name="values[]" class="form-control" value="{{ $value }}"></td>
+                                                    <!-- <td class="text-center"><button type="button" class="btn btn-danger btn-sm removeRow"><i class="bx bx-trash"></i></button></td> -->
+                                                </tr>
+                                            @endif
                                         @endforeach
                                     @else
                                         <tr>
-                                            <td><input type="text" name="keys[]" class="form-control" placeholder="invoice_prefix" required></td>
+                                            <td><input type="text" name="keys[]" class="form-control" value="tax" required readonly></td>
                                             <td><input type="text" name="values[]" class="form-control"></td>
-                                            <td class="text-center">
-                                                <button type="button" class="btn btn-danger btn-sm removeRow">
-                                                    <i class="bx bx-trash"></i>
-                                                </button>
-                                            </td>
+                                            <td class="text-center"><button type="button" class="btn btn-danger btn-sm removeRow"><i class="bx bx-trash"></i></button></td>
                                         </tr>
                                     @endif
                                 </tbody>

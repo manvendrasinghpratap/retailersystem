@@ -38,413 +38,78 @@
                     {{-- Sale ID --}}
                     <input type="hidden" name="sale_id" id="sale_id" value="{{ old('sale_id') }}">
                 </div>
-                {{-- ======================================================
-                BARCODE SCANNER
-                ======================================================= --}}
-
                 <div class="row mb-3">
-
                     <div class="col-md-6">
-
-                        <label for="return_barcode" class="form-label">
-
-                            Scan Product Barcode
-
-                            <span class="text-danger">
-                                *
-                            </span>
-
-                        </label>
-
-
+                        <label for="return_barcode" class="form-label">Scan Product Barcode <span class="text-danger">*</span></label>
                         <div class="input-group">
-
                             <input type="text" id="return_barcode" class="form-control" placeholder="Scan barcode..." autocomplete="off" inputmode="none">
-
-
-                            <button type="button" class="btn btn-primary" id="scanBarcodeBtn">
-
-                                <i class="ri-barcode-line me-1"></i>
-
-                                Scan
-
-                            </button>
-
+                            <button type="button" class="btn btn-primary" id="scanBarcodeBtn"><i class="ri-barcode-line me-1"></i> Scan</button>
                         </div>
-
-
-                        <small class="text-muted">
-
-                            Scan the product barcode to add it to the return.
-
-                        </small>
-
+                        <small class="text-muted">Scan the product barcode to add it to the return.</small>
                     </div>
-
                 </div>
-
-
-                {{-- ======================================================
-                RETURN ITEMS
-                ======================================================= --}}
-
                 <div class="table-responsive mt-3">
-
                     <table class="table table-striped align-middle" id="returnItemsTable">
-
                         <thead>
-
                             <tr>
-
-                                <th width="40">
-                                    #
-                                </th>
-
-                                <th>
-                                    {{ __('translation.product') }}
-                                </th>
-
-                                <th width="120">
-                                    {{ __('translation.sold_qty') }}
-                                </th>
-
-                                <th width="140">
-                                    {{ __('translation.returned_qty') }}
-                                </th>
-
-                                <th width="140">
-                                    {{ __('translation.price') }}
-                                </th>
-
-                                <th width="150">
-                                    {{ __('translation.return_amount') }}
-                                </th>
-
-                                <th width="100">
-                                    {{ __('translation.action') }}
-                                </th>
-
+                                <th width="40">#</th>
+                                <th>{{ __('translation.product') }}</th>
+                                <th width="120">{{ __('translation.sold_qty') }}</th>
+                                <th width="140">{{ __('translation.returned_qty') }}</th>
+                                <th width="140">{{ __('translation.price') }}</th>
+                                <th width="150">{{ __('translation.return_amount') }}</th>
+                                <th width="100">{{ __('translation.action') }}</th>
                             </tr>
-
                         </thead>
-
-
                         <tbody id="returnItemsBody">
-
                             <tr class="empty-return-row">
-
-                                <td colspan="7" class="text-center text-muted">
-
-                                    {{ __('translation.enter_invoice_number_to_load_sale_items') }}
-
-                                </td>
-
+                                <td colspan="7" class="text-center text-muted">{{ __('translation.enter_invoice_number_to_load_sale_items') }}</td>
                             </tr>
-
                         </tbody>
-
-
                         <tfoot>
-
                             <tr>
-
-                                <th colspan="6" class="text-end">
-
-                                    {{ __('translation.total_return_amount') }}
-
-                                </th>
-
-                                <th>
-
-                                    <input type="text" id="return_total" name="return_total" class="form-control" value="0.00" readonly>
-
-                                </th>
-
+                                <th colspan="6" class="text-end">{{ __('translation.total_return_amount') }}</th>
+                                <th><input type="text" id="return_total" name="return_total" class="form-control" value="0.00" readonly></th>
                             </tr>
-
                         </tfoot>
-
                     </table>
-
                 </div>
-
-
-                {{-- ======================================================
-                RETURN DETAILS
-                ======================================================= --}}
-
                 <div class="row mt-3">
-
                     <x-textarea-input name="reason" label="Reason" value="{{ old('reason') }}" rows="1" cols="50" :mainrows="12" required placeholder="Enter return reason" />
-
                 </div>
-
-
-                {{-- ======================================================
-                WALLET INFORMATION
-                ======================================================= --}}
-
                 <div class="alert alert-info mt-3">
-
                     <i class="ri-wallet-3-line me-1"></i>
-
-                    <strong>Customer Wallet:</strong>
-
-                    The return amount will be automatically added
-                    to the customer's wallet balance.
-
+                    <strong>Customer Wallet:</strong>The return amount will be automatically added to the customer's wallet balance.
                 </div>
-
-
-                {{-- ======================================================
-                BUTTONS
-                ======================================================= --}}
-
                 <div class="row mt-3">
-
                     <x-form-buttons submitText="Save Customer Return" resetText="{{ $breadcrumb['reset_route_title'] }}" url="{{ route($breadcrumb['reset_route']) }}" />
-
                 </div>
-
             </form>
-
         </div>
     </div>
-
-
     {{-- ==========================================================
     CUSTOMER MODAL
     ========================================================== --}}
-
-    <div class="modal fade" id="customerModal" tabindex="-1" aria-labelledby="customerModalLabel" aria-hidden="true">
-
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-
-            <div class="modal-content">
-
-
-                {{-- HEADER --}}
-
-                <div class="modal-header">
-
-                    <h5 class="modal-title" id="customerModalLabel">
-
-                        <i class="ri-user-add-line me-1"></i>
-
-                        Add Customer
-
-                    </h5>
-
-
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-
-                </div>
-
-
-                {{-- BODY --}}
-
-                <div class="modal-body">
-
-
-                    <div class="alert alert-warning">
-
-                        <i class="ri-information-line me-1"></i>
-
-                        <strong>Customer Required</strong>
-
-                        <br>
-
-                        This invoice is not linked to a customer.
-                        Please add customer information before processing the return.
-
-                    </div>
-
-
-                    {{-- Sale ID --}}
-
-                    <input type="hidden" id="customer_modal_sale_id">
-
-
-                    {{-- Invoice Information --}}
-
-                    <div class="row mb-3">
-
-                        <div class="col-md-6">
-
-                            <label class="form-label">
-                                Invoice Number
-                            </label>
-
-                            <input type="text" class="form-control" id="modal_invoice_no" readonly>
-
-                        </div>
-
-
-                        <div class="col-md-6">
-
-                            <label class="form-label">
-                                Barcode
-                            </label>
-
-                            <input type="text" class="form-control" id="modal_barcode" readonly>
-
-                        </div>
-
-                    </div>
-
-
-                    {{-- Customer Information --}}
-
-                    <div class="row">
-
-                        {{-- Name --}}
-
-                        <div class="col-md-6 mb-3">
-
-                            <label for="modal_customer_name" class="form-label">
-
-                                Customer Name
-
-                                <span class="text-danger">
-                                    *
-                                </span>
-
-                            </label>
-
-
-                            <input type="text" id="modal_customer_name" class="form-control" maxlength="255" placeholder="Enter customer name">
-
-
-                            <div class="invalid-feedback" id="modal_customer_name_error"></div>
-
-                        </div>
-
-
-                        {{-- Phone --}}
-
-                        <div class="col-md-6 mb-3">
-
-                            <label for="modal_customer_phone" class="form-label">
-
-                                Phone
-
-                                <span class="text-danger">
-                                    *
-                                </span>
-
-                            </label>
-
-
-                            <input type="text" id="modal_customer_phone" class="form-control" maxlength="50" placeholder="Enter phone number">
-
-
-                            <div class="invalid-feedback" id="modal_customer_phone_error"></div>
-
-                        </div>
-
-                    </div>
-
-
-                    {{-- Email --}}
-
-                    <div class="row">
-
-                        <div class="col-md-12 mb-3">
-
-                            <label for="modal_customer_email" class="form-label">
-
-                                Email
-
-                            </label>
-
-
-                            <input type="email" id="modal_customer_email" class="form-control" maxlength="255" placeholder="Enter email address">
-
-
-                            <div class="invalid-feedback" id="modal_customer_email_error"></div>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-                {{-- FOOTER --}}
-
-                <div class="modal-footer">
-
-                    <button type="button" class="btn btn-secondary" id="cancelCustomerModal" data-bs-dismiss="modal">
-
-                        <i class="ri-close-line me-1"></i>
-
-                        Cancel
-
-                    </button>
-
-
-                    <button type="button" class="btn btn-primary" id="saveCustomerBtn">
-
-                        <i class="ri-user-add-line me-1"></i>
-
-                        Create & Link Customer
-
-                    </button>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
+    @include('backend.modal.add-customer-modal')
 @endsection
-
-
 @section('script')
-
     <script>
-
         $(document).ready(function () {
-
-            /*
-            |--------------------------------------------------------------------------
-            | VARIABLES
-            |--------------------------------------------------------------------------
-            */
-
             let scanProcessing = false;
             let customerSaving = false;
             let returnProcessing = false;
-
             let rowIndex = 0;
-
             let pendingCustomerSaleId = null;
             let pendingCustomerBarcode = null;
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | ROUTES
-            |--------------------------------------------------------------------------
-            */
-
-            const scanBarcodeUrl =
-                "{{ route('admin.sales-return.scan-barcode') }}";
-
-            const assignCustomerUrl =
-                "{{ route('admin.sales-return.assign-customer') }}";
-
-
+            const scanBarcodeUrl = "{{ route('admin.sales-return.scan-barcode') }}";
+            const assignCustomerUrl = "{{ route('admin.sales-return.assign-customer') }}";
             /*
             |--------------------------------------------------------------------------
             | CUSTOMER MODAL
             |--------------------------------------------------------------------------
             */
 
-            const customerModalElement =
-                document.getElementById('customerModal');
+            const customerModalElement = document.getElementById('customerModal');
 
             let customerModal = null;
 
@@ -522,15 +187,15 @@
                     }
 
                     $('#returnItemsBody').html(`
-                                                                <tr class="empty-return-row">
-                                                                    <td
-                                                                        colspan="7"
-                                                                        class="text-center text-muted"
-                                                                    >
-                                                                        Scan a product barcode to add it to the return.
-                                                                    </td>
-                                                                </tr>
-                                                            `);
+                                                        <tr class="empty-return-row">
+                                                            <td
+                                                                colspan="7"
+                                                                class="text-center text-muted"
+                                                            >
+                                                                Scan a product barcode to add it to the return.
+                                                            </td>
+                                                        </tr>
+                                                    `);
 
                     rowIndex = 0;
 
@@ -1223,12 +888,12 @@
                 $button
                     .prop('disabled', true)
                     .html(`
-                                                                <span
-                                                                    class="spinner-border spinner-border-sm me-1"
-                                                                    role="status"
-                                                                ></span>
-                                                                Saving...
-                                                            `);
+                                                                                                                                                                                                        <span
+                                                                                                                                                                                                            class="spinner-border spinner-border-sm me-1"
+                                                                                                                                                                                                            role="status"
+                                                                                                                                                                                                        ></span>
+                                                                                                                                                                                                        Saving...
+                                                                                                                                                                                                    `);
 
 
                 /*
@@ -1808,142 +1473,142 @@
 
                 const row = `
 
-                                                            <tr
-                                                                class="return-item-row table-warning"
-                                                                data-sale-item-id="${saleItemId}"
-                                                                data-tracking-id="${trackingId}"
-                                                                data-barcode="${escapeHtml(barcode)}"
-                                                            >
+                                                                                                                                                                                                    <tr
+                                                                                                                                                                                                        class="return-item-row table-warning"
+                                                                                                                                                                                                        data-sale-item-id="${saleItemId}"
+                                                                                                                                                                                                        data-tracking-id="${trackingId}"
+                                                                                                                                                                                                        data-barcode="${escapeHtml(barcode)}"
+                                                                                                                                                                                                    >
 
-                                                                <td>
-                                                                    ${$('#returnItemsBody tr.return-item-row').length + 1}
-                                                                </td>
-
-
-                                                                <td>
-
-                                                                    <strong>
-                                                                        ${escapeHtml(productName)}
-                                                                    </strong>
-
-                                                                    <br>
-
-                                                                    <small class="text-muted">
-
-                                                                        Barcode:
-                                                                        ${escapeHtml(barcode)}
-
-                                                                    </small>
-
-                                                                </td>
+                                                                                                                                                                                                        <td>
+                                                                                                                                                                                                            ${$('#returnItemsBody tr.return-item-row').length + 1}
+                                                                                                                                                                                                        </td>
 
 
-                                                                <td>
+                                                                                                                                                                                                        <td>
 
-                                                                    <span class="soldQty">
-                                                                        ${returnableQty}
-                                                                    </span>
+                                                                                                                                                                                                            <strong>
+                                                                                                                                                                                                                ${escapeHtml(productName)}
+                                                                                                                                                                                                            </strong>
 
-                                                                </td>
+                                                                                                                                                                                                            <br>
 
+                                                                                                                                                                                                            <small class="text-muted">
 
-                                                                <td>
+                                                                                                                                                                                                                Barcode:
+                                                                                                                                                                                                                ${escapeHtml(barcode)}
 
-                                                                    <input
-                                                                        type="number"
-                                                                        class="form-control returnQty"
-                                                                        value="1"
-                                                                        min="1"
-                                                                        max="1"
-                                                                        data-sale-item-id="${saleItemId}"
-                                                                        data-tracking-id="${trackingId}"
-                                                                        data-barcode="${escapeHtml(barcode)}"
-                                                                        data-price="${price}"
-                                                                        readonly
-                                                                    >
+                                                                                                                                                                                                            </small>
+
+                                                                                                                                                                                                        </td>
 
 
-                                                                    <input
-                                                                        type="hidden"
-                                                                        name="items[${currentIndex}][sale_item_id]"
-                                                                        value="${saleItemId}"
-                                                                    >
+                                                                                                                                                                                                        <td>
+
+                                                                                                                                                                                                            <span class="soldQty">
+                                                                                                                                                                                                                ${returnableQty}
+                                                                                                                                                                                                            </span>
+
+                                                                                                                                                                                                        </td>
 
 
-                                                                    <input
-                                                                        type="hidden"
-                                                                        name="items[${currentIndex}][product_id]"
-                                                                        value="${productId}"
-                                                                    >
+                                                                                                                                                                                                        <td>
+
+                                                                                                                                                                                                            <input
+                                                                                                                                                                                                                type="number"
+                                                                                                                                                                                                                class="form-control returnQty"
+                                                                                                                                                                                                                value="1"
+                                                                                                                                                                                                                min="1"
+                                                                                                                                                                                                                max="1"
+                                                                                                                                                                                                                data-sale-item-id="${saleItemId}"
+                                                                                                                                                                                                                data-tracking-id="${trackingId}"
+                                                                                                                                                                                                                data-barcode="${escapeHtml(barcode)}"
+                                                                                                                                                                                                                data-price="${price}"
+                                                                                                                                                                                                                readonly
+                                                                                                                                                                                                            >
 
 
-                                                                    <input
-                                                                        type="hidden"
-                                                                        name="items[${currentIndex}][tracking_ids][]"
-                                                                        value="${trackingId}"
-                                                                    >
+                                                                                                                                                                                                            <input
+                                                                                                                                                                                                                type="hidden"
+                                                                                                                                                                                                                name="items[${currentIndex}][sale_item_id]"
+                                                                                                                                                                                                                value="${saleItemId}"
+                                                                                                                                                                                                            >
 
 
-                                                                    <input
-                                                                        type="hidden"
-                                                                        name="items[${currentIndex}][barcode][]"
-                                                                        value="${escapeHtml(barcode)}"
-                                                                    >
+                                                                                                                                                                                                            <input
+                                                                                                                                                                                                                type="hidden"
+                                                                                                                                                                                                                name="items[${currentIndex}][product_id]"
+                                                                                                                                                                                                                value="${productId}"
+                                                                                                                                                                                                            >
 
 
-                                                                    <input
-                                                                        type="hidden"
-                                                                        name="items[${currentIndex}][quantity]"
-                                                                        value="1"
-                                                                        class="returnQuantityHidden"
-                                                                    >
+                                                                                                                                                                                                            <input
+                                                                                                                                                                                                                type="hidden"
+                                                                                                                                                                                                                name="items[${currentIndex}][tracking_ids][]"
+                                                                                                                                                                                                                value="${trackingId}"
+                                                                                                                                                                                                            >
 
 
-                                                                    <input
-                                                                        type="hidden"
-                                                                        name="items[${currentIndex}][price]"
-                                                                        value="${price}"
-                                                                    >
-
-                                                                </td>
+                                                                                                                                                                                                            <input
+                                                                                                                                                                                                                type="hidden"
+                                                                                                                                                                                                                name="items[${currentIndex}][barcode][]"
+                                                                                                                                                                                                                value="${escapeHtml(barcode)}"
+                                                                                                                                                                                                            >
 
 
-                                                                <td>
-
-                                                                    ${currencyValue(price)}
-
-                                                                </td>
-
-
-                                                                <td>
-
-                                                                    <span class="returnAmount">
-
-                                                                        ${price.toFixed(2)}
-
-                                                                    </span>
-
-                                                                </td>
+                                                                                                                                                                                                            <input
+                                                                                                                                                                                                                type="hidden"
+                                                                                                                                                                                                                name="items[${currentIndex}][quantity]"
+                                                                                                                                                                                                                value="1"
+                                                                                                                                                                                                                class="returnQuantityHidden"
+                                                                                                                                                                                                            >
 
 
-                                                                <td>
+                                                                                                                                                                                                            <input
+                                                                                                                                                                                                                type="hidden"
+                                                                                                                                                                                                                name="items[${currentIndex}][price]"
+                                                                                                                                                                                                                value="${price}"
+                                                                                                                                                                                                            >
 
-                                                                    <button
-                                                                        type="button"
-                                                                        class="btn btn-danger btn-sm deleteReturnItem"
-                                                                    >
+                                                                                                                                                                                                        </td>
 
-                                                                        <i class="ri-delete-bin-line"></i>
 
-                                                                        Delete
+                                                                                                                                                                                                        <td>
 
-                                                                    </button>
+                                                                                                                                                                                                            ${currencyValue(price)}
 
-                                                                </td>
+                                                                                                                                                                                                        </td>
 
-                                                            </tr>
 
-                                                        `;
+                                                                                                                                                                                                        <td>
+
+                                                                                                                                                                                                            <span class="returnAmount">
+
+                                                                                                                                                                                                                ${price.toFixed(2)}
+
+                                                                                                                                                                                                            </span>
+
+                                                                                                                                                                                                        </td>
+
+
+                                                                                                                                                                                                        <td>
+
+                                                                                                                                                                                                            <button
+                                                                                                                                                                                                                type="button"
+                                                                                                                                                                                                                class="btn btn-danger btn-sm deleteReturnItem"
+                                                                                                                                                                                                            >
+
+                                                                                                                                                                                                                <i class="ri-delete-bin-line"></i>
+
+                                                                                                                                                                                                                Delete
+
+                                                                                                                                                                                                            </button>
+
+                                                                                                                                                                                                        </td>
+
+                                                                                                                                                                                                    </tr>
+
+                                                                                                                                                                                                `;
 
 
                 $('#returnItemsBody')
@@ -2081,21 +1746,21 @@
 
                             $('#returnItemsBody').html(`
 
-                                                                        <tr class="empty-return-row">
+                                                                                                                                                                                                                <tr class="empty-return-row">
 
-                                                                            <td
-                                                                                colspan="7"
-                                                                                class="text-center text-muted"
-                                                                            >
+                                                                                                                                                                                                                    <td
+                                                                                                                                                                                                                        colspan="7"
+                                                                                                                                                                                                                        class="text-center text-muted"
+                                                                                                                                                                                                                    >
 
-                                                                                Scan a product barcode to add it
-                                                                                to the return.
+                                                                                                                                                                                                                        Scan a product barcode to add it
+                                                                                                                                                                                                                        to the return.
 
-                                                                            </td>
+                                                                                                                                                                                                                    </td>
 
-                                                                        </tr>
+                                                                                                                                                                                                                </tr>
 
-                                                                    `);
+                                                                                                                                                                                                            `);
 
                         }
 

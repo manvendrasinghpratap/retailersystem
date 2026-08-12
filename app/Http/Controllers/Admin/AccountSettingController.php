@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use App\Helpers\Settings;
 use App\Models\AccountModule;
+use App\Services\AccountSettingService;
 
 class AccountSettingController extends Controller
 {
@@ -38,10 +39,10 @@ class AccountSettingController extends Controller
                     'route' => 'admin.account-settings.index',
                     'title' => __('translation.account_settings'),
                 ],
-                [
-                    'route' => 'admin.account-settings.create',
-                    'title' => __('translation.add_account_setting'),
-                ],
+                // [
+                //     'route' => 'admin.account-settings.create',
+                //     'title' => __('translation.add_account_setting'),
+                // ],
             ],
         ];
 
@@ -62,10 +63,10 @@ class AccountSettingController extends Controller
                     'route' => 'admin.account-settings.index',
                     'title' => __('translation.account_settings'),
                 ],
-                [
-                    'route' => 'admin.account-settings.create',
-                    'title' => __('translation.add_account_setting'),
-                ],
+                // [
+                //     'route' => 'admin.account-settings.create',
+                //     'title' => __('translation.add_account_setting'),
+                // ],
             ],
         ];
     }
@@ -77,7 +78,7 @@ class AccountSettingController extends Controller
     {
         $modules = AccountModule::getSelectable();
         $breadcrumb = $this->breadcrumbListing;
-        $accountSettings = AccountSetting::ofAccount()->orderBy('module')->get();
+        $accountSettings = AccountSetting::ofAccount()->where('module', '=', 'general')->orderBy('module')->get();
         return view('backend.admin.account-settings.index', compact('breadcrumb', 'accountSettings', 'modules'));
     }
 
@@ -91,7 +92,7 @@ class AccountSettingController extends Controller
         // $availableModules = Settings::getAvailableModules();
         $availableModules = AccountModule::getSelectable();
 
-        return view('backend.admin.account-settings.form', compact('breadcrumb', 'availableModules'));
+        return view('backend.admin.account-settings.selectedform', compact('breadcrumb', 'availableModules'));
     }
 
     /**
@@ -150,13 +151,13 @@ class AccountSettingController extends Controller
                         'route' => 'admin.account-settings.index',
                         'title' => __('translation.account_settings'),
                     ],
-                    [
-                        'route' => 'admin.account-settings.create',
-                        'title' => __('translation.add_account_setting'),
-                    ],
+                    // [
+                    //     'route' => 'admin.account-settings.create',
+                    //     'title' => __('translation.add_account_setting'),
+                    // ],
                 ],
             ];
-            return view('backend.admin.account-settings.form', compact('accountSetting', 'breadcrumb'));
+            return view('backend.admin.account-settings.selectedform', compact('accountSetting', 'breadcrumb'));
         } catch (\Exception $e) {
             return redirect()->route('admin.account-settings.index')->with('error', $e->getMessage());
         }
@@ -165,7 +166,94 @@ class AccountSettingController extends Controller
     /**
      * Update
      */
-    public function update(Request $request, $id)
+    public function update_working_for_all(Request $request, AccountSettingService $accountSettingService, $id)
+    {
+        $validator = $this->validateRequest($request, $id);
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+        DB::beginTransaction();
+        try {
+            $accountSetting = AccountSetting::ofAccount()->findOrFail($id);
+            $accountSetting->update(['settings' => Settings::buildSettings($request),]);
+            DB::commit();
+            // Clear account settings cache after successful update
+            $accountSettingService->clearCache($accountSetting->account_id);
+            return redirect()->route('admin.account-settings.index')->with('success', __('translation.record_updated_successfully'));
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->withInput()->with('error', $e->getMessage());
+        }
+    }
+
+    public function update(Request $request, AccountSettingService $accountSettingService, $id)
+    {
+        $validator = $this->validateRequest($request, $id);
+
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $accountSetting = AccountSetting::ofAccount()->findOrFail($id);
+
+            // Get existing JSON settings
+            $settings = $accountSetting->settings ?? [];
+
+            // Only these settings can be updated
+            $allowedSettings = [
+                'tax',
+                'session_timeout',
+                'warning_before',
+                'pagination',
+            ];
+
+            $keys = $request->input('keys', []);
+            $values = $request->input('values', []);
+
+            foreach ($keys as $index => $key) {
+
+                // Ignore any key that is not allowed
+                if (!in_array($key, $allowedSettings, true)) {
+                    continue;
+                }
+
+                // Update only the allowed setting
+                $settings[$key] = $values[$index] ?? null;
+            }
+
+            // Save complete settings JSON
+            // Existing values remain unchanged
+            $accountSetting->update([
+                'settings' => $settings,
+            ]);
+
+            DB::commit();
+
+            // Clear cached settings
+            $accountSettingService->clearCache($accountSetting->account_id);
+
+            return redirect()
+                ->route('admin.account-settings.index')
+                ->with(
+                    'success',
+                    __('translation.record_updated_successfully')
+                );
+
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', $e->getMessage());
+        }
+    }
+
+    public function update_old(Request $request, AccountSettingService $accountSettingService, $id)
     {
         $validator = $this->validateRequest($request, $id);
         if ($validator->fails()) {

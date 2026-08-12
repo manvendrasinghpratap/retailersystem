@@ -50,53 +50,11 @@ class AuthenticatedSessionController extends Controller
         }
 
         $request->session()->regenerate();
+        session(['is_admin' => (auth()->user()->designation && auth()->user()->designation->name === 'Admin') ? 1 : 0]);
+        session(['is_cashier' => (auth()->user()->designation && auth()->user()->designation->name === 'Cashier') ? 1 : 0]);
 
         return redirect($this->redirectByRole($user));
     }
-
-    public function store_old(LoginRequest $request): RedirectResponse
-    {
-        $request->authenticate();
-
-        $user = auth()->user();
-
-        // Check account status
-        if ($user->id != 1 && (!$user->account || $user->account->status != 1)) {
-
-            auth()->logout();
-
-            return back()->withErrors([
-                'email' => 'Your main account has been deactivated. Please contact support.',
-            ]);
-        }
-
-        // Check subscription status
-        if (!$user->account->hasActiveSubscription()) {
-
-            auth()->logout();
-
-            return back()->withErrors([
-                'email' => 'Your subscription has expired. Please renew your subscription.',
-            ]);
-        }
-
-        $request->session()->regenerate();
-
-        return redirect($this->redirectByRole($user));
-    }
-
-
-    public function store_delete(LoginRequest $request): RedirectResponse
-    {
-        $request->authenticate();
-
-        $request->session()->regenerate();
-
-        $user = auth()->user();
-
-        return redirect($this->redirectByRole($user));
-    }
-
 
 
 
@@ -147,7 +105,10 @@ class AuthenticatedSessionController extends Controller
             ], 422);
         }
 
+
         $request->session()->regenerate();
+        session(['is_admin' => (auth()->user()->designation && auth()->user()->designation->name === 'Admin') ? 1 : 0]);
+        session(['is_cashier' => (auth()->user()->designation && auth()->user()->designation->name === 'Cashier') ? 1 : 0]);
 
         return response()->json([
             'status' => true,
