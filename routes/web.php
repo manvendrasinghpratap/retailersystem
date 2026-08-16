@@ -126,6 +126,8 @@ Route::middleware(['auth', 'route.permission', 'subscription'])->group(function 
     Route::get('/sales/{sale}', [SaleController::class, 'show'])->name('admin.sales.show');
     Route::get('/sales/{sale}/payment-details', [SaleController::class, 'paymentDetails'])->name('admin.sales.payment-details');
     Route::post('/sales/save-credit-payment', [SaleController::class, 'saveCreditPayment'])->name('admin.sales.save-credit-payment');
+    Route::post('/sales/approve-credit/{id}', [BillingController::class, 'approveCreditSale'])->name('admin.sales.approve-credit');
+    // Route::post('/sales/approve-credit/{id}', [SaleController::class, 'approveCreditSale'])->name('admin.sales.approve-credit');
 });
 Route::middleware(['auth', 'route.permission', 'subscription'])->group(function () {
     Route::get('admin/print/invoice/{id}', [SaleController::class, 'printinvoice'])->name('printinvoice');
@@ -254,7 +256,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'route.permission', 
         Route::post('/barcode/search', [RequisitionController::class, 'searchBarcode'])->name('barcode.search');
     });
 });
-
 require __DIR__ . '/auth.php';
 require __DIR__ . '/admin.php';
 require __DIR__ . '/administrator.php';

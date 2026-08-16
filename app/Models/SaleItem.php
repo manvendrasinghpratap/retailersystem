@@ -2,13 +2,20 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use App\Models\SaleItemTracking;
 
 class SaleItem extends Model
 {
     protected $table = 'sale_items';
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | MASS ASSIGNMENT
+    |--------------------------------------------------------------------------
+    */
 
     protected $fillable = [
         'account_id',
@@ -19,85 +26,139 @@ class SaleItem extends Model
         'total',
     ];
 
+
     /*
     |--------------------------------------------------------------------------
-    | Boot Method
+    | CASTS
+    |--------------------------------------------------------------------------
+    */
+
+    protected $casts = [
+        'quantity' => 'integer',
+        'price' => 'decimal:2',
+        'total' => 'decimal:2',
+    ];
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | BOOT
     |--------------------------------------------------------------------------
     */
 
     protected static function booted()
     {
+        /*
+        |--------------------------------------------------------------------------
+        | Creating
+        |--------------------------------------------------------------------------
+        */
+
         static::creating(function ($item) {
 
-            // Auto assign account_id
+            // Automatically assign account
+            // from currently logged-in user.
             if (auth()->check()) {
                 $item->account_id = auth()->user()->account_id;
             }
 
-            // Auto calculate total
-            $item->total = $item->quantity * $item->price;
+            // Automatically calculate item total.
+            $item->total =
+                (float) $item->quantity *
+                (float) $item->price;
         });
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Created
+        |--------------------------------------------------------------------------
+        */
 
         static::created(function ($item) {
 
-            // 🔥 Automatically deduct stock using StockAdjustment
+            /*
+            |--------------------------------------------------------------------------
+            | Automatically deduct stock
+            |--------------------------------------------------------------------------
+            |
+            | StockAdjustment handles the actual stock movement.
+            |
+            */
+
             StockAdjustment::create([
                 'account_id' => $item->account_id,
                 'product_id' => $item->product_id,
                 'type' => 'sale',
                 'quantity' => $item->quantity,
                 'reference_id' => $item->sale_id,
-                'note' => 'POS Sale Invoice #' . $item->sale->invoice_no,
+                'note' => 'POS Sale Invoice #'
+                    . optional($item->sale)->invoice_no,
                 'created_by' => auth()->id(),
             ]);
         });
     }
 
+
     /*
     |--------------------------------------------------------------------------
-    | Relationships
+    | RELATIONSHIPS
     |--------------------------------------------------------------------------
     */
 
-    // Item belongs to sale
-    // public function sale()
-    // {
-    //     return $this->belongsTo(Sale::class);
-    // }
-
+    /**
+     * Sale item belongs to Sale.
+     */
     public function sale()
     {
-        return $this->belongsTo(Sale::class, 'sale_id');
+        return $this->belongsTo(
+            Sale::class,
+            'sale_id'
+        );
     }
 
+
+    /**
+     * Sale item belongs to Product.
+     */
     public function product()
     {
-        return $this->belongsTo(Product::class, 'product_id');
+        return $this->belongsTo(
+            Product::class,
+            'product_id'
+        );
     }
 
-    // Item belongs to product
-    // public function product()
-    // {
-    //     return $this->belongsTo(Product::class);
-    // }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Query Scopes
-    |--------------------------------------------------------------------------
-    */
-
-    // Scope by account
-    public function scopeAccount(Builder $query)
-    {
-        return $query->where('account_id', auth()->user()->account_id);
-    }
-
+    /**
+     * Sale item has many tracking records.
+     */
     public function trackingRecords()
     {
-        return $this->hasMany(SaleItemTracking::class);
+        return $this->hasMany(
+            SaleItemTracking::class,
+            'sale_item_id'
+        );
     }
 
+
+    /**
+     * Sale item has many tracking records.
+     *
+     * Alias for trackingRecords().
+     */
+    public function trackings()
+    {
+        return $this->hasMany(
+            SaleItemTracking::class,
+            'sale_item_id'
+        );
+    }
+
+
+    /**
+     * Sale item has many returned items.
+     */
     public function returnedItems()
     {
         return $this->hasMany(
@@ -106,11 +167,50 @@ class SaleItem extends Model
         );
     }
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | SCOPES
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Restrict sale items to current account.
+     */
+    public function scopeAccount(Builder $query)
+    {
+        if (
+            auth()->check() &&
+            auth()->user()->account_id
+        ) {
+            $query->where(
+                'account_id',
+                auth()->user()->account_id
+            );
+        }
+
+        return $query;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ACCESSORS
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Total quantity already returned.
+     */
     public function getReturnedQtyAttribute()
     {
         return $this->returnedItems()->sum('quantity');
     }
 
+
+    /**
+     * Quantity still available for return.
+     */
     public function getReturnableQtyAttribute()
     {
         return max(
@@ -118,9 +218,5 @@ class SaleItem extends Model
             (float) $this->quantity -
             (float) $this->returned_qty
         );
-    }
-    public function trackings()
-    {
-        return $this->hasMany(SaleItemTracking::class, 'sale_item_id');
     }
 }

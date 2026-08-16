@@ -114,15 +114,15 @@
             }
 
             let row = `
-                            <tr>
-                                <td><select name="items[${rowIndex}][master_item_id]" class="form-control selectProduct"></select></td>
-                                <td class="stock text-center text-primary fw-bold">0</td>
-                                <td><input type="number" name="items[${rowIndex}][qty]" class="form-control qty" min="1" step="1" disabled></td>
-                                <td><input type="number" name="items[${rowIndex}][price]" class="form-control price" min="0.01" step="0.01" readonly></td>
-                                <td class="rowTotal text-end">0.00</td>
-                                <td><input type="text" name="items[${rowIndex}][reason]" class="form-control"></td>
-                                <td><button type="button" class="btn btn-danger removeRow">x</button></td>
-                            </tr>`;
+                                    <tr>
+                                        <td><select name="items[${rowIndex}][master_item_id]" class="form-control selectProduct"></select></td>
+                                        <td class="stock text-center text-primary fw-bold">0</td>
+                                        <td><input type="number" name="items[${rowIndex}][qty]" class="form-control qty" min="1" step="1" disabled></td>
+                                        <td><input type="number" name="items[${rowIndex}][price]" class="form-control price" min="0.01" step="0.01" readonly></td>
+                                        <td class="rowTotal text-end">0.00</td>
+                                        <td><input type="text" name="items[${rowIndex}][reason]" class="form-control"></td>
+                                        <td><button type="button" class="btn btn-danger removeRow">x</button></td>
+                                    </tr>`;
 
             $('#itemsTable tbody').append(row);
 
@@ -272,7 +272,7 @@
             let warehouse = $('select[name="warehouse_id"]').val();
 
             if (!vendor) {
-                Swal.fire('Error', 'Please select vendor', 'error');
+                Swal.fire('Error', 'Please select Supplier', 'error');
                 return;
             }
 

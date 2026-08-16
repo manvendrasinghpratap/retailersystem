@@ -42,6 +42,7 @@
                     <div class="input-group">
                         <input type="text" id="coupon_code" class="form-control" placeholder="Enter Coupon">
                         <button type="button" class="btn btn-primary" id="apply_coupon">{{ __('translation.apply') }}</button>
+                        <button type="button" class="btn btn-danger" id="remove_coupon" style="display: none;">{{ __('translation.remove') }}</button>
                     </div>
                 </div>
             </div>
@@ -132,7 +133,30 @@
                     </div>
                 </div>
             </div>
+            {{-- FULFILLMENT / DELIVERY OPTION --}}
+            <div class="card mb-3">
+                <div class="card-header">
+                    <strong>{{__('translation.fullfillment_method')}}</strong>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <x-select-dropdown :noselect="true" id="fulfillment_type" name="fulfillment_type" label="Select Option" :options="['pickup' => 'Customer Pickup', 'delivery' => 'Home Delivery']" selected="pickup" class="fulfillment_type" mainrows="12" />
+                    </div>
 
+                    {{-- HOME DELIVERY EXTRA FIELDS --}}
+                    <div id="delivery_fields" style="display: none;">
+                        <div class="mb-3">
+                            <x-textarea-input name="delivery_address" id="delivery_address" :label="__('translation.delivery_address')" placeholder="Enter Delivery Address" value="" class="form-control" rows="2" mainrows="12" required />
+                        </div>
+                        <div class="mb-3">
+                            <x-textarea-input name="delivery_notes" id="delivery_notes" :label="__('translation.delivery_notes')" placeholder="Enter Delivery Notes if any()" value="" class="form-control" rows="2" mainrows="12" />
+                        </div>
+                        <div class="mb-3">
+                            <x-text-input :islabel="true" id="delivery_amount" name="delivery_amount" :label="'Delivery Amount ' . __('translation.b_ngn') . ' *'" value="0" class="form-control onlydecimal default-zero" mainrows="12" />
+                        </div>
+                    </div>
+                </div>
+            </div>
             {{-- COMPLETE PAYMENT --}}
             <button class="btn btn-success btn-lg w-100" id="complete-sale"> {{ __('translation.complete_payment') }}</button>
         </div>
@@ -435,6 +459,7 @@
         // =========================
         // 🔹 APPLY COUPON
         // =========================
+
         $('#apply_coupon').click(function () {
 
             let code = $('#coupon_code').val().trim();
@@ -460,6 +485,9 @@
                     discount = parseFloat(res.discount) || 0;
 
                     $('#discount').text(discount.toFixed(2));
+                    $('#coupon_code').prop('readonly', true);
+                    $('#apply_coupon').hide();
+                    $('#remove_coupon').show();
 
                     calculateTotals();
 
@@ -472,18 +500,99 @@
         });
 
         // =========================
+        // 🔹 REMOVE COUPON
+        // =========================
+        $('#remove_coupon').click(function () {
+            resetCoupon();
+            calculateTotals();
+            showAlert('info', 'Removed', 'Coupon removed successfully');
+        });
+
+        // =========================
         // 🔹 RESET COUPON
         // =========================
         function resetCoupon() {
             discount = 0;
             $('#discount').text('0.00');
-            $('#coupon_code').val('');
+            $('#coupon_code').val('').prop('readonly', false);
+            $('#remove_coupon').hide();
+            $('#apply_coupon').show();
         }
 
         // =========================
         // 🔹 TOTALS
         // =========================
         function calculateTotals() {
+            let subtotal = 0;
+
+            cart.forEach(item => {
+                subtotal += item.quantity * item.price;
+            });
+
+            let taxPercentage = parseFloat($('#tax_percentage').val()) || 0;
+            let tax = (subtotal * taxPercentage) / 100;
+
+            // Delivery Charge
+            let fulfillmentType = $('#fulfillment_type').val();
+            let deliveryAmount = 0;
+            if (fulfillmentType === 'delivery') {
+                deliveryAmount = parseFloat($('#delivery_amount').val()) || 0;
+            }
+
+            let total = subtotal + tax + deliveryAmount - discount;
+
+            if (total < 0) {
+                total = 0;
+            }
+
+            $('#subtotal').text(subtotal.toFixed(2));
+            $('#tax').text(tax.toFixed(2));
+            $('#grand_total').text(total.toFixed(2));
+
+            syncFullAmount();
+
+            if ($('#payment_type').val() === 'credit') {
+                let interestRate = parseFloat($('#interest_rate').val()) || 0;
+                calculateCreditAmount(interestRate);
+            }
+        }
+        function calculateTotals_bk() {
+            let subtotal = 0;
+
+            cart.forEach(item => {
+                subtotal += item.quantity * item.price;
+            });
+
+            let taxPercentage = parseFloat($('#tax_percentage').val()) || 0;
+            let tax = (subtotal * taxPercentage) / 100;
+
+            // Delivery Charge
+            let fulfillmentType = $('#fulfillment_type').val();
+            let deliveryAmount = 0;
+            if (fulfillmentType === 'delivery') {
+                deliveryAmount = parseFloat($('#delivery_amount').val()) || 0;
+            }
+
+            let total = subtotal + tax + deliveryAmount - discount;
+
+            if (total < 0) {
+                total = 0;
+            }
+
+            $('#subtotal').text(subtotal.toFixed(2));
+            $('#tax').text(tax.toFixed(2));
+            $('#grand_total').text(total.toFixed(2));
+
+            syncFullAmount();
+
+            if ($('#payment_type').val() === 'credit') {
+                let interestRate = parseFloat($('#interest_rate').val()) || 0;
+                calculateCreditAmount(interestRate);
+            }
+        }
+
+        /*
+        function calculateTotals_bk() {
 
             let subtotal = 0;
 
@@ -520,6 +629,7 @@
                 calculateCreditAmount(interestRate);
             }
         }
+        */
 
         function syncFullAmount() {
             let total = parseFloat($('#grand_total').text()) || 0;
@@ -755,84 +865,59 @@
             let total = parseFloat($('#grand_total').text()) || 0;
 
             // For credit sales use payable amount
-            if (
-                paymentData.payment_type === 'credit' &&
-                paymentData.payable_amount
-            ) {
+            if (paymentData.payment_type === 'credit' && paymentData.payable_amount) {
                 total = parseFloat(paymentData.payable_amount) || total;
             }
 
             $.post("{{ route('billing.complete') }}", {
                 _token: "{{ csrf_token() }}",
-
                 customer_id: customer_id,
-
                 items: cart,
-
                 subtotal: parseFloat($('#subtotal').text()) || 0,
-
                 tax: parseFloat($('#tax').text()) || 0,
-
                 discount: discount || 0,
 
+                // Fulfillment Details
+                fulfillment_type: $('#fulfillment_type').val(),
+                delivery_address: $('#fulfillment_type').val() === 'delivery' ? $('#delivery_address').val().trim() : null,
+                delivery_notes: $('#fulfillment_type').val() === 'delivery' ? $('#delivery_notes').val().trim() : null,
+                delivery_amount: $('#fulfillment_type').val() === 'delivery' ? parseFloat($('#delivery_amount').val()) || 0 : 0,
+
                 total: total,
-
                 payment_type: paymentData.payment_type,
-
                 payments: paymentData.payments || [],
-
-                credit_duration_id:
-                    paymentData.credit_duration_id ?? null,
-
-                interest_rate:
-                    paymentData.interest_rate ?? 0,
-
-                interest_amount:
-                    paymentData.interest_amount ?? 0,
-
-                payable_amount:
-                    paymentData.payable_amount ?? total,
+                credit_duration_id: paymentData.credit_duration_id ?? null,
+                interest_rate: paymentData.interest_rate ?? 0,
+                interest_amount: paymentData.interest_amount ?? 0,
+                payable_amount: paymentData.payable_amount ?? total,
             })
                 .done(function (res) {
-
                     if (!res || !res.success) {
-                        showAlert(
-                            'error',
-                            'Error',
-                            res?.message || 'Something went wrong'
-                        );
+                        showAlert('error', 'Error', res?.message || 'Something went wrong');
                         hideLoader();
                         return;
                     }
+
                     hideLoader();
-                    showAlert('success', 'Success', 'Sale Completed!').then(() => {
+
+                    // Dynamic message using res.message from controller response
+                    showAlert('success', 'Success', res.message || 'Sale Completed!').then(() => {
                         // printReceipt(res.sale_id);
                         hideLoader();
                         location.reload();
                     });
-
                 })
                 .fail(function (xhr) {
-
-                    let message =
-                        xhr.responseJSON?.message ||
-                        'Server Error';
+                    let message = xhr.responseJSON?.message || 'Server Error';
 
                     if (xhr.responseJSON?.errors) {
-                        message = Object.values(
-                            xhr.responseJSON.errors
-                        ).flat().join('<br>');
+                        message = Object.values(xhr.responseJSON.errors).flat().join('<br>');
                     }
 
-                    showAlert(
-                        'error',
-                        'Error',
-                        message
-                    );
+                    showAlert('error', 'Error', message);
                     hideLoader();
                 });
         }
-
         // =========================
         // 🔹 PRINT
         // =========================
@@ -863,7 +948,7 @@
         });
 
 
-        function calculateCreditAmount(interestRate) {
+        function calculateCreditAmount_bk(interestRate) {
             let total = parseFloat($('#grand_total').text()) || 0;
 
             let interestAmount = (total * interestRate) / 100;
@@ -876,6 +961,34 @@
             // Update displayed grand total
             $('#grand_total').text(payableAmount.toFixed(2));
         }
+
+        function calculateCreditAmount(interestRate) {
+            let subtotal = parseFloat($('#subtotal').text()) || 0;
+            let tax = parseFloat($('#tax').text()) || 0;
+
+            // 1. Calculate base sale total (excluding delivery)
+            let saleBase = subtotal + tax - discount;
+            if (saleBase < 0) saleBase = 0;
+
+            // 2. Calculate interest strictly on the sale base amount
+            let interestAmount = (saleBase * interestRate) / 100;
+
+            // 3. Get delivery charge separately
+            let deliveryAmount = 0;
+            if ($('#fulfillment_type').val() === 'delivery') {
+                deliveryAmount = parseFloat($('#delivery_amount').val()) || 0;
+            }
+
+            // 4. Payable Amount = Sale Base + Interest + Delivery Charge
+            let payableAmount = saleBase + interestAmount + deliveryAmount;
+
+            $('#interest_amount').val(interestAmount.toFixed(2));
+            $('#payable_amount').val(payableAmount.toFixed(2));
+
+            // Display final payable amount on grand total for credit sales
+            $('#grand_total').text(payableAmount.toFixed(2));
+        }
+
         function resetPaymentCalculations() {
             // Full payment
             $('#full_amount').val('');
@@ -891,5 +1004,24 @@
             $('#interest_amount').val('0');
             $('#payable_amount').val('0');
         }
+
+        // Toggle delivery fields on fulfillment_type change
+        $('#fulfillment_type').on('change', function () {
+            let type = $(this).val();
+            if (type === 'delivery') {
+                $('#delivery_fields').slideDown();
+            } else {
+                $('#delivery_fields').slideUp();
+                $('#delivery_amount').val('0');
+                $('#delivery_address').val('');
+                $('#delivery_note').val('');
+            }
+            calculateTotals();
+        });
+
+        // Update totals when delivery amount changes
+        $('#delivery_amount').on('input change', function () {
+            calculateTotals();
+        });
     </script>
 @endsection

@@ -12,19 +12,19 @@
                     <h4 class="card-title d-inline-block">{{ __('translation.filter') }}</h4>
                     <div class="d-inline-block">
                         @include('backend.components.exportpdfcsv', [
-                            'pdfId' => 'downloadcouponpdf',
-                            'pdfRoute' => route('admin.coupons.exportPdf'),
-                            'pdfClass' => 'downloadcouponpdf',
-                            'csvId' => 'downloadcouponcsv',
-                            'csvRoute' => route('admin.coupons.exportCsv'),
-                            'csvClass' => 'downloadcouponcsv',
+                            'pdfId' => 'downloadSaleReturnpdf',
+                            'pdfRoute' => route('admin.sale-returns.exportPdf'),
+                            'pdfClass' => 'downloadSaleReturnpdf',
+                            'csvId' => 'downloadSaleReturncsv',
+                            'csvRoute' => route('admin.sale-returns.exportCsv'),
+                            'csvClass' => 'downloadSaleReturncsv',
                         ])
                     </div>
                 </div>
                 <div class="card-body">
                     <form method="GET">
                         <div class="row">
-                            <x-text-input name="code" label="{{__('translation.invoice_no')  }}" value="{{ request('code') ?? '' }}" mainrows="3" />
+                            <x-text-input name="invoice_no" label="{{__('translation.invoice_no')  }}" value="{{ request('invoice_no') ?? '' }}" mainrows="3" />
                             <!-- <x-select-dropdown name="status" label="{{ __('translation.status') }}" :options="config('constants.accountstatus')" :selected="request('status') ?? ''" mainrows="2" class="accountstatus" /> -->
                             <div class="col-xl-2 col-md-2">
                                 <div class="form-group mb-3">
@@ -60,7 +60,6 @@
                                     <th>{{ __('translation.customer') }}</th>
                                     <th>{{ __('translation.products') }}</th>
                                     <th>{{ __('translation.return_amount') }}</th>
-                                    <th>{{ __('translation.refund') }}</th>
                                     <th>{{ __('translation.status') }}</th>
                                     <th>{{ __('translation.created_at') }}</th>
                                     <th>{{ __('translation.action') }}</th>
@@ -79,19 +78,13 @@
                                             @endphp
                                             {{ Str::limit($products, 50) }}
                                         </td>
-                                        <td>{{ __('translation.currency') }}{{ number_format($return->total_amount, 2) }} </td>
-                                        <td>
-                                            @if($return->refund_type === 'refund')
-                                                <span class="badge bg-warning">Refund</span>
-                                            @else
-                                                <span class="badge bg-info">Credit Adjustment</span>
-                                            @endif
-                                        </td>
+                                        <td>{{ __('translation.currency') }}{{  \App\Helpers\Settings::getcustomnumberformat($return->total_amount) }} </td>
+
                                         <td>
                                             @if($return->status === 'completed')
-                                                <span class="badge bg-success">Completed</span>
+                                                <span class="badge bg-success">{{ __('translation.completed') }}</span>
                                             @else
-                                                <span class="badge bg-danger">Cancelled</span>
+                                                <span class="badge bg-danger">{{ __('translation.cancelled') }}</span>
                                             @endif
                                         </td>
                                         <td>{{ \App\Helpers\Settings::formatDate($return->created_at, Config::get('constants.dateformat.slashdmy')) }} </td>
@@ -113,8 +106,12 @@
             </div>
         </div>
     </div>
-
-
-
-
+@endsection
+@section('script')
+    <script>
+        $(document).ready(function () {
+            setupPdfDownload('.downloadSaleReturnpdf', 'data-downloadroutepdf');
+            setupPdfDownload('.downloadSaleReturncsv', 'data-downloadroutecsv');
+        });
+    </script>
 @endsection

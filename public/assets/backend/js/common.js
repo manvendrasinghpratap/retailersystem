@@ -206,6 +206,16 @@ $(document).ready(function () {
         placeholder: "Select Reason",
         allowClear: true
     });
+    $(".payment_type").select2({
+        placeholder: "Select Payment Type",
+        allowClear: true
+    });
+    $(".approval_status").select2({
+        placeholder: "Select Approval Status",
+        allowClear: true
+    });
+
+
     $(".barcode").on("input", function () {
         this.value = this.value.replace(/[^a-zA-Z0-9]/g, '');
     });

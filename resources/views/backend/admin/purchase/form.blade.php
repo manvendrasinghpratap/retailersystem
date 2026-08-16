@@ -28,26 +28,21 @@
                             <table class="table table-hover align-middle" id="itemsTable">
                                 <thead class="table-light">
                                     <tr>
-                                        <th width="25%">Product</th>
-                                        <th width="8%">Qty</th>
-                                        <th width="10%">Price</th>
-                                        <th width="32%">Tracking</th>
-                                        <th width="10%">Total</th>
-                                        <th width="5%">Action</th>
+                                        <th width="25%">{{ __('translation.product') }}</th>
+                                        <th width="8%">{{ __('translation.quantity') }}</th>
+                                        <th width="10%">{{ __('translation.price') }}</th>
+                                        <th width="15%">{{ __('translation.tracking') }}</th>
+                                        <th width="10%">{{ __('translation.total') }}</th>
+                                        <th width="5%">{{ __('translation.action') }}</th>
                                     </tr>
                                 </thead>
                                 <tbody></tbody>
                             </table>
                             <!-- ADD ROW BUTTON -->
-                            <div class="text-center mt-2">
-                                <button type="button" class="btn btn-success px-4" id="addRow">
-                                    <i class="mdi mdi-plus"></i> {{ __('translation.add_item') }}
-                                </button>
-                            </div>
+                            <div class="text-center mt-2"><button type="button" class="btn btn-success px-4" id="addRow"><i class="mdi mdi-plus"></i> {{ __('translation.add_item') }}</button></div>
                         </div>
                         <div class="text-end">
-                            <h4>{{ __('translation.total')}}: @lang('translation.currency')<span id="grandTotal">0</span></h4>
-                            <input type="hidden" name="total" id="totalInput">
+                            <h4>{{ __('translation.total')}}: @lang('translation.currency')<span id="grandTotal">0</span></h4><input type="hidden" name="total" id="totalInput">
                         </div>
                         <div id="trackingHiddenContainer"></div>
                         <div class="card-footer form-group center">
@@ -56,49 +51,28 @@
                                 <a href="{{ route('admin.purchases.index') }}" class="btn btn-secondary">{{ __('translation.cancel') }}</a>
                             </div>
                         </div>
-
                     </form>
                 </div>
             </div>
         </div>
     </div>
-    </div>
-
-
     <div class="offcanvas offcanvas-end" tabindex="-1" id="trackingCanvas" style="width:600px;">
-
         <div class="offcanvas-header">
-
-            <h5 class="offcanvas-title">
-                Product Tracking
-            </h5>
-
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas">
-            </button>
-
+            <h5 class="offcanvas-title">Product Tracking</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
         </div>
-
         <div class="offcanvas-body">
-
             <div class="mb-3">
-
-                <strong>Product :</strong>
+                <strong>{{__('translation.product')}} :</strong>
                 <span id="trackingProduct"></span>
-
                 <br>
-
-                <strong>Qty :</strong>
+                <strong>{{__('translation.quantity')}} :</strong>
                 <span id="trackingQty"></span>
-
                 <br>
-
-                <strong>Tracking :</strong>
+                <strong>{{__('translation.tracking')}} :</strong>
                 <span id="trackingTypeLabel"></span>
-
             </div>
-
             <div id="trackingWorkspace"></div>
-
         </div>
 
     </div>
@@ -118,136 +92,117 @@
         let trackingData = {};
 
         function initSelect2(element) {
-
             element.select2({
-
                 placeholder: 'Search Master Item',
-
                 width: '100%',
-
                 ajax: {
-
                     url: "{{ route('admin.master_items.search') }}",
-
                     dataType: 'json',
-
                     delay: 250,
-
                     data: function (params) {
-
                         return {
-
                             q: params.term
-
                         };
-
                     },
-
                     processResults: function (data) {
-
                         return {
-
                             results: data
-
                         };
-
                     }
-
                 }
-
             });
 
         }
 
         function addRow() {
-
             let row = `
+                                <tr data-row="${rowIndex}">
+                                <td>
+                                <select
+                                name="items[${rowIndex}][product_id]"
+                                class="form-control selectProduct">
+                                </select>
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        <tr data-row="${rowIndex}">
+                                </td>
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            <td>
+                                <td>
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                <select
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    name="items[${rowIndex}][product_id]"
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    class="form-control selectProduct">
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                </select>
+                                <input
+                                type="number"
+                                name="items[${rowIndex}][qty]"
+                                class="form-control qty"
+                                value="1"
+                                oninput="this.value = this.value.replace(/[^0-9.]/g, '').slice(0, 3);"
+                                min="1">
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            </td>
+                                </td>
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            <td>
+                                <td>
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                <input
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    type="number"
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    name="items[${rowIndex}][qty]"
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    class="form-control qty"
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    value="1"
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    min="1">
+                                <input
+                                type="number"
+                                name="items[${rowIndex}][price]"
+                                class="form-control price"
+                                value="0"
+                                min="0.01"
+                                step="0.01"
+                                oninput="this.value = this.value.replace(/[^0-9.]/g, '').slice(0, 9);"
+                                onfocus="if (this.value == '0') this.value = '';"
+                                onblur="if (this.value === '') this.value = '0';"
+                                >
+                                </td>
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            </td>
+                                <td>
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            <td>
+                                <select
+                                name="items[${rowIndex}][tracking_type]"
+                                class="form-control trackingType">
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                <input
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    type="number"
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    name="items[${rowIndex}][price]"
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    class="form-control price"
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    value="0"
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    min="0.01"
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    step="0.01">
+                                <option value="none">None</option>
+                                <option value="batch">Batch</option>
+                                <option value="individual">Individual</option>
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            </td>
+                                </select>
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            <td>
+                                <button
+                                type="button"
+                                class="btn btn-primary btn-sm mt-2 manageTracking d-none">
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                <select
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    name="items[${rowIndex}][tracking_type]"
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    class="form-control trackingType">
+                                <i class="mdi mdi-barcode-scan"></i>
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    <option value="none">None</option>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    <option value="batch">Batch</option>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    <option value="individual">Individual</option>
+                                Manage Tracking
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                </select>
+                                </button>
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                <button
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    type="button"
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    class="btn btn-primary btn-sm mt-2 manageTracking d-none">
+                                <div class="trackingStatus text-success small mt-1">
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    <i class="mdi mdi-barcode-scan"></i>
+                                No Tracking
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    Manage Tracking
+                                </div>
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                </button>
+                                </td>
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                <div class="trackingStatus text-success small mt-1">
+                                <td class="rowTotal">
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    No Tracking
+                                0.00
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                </div>
+                                </td>
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            </td>
+                                <td>
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            <td class="rowTotal">
+                                <button
+                                type="button"
+                                class="btn btn-danger removeRow">
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                0.00
+                                ×
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            </td>
+                                </button>
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            <td>
+                                </td>
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                <button
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    type="button"
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    class="btn btn-danger removeRow">
+                                </tr>
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ×
-
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                </button>
-
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            </td>
-
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </tr>
-
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        `;
+                                `;
 
             $('#itemsTable tbody').append(row);
 
@@ -354,7 +309,7 @@
 
             if (!$('select[name="vendor_id"]').val()) {
 
-                Swal.fire('Error', 'Select Vendor', 'error');
+                Swal.fire('Error', 'Select Supplier', 'error');
 
                 return;
 
@@ -611,26 +566,26 @@
 
                 html += `
 
-                                                                                                                                                                                                                            <div class="card">
+                                                                                                                                                                                                                                                                                                                                                                                                                    <div class="card">
 
-                                                                                                                                                                                                                                <div class="card-body">
+                                                                                                                                                                                                                                                                                                                                                                                                                        <div class="card-body">
 
-                                                                                                                                                                                                                                    <label class="form-label">
-                                                                                                                                                                                                                                        Batch Barcode
-                                                                                                                                                                                                                                    </label>
+                                                                                                                                                                                                                                                                                                                                                                                                                            <label class="form-label">
+                                                                                                                                                                                                                                                                                                                                                                                                                                Batch Barcode
+                                                                                                                                                                                                                                                                                                                                                                                                                            </label>
 
-                                                                                                                                                                                                                                    <input
-                                                                                                                                                                                                                                        type="text"
-                                                                                                                                                                                                                                        id="batchBarcode"
-                                                                                                                                                                                                                                        class="form-control"
-                                                                                                                                                                                                                                        autocomplete="off"
-                                                                                                                                                                                                                                        placeholder="Scan Batch Barcode">
+                                                                                                                                                                                                                                                                                                                                                                                                                            <input
+                                                                                                                                                                                                                                                                                                                                                                                                                                type="text"
+                                                                                                                                                                                                                                                                                                                                                                                                                                id="batchBarcode"
+                                                                                                                                                                                                                                                                                                                                                                                                                                class="form-control"
+                                                                                                                                                                                                                                                                                                                                                                                                                                autocomplete="off"
+                                                                                                                                                                                                                                                                                                                                                                                                                                placeholder="Scan Batch Barcode">
 
-                                                                                                                                                                                                                                </div>
+                                                                                                                                                                                                                                                                                                                                                                                                                        </div>
 
-                                                                                                                                                                                                                            </div>
+                                                                                                                                                                                                                                                                                                                                                                                                                    </div>
 
-                                                                                                                                                                                                                        `;
+                                                                                                                                                                                                                                                                                                                                                                                                                `;
 
             }
 
@@ -641,51 +596,51 @@
 
                 html += `
 
-                                                                                                                                                                                                                            <div class="card">
+                                                                                                                                                                                                                                                                                                                                                                                                                    <div class="card">
 
-                                                                                                                                                                                                                                <div class="card-body">
+                                                                                                                                                                                                                                                                                                                                                                                                                        <div class="card-body">
 
-                                                                                                                                                                                                                                    <label class="form-label">
-                                                                                                                                                                                                                                        Scan Barcode
-                                                                                                                                                                                                                                    </label>
+                                                                                                                                                                                                                                                                                                                                                                                                                            <label class="form-label">
+                                                                                                                                                                                                                                                                                                                                                                                                                                Scan Barcode
+                                                                                                                                                                                                                                                                                                                                                                                                                            </label>
 
-                                                                                                                                                                                                                                    <input
-                                                                                                                                                                                                                                        type="text"
-                                                                                                                                                                                                                                        id="barcodeInput"
-                                                                                                                                                                                                                                        class="form-control form-control-lg"
-                                                                                                                                                                                                                                        autocomplete="off"
-                                                                                                                                                                                                                                        placeholder="Scan barcode and press ENTER">
+                                                                                                                                                                                                                                                                                                                                                                                                                            <input
+                                                                                                                                                                                                                                                                                                                                                                                                                                type="text"
+                                                                                                                                                                                                                                                                                                                                                                                                                                id="barcodeInput"
+                                                                                                                                                                                                                                                                                                                                                                                                                                class="form-control form-control-lg"
+                                                                                                                                                                                                                                                                                                                                                                                                                                autocomplete="off"
+                                                                                                                                                                                                                                                                                                                                                                                                                                placeholder="Scan barcode and press ENTER">
 
-                                                                                                                                                                                                                                </div>
+                                                                                                                                                                                                                                                                                                                                                                                                                        </div>
 
-                                                                                                                                                                                                                            </div>
+                                                                                                                                                                                                                                                                                                                                                                                                                    </div>
 
-                                                                                                                                                                                                                            <div class="mt-3">
+                                                                                                                                                                                                                                                                                                                                                                                                                    <div class="mt-3">
 
-                                                                                                                                                                                                                                <div class="progress">
+                                                                                                                                                                                                                                                                                                                                                                                                                        <div class="progress">
 
-                                                                                                                                                                                                                                    <div
-                                                                                                                                                                                                                                        id="scanProgressBar"
-                                                                                                                                                                                                                                        class="progress-bar"
-                                                                                                                                                                                                                                        style="width:0%;">
+                                                                                                                                                                                                                                                                                                                                                                                                                            <div
+                                                                                                                                                                                                                                                                                                                                                                                                                                id="scanProgressBar"
+                                                                                                                                                                                                                                                                                                                                                                                                                                class="progress-bar"
+                                                                                                                                                                                                                                                                                                                                                                                                                                style="width:0%;">
 
-                                                                                                                                                                                                                                        0%
+                                                                                                                                                                                                                                                                                                                                                                                                                                0%
 
-                                                                                                                                                                                                                                    </div>
+                                                                                                                                                                                                                                                                                                                                                                                                                            </div>
 
-                                                                                                                                                                                                                                </div>
+                                                                                                                                                                                                                                                                                                                                                                                                                        </div>
 
-                                                                                                                                                                                                                                <div
-                                                                                                                                                                                                                                    id="scanProgressText"
-                                                                                                                                                                                                                                    class="text-center mt-2">
+                                                                                                                                                                                                                                                                                                                                                                                                                        <div
+                                                                                                                                                                                                                                                                                                                                                                                                                            id="scanProgressText"
+                                                                                                                                                                                                                                                                                                                                                                                                                            class="text-center mt-2">
 
-                                                                                                                                                                                                                                    0 / 0
+                                                                                                                                                                                                                                                                                                                                                                                                                            0 / 0
 
-                                                                                                                                                                                                                                </div>
+                                                                                                                                                                                                                                                                                                                                                                                                                        </div>
 
-                                                                                                                                                                                                                            </div>
+                                                                                                                                                                                                                                                                                                                                                                                                                    </div>
 
-                                                                                                                                                                                                                        `;
+                                                                                                                                                                                                                                                                                                                                                                                                                `;
 
             }
 
@@ -694,43 +649,43 @@
             // ==========================
             html += `
 
-                                                                                                                                                                                                                        <div class="card mt-3">
+                                                                                                                                                                                                                                                                                                                                                                                                                <div class="card mt-3">
 
-                                                                                                                                                                                                                            <div class="card-header">
+                                                                                                                                                                                                                                                                                                                                                                                                                    <div class="card-header">
 
-                                                                                                                                                                                                                                Tracking List
+                                                                                                                                                                                                                                                                                                                                                                                                                        Tracking List
 
-                                                                                                                                                                                                                            </div>
+                                                                                                                                                                                                                                                                                                                                                                                                                    </div>
 
-                                                                                                                                                                                                                            <div class="card-body p-0">
+                                                                                                                                                                                                                                                                                                                                                                                                                    <div class="card-body p-0">
 
-                                                                                                                                                                                                                                <table class="table table-bordered table-striped mb-0">
+                                                                                                                                                                                                                                                                                                                                                                                                                        <table class="table table-bordered table-striped mb-0">
 
-                                                                                                                                                                                                                                    <thead>
+                                                                                                                                                                                                                                                                                                                                                                                                                            <thead>
 
-                                                                                                                                                                                                                                        <tr>
+                                                                                                                                                                                                                                                                                                                                                                                                                                <tr>
 
-                                                                                                                                                                                                                                            <th width="60">#</th>
+                                                                                                                                                                                                                                                                                                                                                                                                                                    <th width="60">#</th>
 
-                                                                                                                                                                                                                                            <th>Barcode</th>
+                                                                                                                                                                                                                                                                                                                                                                                                                                    <th>Barcode</th>
 
-                                                                                                                                                                                                                                            <th width="100">Action</th>
+                                                                                                                                                                                                                                                                                                                                                                                                                                    <th width="100">Action</th>
 
-                                                                                                                                                                                                                                        </tr>
+                                                                                                                                                                                                                                                                                                                                                                                                                                </tr>
 
-                                                                                                                                                                                                                                    </thead>
+                                                                                                                                                                                                                                                                                                                                                                                                                            </thead>
 
-                                                                                                                                                                                                                                    <tbody id="barcodeTable"></tbody>
+                                                                                                                                                                                                                                                                                                                                                                                                                            <tbody id="barcodeTable"></tbody>
 
-                                                                                                                                                                                                                                </table>
+                                                                                                                                                                                                                                                                                                                                                                                                                        </table>
 
-                                                                                                                                                                                                                            </div>
+                                                                                                                                                                                                                                                                                                                                                                                                                    </div>
 
-                                                                                                                                                                                                                        </div>
+                                                                                                                                                                                                                                                                                                                                                                                                                </div>
 
-                                                                                                                                                                                                                        <div id="hiddenTrackingInputs"></div>
+                                                                                                                                                                                                                                                                                                                                                                                                                <div id="hiddenTrackingInputs"></div>
 
-                                                                                                                                                                                                                    `;
+                                                                                                                                                                                                                                                                                                                                                                                                            `;
 
             $('#trackingWorkspace').html(html);
 
@@ -863,20 +818,19 @@
             let tbody = '';
 
             list.forEach(function (item, index) {
-
                 tbody += `
-                                                                                                                                                                                                                                                        <tr>
-                                                                                                                                                                                                                                                            <td>${index + 1}</td>
-                                                                                                                                                                                                                                                            <td>${item.barcode}</td>
-                                                                                                                                                                                                                                                            <td>
-                                                                                                                                                                                                                                                                <button
-                                                                                                                                                                                                                                                                    type="button"
-                                                                                                                                                                                                                                                                    class="btn btn-danger btn-sm removeBarcode"
-                                                                                                                                                                                                                                                                    data-index="${index}">
-                                                                                                                                                                                                                                                                    Remove
-                                                                                                                                                                                                                                                                </button>
-                                                                                                                                                                                                                                                            </td>
-                                                                                                                                                                                                                                                        </tr>`;
+                                                                                                                                                                            <tr>
+                                                                                                                                                                            <td>${index + 1}</td>
+                                                                                                                                                                            <td>${item.barcode}</td>
+                                                                                                                                                                            <td>
+                                                                                                                                                                            <button
+                                                                                                                                                                            type="button"
+                                                                                                                                                                            class="btn btn-danger btn-sm removeBarcode"
+                                                                                                                                                                            data-index="${index}">
+                                                                                                                                                                            Remove
+                                                                                                                                                                            </button>
+                                                                                                                                                                            </td>
+                                                                                                                                                                            </tr>`;
 
             });
 

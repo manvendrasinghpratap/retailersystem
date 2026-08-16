@@ -3,20 +3,13 @@
 
 <head>
   <meta charset="utf-8">
-  <title>{{ $sale->store->name ?? Config::get('constants.shop_name') }} || {{ __('translation.invoice') }} </title>
+  <title>{{ $sale->store->name ?? Config::get('constants.shop_name') }} || {{ __('translation.invoice') }}</title>
   @include('backend.pdf.layouts.pdfcss')
   <style>
     .header {
       border-bottom: 2px solid #2563eb;
       padding-bottom: 10px;
       margin-bottom: 15px;
-    }
-
-    .section-title {
-      font-size: 14px;
-      font-weight: bold;
-      color: #2563eb;
-      margin-bottom: 8px;
     }
 
     .items th {
@@ -40,42 +33,26 @@
       background: #f3f4f6;
       border-radius: 6px;
     }
-
-    .grand-total {
-      background: #2563eb;
-      color: #fff;
-      font-weight: bold;
-      padding: 6px;
-      border-radius: 4px;
-    }
-
-    .footer {
-      text-align: center;
-      font-size: 11px;
-      color: #6b7280;
-      margin-top: 20px;
-    }
-
-    .footer strong {
-      font-size: 13px;
-      color: #111827;
-    }
   </style>
 </head>
 
 <body>
-  <div class="watermark">{{ $sale->store->name ?? Config::get('constants.shop_name') }}</div>
+  @php
+    $storeName = $sale->store->name ?? Config::get('constants.shop_name');
+    $currency = __('translation.currency');
+    $grandTotal = $sale->payable_amount > 0 ? $sale->payable_amount : $sale->total;
+  @endphp
+
+  <div class="watermark">{{ $storeName }}</div>
+
   <!-- HEADER -->
   <table class="header" width="100%">
     <tr>
       <td width="60%">
-        <!-- @if($sale->store->logo)
-          <img src="{{$sale->store->logo}}" alt="{{ $sale->store->name ?? Config::get('constants.shop_name') }}" width="70" height="70" style="float:left;margin-right:10px" />
-        @endif -->
-        <div style="font-size:22px; font-weight:bold; color:#2563eb;">{{ $sale->store->name ?? Config::get('constants.shop_name') }}</div>
+        <div style="font-size:22px; font-weight:bold; color:#2563eb;">{{ $storeName }}</div>
         <div style="font-size:11px; color:#555; line-height:14px;">
-          <strong>{{ __('translation.address') }}:</strong> {{ $sale->store->address ?? '' }}<br>
-          <strong>{{ __('translation.phone') }}:</strong> {{ $sale->store->phone ?? '' }}
+          <strong>{{ __('translation.address') }}:</strong> {{ $sale->store->address ?? '-' }}<br>
+          <strong>{{ __('translation.phone') }}:</strong> {{ $sale->store->phone ?? '-' }}
           @if(!empty($sale->store->alternate_phone)) || {{ $sale->store->alternate_phone }} @endif<br>
           @if(!empty($sale->store->email)) <strong>{{ __('translation.email') }}:</strong> {{ $sale->store->email }}<br> @endif
           @if(!empty($sale->store->website)) <strong>{{ __('translation.website') }}:</strong> {{ $sale->store->website }} @endif
@@ -108,12 +85,13 @@
       </td>
     </tr>
   </table>
+
+  <!-- CUSTOMER & FULFILLMENT -->
   <table class="section" width="100%" cellpadding="0" cellspacing="0">
     <tr>
-      <!-- Customer Information -->
-      <td width="55%" style="vertical-align:top; padding-right:20px;">
+      <td width="48%" style="vertical-align:top; padding-right:15px;">
         <div style="font-size:13px;font-weight:bold;color:#2563eb;margin-bottom:8px;">{{ __('translation.customer_information') }}</div>
-        <table width="100%" style="font-size:11px; line-height:3px;">
+        <table width="100%" style="font-size:11px; line-height:16px;">
           <tr>
             <td width="90"><strong>{{ __('translation.customer') }}</strong></td>
             <td>: {{ $sale->customer->name ?? __('translation.walk_in_customer') }}</td>
@@ -133,43 +111,47 @@
           @if(!empty($sale->customer?->address))
             <tr>
               <td style="vertical-align:top;"><strong>{{ __('translation.address') }}</strong></td>
-              <td>: <div style="display:inline-block;max-width:220px;">{{ $sale->customer->address }}</div>
-              </td>
+              <td>: {{ $sale->customer->address }}</td>
             </tr>
           @endif
         </table>
       </td>
-      <!-- Payment Information -->
-      <td width="45%" style="vertical-align:top;">
+
+      <td width="52%" style="vertical-align:top;">
         <div style="font-size:13px;font-weight:bold;color:#2563eb;margin-bottom:8px;">
-          {{ __('translation.payment_information') }}
+          {{ __('translation.payment_information') }} & {{ __('translation.fullfillment_method') }}
         </div>
-        <table width="100%" style="font-size:11px; line-height:3px;">
+        <table width="100%" style="font-size:11px; line-height:16px;">
           <tr>
-            <td width="45%"><strong>{{ __('translation.payment_type') }}</strong></td>
-            <td class="text-right">{{ $sale->customerPaymentType->name ?? App\Helpers\Settings::getDataUcfirst($sale->payment_type) }}</td>
+            <td width="50%"><strong>{{ __('translation.payment_type') }}</strong></td>
+            <td class="text-right">: {{ $sale->customerPaymentType->name ?? App\Helpers\Settings::getDataUcfirst($sale->payment_type) }}</td>
           </tr>
           <tr>
             <td><strong>{{ __('translation.payment_status') }}</strong></td>
-            <td class="text-right">
-              @if($sale->payment_status == 'paid')
-                <span style="color:#16a34a;font-weight:bold;">
-                  {{ App\Helpers\Settings::getDataUcfirst($sale->payment_status) }}
-                </span>
-              @elseif($sale->payment_status == 'partial')
-                <span style="color:#d97706;font-weight:bold;">
-                  {{ App\Helpers\Settings::getDataUcfirst($sale->payment_status) }}
-                </span>
-              @else
-                <span style="color:#dc2626;font-weight:bold;">
-                  {{ App\Helpers\Settings::getDataUcfirst($sale->payment_status) }}
-                </span>
-              @endif
+            <td class="text-right">:
+              <span style="font-weight:bold; color: {{ $sale->payment_status == 'paid' ? '#16a34a' : ($sale->payment_status == 'partial' ? '#d97706' : '#dc2626') }};">
+                {{ App\Helpers\Settings::getDataUcfirst($sale->payment_status) }}
+              </span>
             </td>
+          </tr>
+          <tr>
+            <td><strong>{{ __('translation.approval_status') }}</strong></td>
+            <td class="text-right">:
+              <span style="font-weight:bold; color: {{ ($sale->payment_approval_status ?? 'approve') == 'approve' ? '#16a34a' : (($sale->payment_approval_status ?? '') == 'pending' ? '#d97706' : '#dc2626') }};">
+                {{ ucfirst($sale->payment_approval_status ?? 'Approved') }}
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>{{ __('translation.fullfillment_method') }}</strong></td>
+            <td class="text-right">: {{ \App\Helpers\Settings::getDataTitle($sale->delivery_type ?? 'pickup') }}</td>
+          </tr>
+          <tr>
+            <td><strong>{{ __('translation.delivery_status') }}</strong></td>
+            <td class="text-right">: {{ ucfirst($sale->delivery_status ?? 'delivered') }}</td>
           </tr>
         </table>
       </td>
-
     </tr>
   </table>
 
@@ -186,20 +168,25 @@
       </tr>
     </thead>
     <tbody>
-      @foreach($sale->items ?? [] as $index => $item)
+      @forelse($sale->items as $index => $item)
         <tr>
           <td>{{ $index + 1 }}</td>
           <td>{{ $item->product->name ?? 'Product' }}</td>
           <td style="padding:2px;">
-            <div style="font-size:8px; line-height:8px;">
+            <div style="font-size:8px; line-height:8px;" class="d-inline-block text-center">
               {!! DNS1D::getBarcodeHTML($item->product->barcode, 'C128', 1, 25) !!}
+              <small class="text-muted">{{ $item->product->barcode }}</small>
             </div>
           </td>
           <td class="text-center">{{ $item->quantity }}</td>
-          <td class="text-right">{{ __('translation.currency') }} {{ App\Helpers\Settings::getcustomnumberformat($item->price) }}</td>
-          <td class="text-right">{{ __('translation.currency') }} {{ App\Helpers\Settings::getcustomnumberformat($item->total) }}</td>
+          <td class="text-right">{{ $currency }} {{ App\Helpers\Settings::getcustomnumberformat($item->price) }}</td>
+          <td class="text-right">{{ $currency }} {{ App\Helpers\Settings::getcustomnumberformat($item->total) }}</td>
         </tr>
-      @endforeach
+      @empty
+        <tr>
+          <td colspan="6" class="text-center">{{ __('translation.no_sales_found') }}</td>
+        </tr>
+      @endforelse
     </tbody>
   </table>
 
@@ -207,9 +194,8 @@
   <table width="100%" style="margin-top:20px;">
     <tr>
       <td width="55%" style="vertical-align:top;">
-
         @if($sale->payment_type == 'credit')
-          <div style="font-size:12px; line-height:5px;">
+          <div style="font-size:12px; line-height:16px;">
             <strong>{{ __('translation.credit_information') }}</strong>
             <hr style="margin:5px 0;">
             <table width="100%">
@@ -234,46 +220,46 @@
       <td width="45%">
         <div class="totals-box">
           <table width="100%">
-            {{-- Subtotal --}}
             <tr>
               <td>{{ __('translation.subtotal') }}</td>
-              <td class="text-right">{{ __('translation.currency') }} {{ App\Helpers\Settings::getcustomnumberformat($sale->subtotal) }}</td>
+              <td class="text-right">{{ $currency }} {{ App\Helpers\Settings::getcustomnumberformat($sale->subtotal) }}</td>
             </tr>
-            {{-- Tax --}}
             @if($sale->tax > 0)
               <tr>
                 <td>{{ __('translation.tax') }} @if(account_setting('general.tax')) ({{ account_setting('general.tax') }}%) @endif</td>
-                <td class="text-right">{{ __('translation.currency') }} {{ App\Helpers\Settings::getcustomnumberformat($sale->tax) }}</td>
+                <td class="text-right">{{ $currency }} {{ App\Helpers\Settings::getcustomnumberformat($sale->tax) }}</td>
               </tr>
             @endif
-            {{-- Discount --}}
             @if($sale->discount > 0)
               <tr>
                 <td>{{ __('translation.discount') }}</td>
-                <td class="text-right">- {{ __('translation.currency') }} {{ App\Helpers\Settings::getcustomnumberformat($sale->discount) }}</td>
+                <td class="text-right">- {{ $currency }} {{ App\Helpers\Settings::getcustomnumberformat($sale->discount) }}</td>
               </tr>
             @endif
-            {{-- Interest --}}
+            @if(($sale->delivery_charge ?? 0) > 0)
+              <tr>
+                <td>{{ __('translation.delivery_charges') }}</td>
+                <td class="text-right">{{ $currency }} {{ App\Helpers\Settings::getcustomnumberformat($sale->delivery_charge) }}</td>
+              </tr>
+            @endif
             @if($sale->interest_amount > 0)
               <tr>
                 <td>{{ __('translation.interest_amount') }}</td>
-                <td class="text-right">{{ __('translation.currency') }} {{ App\Helpers\Settings::getcustomnumberformat($sale->interest_amount) }}</td>
+                <td class="text-right">{{ $currency }} {{ App\Helpers\Settings::getcustomnumberformat($sale->interest_amount) }}</td>
               </tr>
             @endif
-            {{-- Grand Total --}}
             <tr>
               <td style="border-top:1px solid #ddd;font-weight:bold;">{{ __('translation.grand_total') }}</td>
-              <td class="text-right" style="border-top:1px solid #ddd;font-weight:bold;">{{ __('translation.currency') }} {{ App\Helpers\Settings::getcustomnumberformat($sale->payable_amount > 0 ? $sale->payable_amount : $sale->total) }}</td>
+              <td class="text-right" style="border-top:1px solid #ddd;font-weight:bold;">{{ $currency }} {{ App\Helpers\Settings::getcustomnumberformat($grandTotal) }}</td>
             </tr>
-            {{-- Credit Payment Details --}}
             @if($sale->payment_type == 'credit')
               <tr>
                 <td>{{ __('translation.paid_amount') }}</td>
-                <td class="text-right">{{ __('translation.currency') }} {{ App\Helpers\Settings::getcustomnumberformat($sale->paid_amount) }}</td>
+                <td class="text-right">{{ $currency }} {{ App\Helpers\Settings::getcustomnumberformat($sale->paid_amount) }}</td>
               </tr>
               <tr>
                 <td><strong>{{ __('translation.balance_amount') }}</strong></td>
-                <td class="text-right"><strong>{{ __('translation.currency') }} {{ App\Helpers\Settings::getcustomnumberformat($sale->balance_amount) }}</strong></td>
+                <td class="text-right"><strong>{{ $currency }} {{ App\Helpers\Settings::getcustomnumberformat($sale->balance_amount) }}</strong></td>
               </tr>
             @endif
           </table>
@@ -281,25 +267,9 @@
       </td>
     </tr>
   </table>
-  <!-- PAYMENT INFORMATION -->
-  <div style="margin-top:20px; font-size:11px;">
-    <table width="100%" cellpadding="3" cellspacing="0">
-      @if($sale->payments && $sale->payments->count())
-        <tr>
-          <td style="vertical-align:top;"><strong>{{ __('translation.payment_method') }}</strong></td>
-          <td colspan="3">
-            @foreach($sale->payments as $payment)
-              {{ $payment->paymentMethod->name ?? ucfirst($payment->method) }}
-              ({{ __('translation.currency') }}{{ App\Helpers\Settings::getcustomnumberformat($payment->amount) }})
-              @if(!$loop->last),@endif
-            @endforeach
-          </td>
-        </tr>
-      @endif
-    </table>
-  </div>
-  <hr style="margin:20px 0;">
+
   <!-- FOOTER -->
+  <hr style="margin:20px 0;">
   <div style="text-align:center;font-size:11px;color:#6b7280;line-height:20px;">
     <strong style="font-size:13px;color:#111827;">{{ __('translation.thank_you_for_your_business') }}</strong>
     <br>
@@ -307,8 +277,7 @@
     @if(!empty($sale->store->phone))<br><strong>{{ __('translation.contact') }}:</strong> {{ $sale->store->phone }} @endif
     @if(!empty($sale->store->email)) | {{ $sale->store->email }} @endif
     @if(!empty($sale->store->website))
-      <br>
-      <a href="{{ $sale->store->website }}" style="color:#2563eb;text-decoration:none;">{{ $sale->store->website }}</a>
+      <br><a href="{{ $sale->store->website }}" style="color:#2563eb;text-decoration:none;">{{ $sale->store->website }}</a>
     @endif
   </div>
 </body>

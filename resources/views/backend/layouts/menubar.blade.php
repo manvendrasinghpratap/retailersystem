@@ -58,7 +58,7 @@
             {{-- POS --}}
             <li class="nav-item dropdown {{ $isActive(['admin.requisitions.pending.posting', $role . '.sales-barcode', $role . '.return-barcode', $role . '.damage-barcode', $role . '.deduct-barcode']) ? 'active' : '' }}">
                 <a href="javascript:void(0);" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
-                    <i data-feather="monitor"></i><span>@lang('translation.pos')</span>
+                    <i data-feather="monitor"></i><span>@lang('translation.stock_operations')</span>
                 </a>
                 <div class="dropdown-menu">
                     <h6 class="dropdown-header">@lang('translation.stock_operations')</h6>
@@ -136,7 +136,7 @@
                     {{-- Master Entries --}}
                     <h6 class="dropdown-header">@lang('translation.master_entries')</h6>
                     <a href="{{ route('admin.payment-types.index') }}" class="dropdown-item" style="display: none;"><i data-feather="credit-card" class="menu-icon-sm"></i>@lang('translation.payment_types')</a>
-                    <a href="{{ route('admin.credit-durations.index') }}" class="dropdown-item" style="display: none;"><i data-feather="calendar" class="menu-icon-sm"></i>@lang('translation.credit_duration')</a>
+                    <a href="{{ route('admin.credit-durations.index') }}" class="dropdown-item"><i data-feather="calendar" class="menu-icon-sm"></i>@lang('translation.credit_duration')</a>
                     <a href="{{ route('admin.account-settings.index') }}" class="dropdown-item"><i data-feather="settings" class="menu-icon-sm"></i>@lang('translation.account_settings')</a>
                     <a href="{{ route('admin.designations.index') }}" class="dropdown-item" style="display: none;"><i data-feather="briefcase" class="menu-icon-sm"></i>@lang('translation.designations')</a>
                     <a href="{{ route('admin.modules.index') }}" class="dropdown-item" style="display: none;"><i data-feather="box" class="menu-icon-sm"></i>@lang('translation.modules')</a>

@@ -82,4 +82,45 @@
 
 </script>
 
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+
+    document.querySelectorAll('[data-customer-popover]').forEach(function (element) {
+      let hideTimeout;
+
+      const popover = new bootstrap.Popover(element, {
+        trigger: 'manual',
+        html: true,
+        placement: 'right',
+        container: 'body'
+      });
+
+      element.addEventListener('mouseenter', function () {
+        clearTimeout(hideTimeout);
+        popover.show();
+
+        // Keep popover open when hovering directly over the popover box itself
+        const popoverEl = document.getElementById(element.getAttribute('aria-describedby'));
+        if (popoverEl) {
+          popoverEl.addEventListener('mouseenter', function () {
+            clearTimeout(hideTimeout);
+          });
+          popoverEl.addEventListener('mouseleave', function () {
+            hideTimeout = setTimeout(() => popover.hide(), 200);
+          });
+        }
+      });
+
+      element.addEventListener('mouseleave', function () {
+        hideTimeout = setTimeout(function () {
+          if (!document.querySelector('.popover:hover')) {
+            popover.hide();
+          }
+        }, 200);
+      });
+    });
+
+  });
+</script>
+
 </html>

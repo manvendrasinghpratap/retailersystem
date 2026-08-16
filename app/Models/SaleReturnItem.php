@@ -45,6 +45,14 @@ class SaleReturnItem extends Model
             'sale_return_item_id'
         );
     }
+
+    public function tracking()
+    {
+        return $this->belongsTo(
+            PurchaseItemTracking::class,
+            'purchase_item_tracking_id'
+        );
+    }
     public function purchaseItemTracking()
     {
         return $this->belongsTo(

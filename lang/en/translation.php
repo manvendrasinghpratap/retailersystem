@@ -219,7 +219,11 @@ return [
     'this_barcode_is_not_allowed_for_this_operation' => 'This barcode is not allowed for this operation!',
     'error' => 'Error',
     'logout' => 'Logout',
-    'invalid_barcode' => 'Invalid Barcode',
+    'delivery_charges' => 'Delivery Charges',
+    'approval_status' => 'Approval Status',
+    'approved_by' => 'Approved By',
+    'delivery_type' => 'Delivery Type',
+    'delivery_status' => 'Delivery Status',
     'access_control_list' => 'Access Control List',
     'sync' => 'Sync',
     'people' => 'People',
@@ -420,6 +424,11 @@ return [
     'purchase_status' => 'Purchase Status',
     'purchase_remarks' => 'Purchase Remarks',
     'save_purchase' => 'Save Purchase',
+    'sale_return_details' => 'Sale Return Details',
+    'refund_amount' => 'Refund Amount',
+    'no_returned_items_found' => 'No returned items found.',
+    'returned_items' => 'Returned Items',
+    'total_returned' => 'Total Returned',
     'add_item' => 'Add Item',
     'warehouse_products' => 'Products in Warehouse',
     'stock_filter' => 'Stock Filter',
@@ -695,6 +704,11 @@ return [
     'returned_qty' => 'Returned Qty',
     'enter_invoice_number_to_load_sale_items' => 'Enter invoice number to load sale items.',
     'refund_type' => 'Refund Type',
-    'total_return_amount' => 'Total Return Amount'
-
+    'total_return_amount' => 'Total Return Amount',
+    'returned_amount' => 'Returned Amount',
+    'net_sale' => 'Net Sale',
+    'delivery_notes' => 'Delivery Notes',
+    'delivery_address' => 'Delivery Address',
+    'sale_completed' => 'Sale completed successfully',
+    'fullfillment_method' => 'Fulfillment Method'
 ];

@@ -38,24 +38,11 @@
 
                 <!-- Left Content -->
                 <div class="col-lg-6">
-                    <h1 class="fw-bold mb-4">
-                        Smart Retail Management & POS System
-                    </h1>
-
-                    <p class="lead mb-4">
-                        Manage billing, inventory, sales, and customers from one powerful cloud platform designed for
-                        modern retail stores.
-                    </p>
-
-                    <a href="#pricing" class="btn btn-primary btn-lg me-2">
-                        Start Free Trial
-                    </a>
-
-                    <a href="#features" class="btn btn-outline-primary btn-lg">
-                        Explore Features
-                    </a>
+                    <h1 class="fw-bold mb-4">Smart Retail Management & Stock Operations System</h1>
+                    <p class="lead mb-4">Manage billing, inventory, sales, and customers from one powerful cloud platform designed for modern retail stores.</p>
+                    <a href="#pricing" class="btn btn-primary btn-lg me-2">Start Free Trial</a>
+                    <a href="#features" class="btn btn-outline-primary btn-lg">Explore Features</a>
                 </div>
-
                 <!-- Right Image -->
                 <div class="col-lg-6 text-center mt-4 mt-lg-0">
                     <img src="{{ asset('assets/images/celeberation/' . rand(1, 7) . '.png') }}" class="img-fluid rounded shadow" alt="African girl working in a retail shop using POS system">
@@ -96,10 +83,10 @@
 
                         <i class="fa-solid fa-cash-register text-primary fs-1 mb-3"></i>
 
-                        <h5 class="fw-bold">Point of Sale (POS)</h5>
+                        <h5 class="fw-bold">Stock Operations</h5>
 
                         <p class="text-muted">
-                            Process sales quickly with a fast and easy POS system.
+                            Streamline your stock operations with easy-to-manage transfers, adjustments, requisitions, returns, and accurate movement tracking across your business.
                         </p>
 
                     </div>
@@ -453,7 +440,7 @@
     <!-- TESTIMONIALS END -->
     <!-- CTA -->
     <section class="cta py-5 text-center">
-        <h2 class="fw-bold mb-3">Start Your Free POS Today!</h2>
+        <h2 class="fw-bold mb-3">Start Managing Your Retail Business for Free!</h2>
         <a href="#pricing" class="btn btn-light btn-lg">Start Free Trial</a>
     </section>
 

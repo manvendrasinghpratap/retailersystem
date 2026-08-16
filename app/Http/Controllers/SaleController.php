@@ -14,6 +14,7 @@ use App\Models\PaymentType;
 use App\Models\SalePayment;
 use Illuminate\Support\Facades\DB;
 use App\Models\PaymentMethod;
+use Illuminate\Support\Str;
 class SaleController extends Controller
 {
 
@@ -95,32 +96,117 @@ class SaleController extends Controller
     {
         $breadcrumb = $this->breadcrumbBilling;
         $paymentTypes = PaymentType::getSelectable();
-        $query = Sale::with('user', 'payments')->visibleToUser()->ofAccount();
+        $approvalStatus = \Config::get('constants.approvalStatus');
+        /*
+        |--------------------------------------------------------------------------
+        | Base Sales Query with Aggregates
+        |--------------------------------------------------------------------------
+        */
+        $query = Sale::with(['user', 'payments', 'customer'])
+            ->visibleToUser()
+            ->ofAccount()
+            ->select('sales.*');
 
-        // Filter by date
+        // Calculated Subquery: Total Returned Amount
+        $returnedAmountSubquery = DB::table('sale_returns')
+            ->selectRaw('COALESCE(SUM(total_amount), 0)')
+            ->whereColumn('sale_returns.sale_id', 'sales.id')
+            ->where('sale_returns.status', 'completed');
+
+        // Calculated Subquery: Total Returned Quantity
+        $returnedQtySubquery = DB::table('sale_return_items')
+            ->join('sale_returns', 'sale_returns.id', '=', 'sale_return_items.sale_return_id')
+            ->selectRaw('COALESCE(SUM(quantity), 0)')
+            ->whereColumn('sale_returns.sale_id', 'sales.id')
+            ->where('sale_returns.status', 'completed');
+
+        // Add Computed Columns using Bindings
+        $query->selectSub($returnedAmountSubquery, 'returned_amount');
+        $query->selectSub($returnedQtySubquery, 'returned_quantity');
+
+        $query->selectRaw('
+        GREATEST(0, sales.total - (' . $returnedAmountSubquery->toSql() . ')) AS net_sale,
+        CASE 
+            WHEN (' . $returnedAmountSubquery->toSql() . ') <= 0 THEN "Completed"
+            WHEN (' . $returnedAmountSubquery->toSql() . ') >= sales.total THEN "Fully Returned"
+            ELSE "Partially Returned"
+        END AS return_status
+    ', array_merge($returnedAmountSubquery->getBindings(), $returnedAmountSubquery->getBindings(), $returnedAmountSubquery->getBindings()));
+
+        /*
+        |--------------------------------------------------------------------------
+        | Filters
+        |--------------------------------------------------------------------------
+        */
+        // Date Range Filter
         $query = Settings::applyDateRange($query, $request, 'created_at', true);
-        // Filter by invoice
-        if ($request->invoice_no) {
-            $query->where('invoice_no', 'like', '%' . $request->invoice_no . '%');
-        }
-        $sales = $query->latest();
 
-        // Summary
-        $totalSales = $sales->sum('total');
-        if ($request->pdf) {
-            $sales = $sales->get();
+        // Invoice Search Filter
+        if ($request->filled('invoice_no')) {
+            $query->where('sales.invoice_no', 'like', '%' . trim($request->invoice_no) . '%');
+        }
+
+        // NEW: Payment Type / Sale Type Filter (Full, Partial, Credit)
+        if ($request->filled('payment_type')) {
+            $query->where('sales.payment_type', $request->payment_type);
+        }
+
+        // NEW: Payment Approval Status Filter (Pending, Approved, Rejected)
+        if ($request->filled('approval_status')) {
+            $query->where('sales.payment_approval_status', $request->approval_status);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Summary Totals (Optimized)
+        |--------------------------------------------------------------------------
+        */
+        // Clone base filtered query for total calculations
+        $summaryQuery = (clone $query);
+
+        $totalSales = $summaryQuery->sum('sales.total');
+
+        $totalReturned = DB::table('sale_returns')
+            ->where('sale_returns.status', 'completed')
+            ->whereIn('sale_returns.sale_id', $summaryQuery->select('sales.id'))
+            ->sum('sale_returns.total_amount');
+
+        $netSales = $totalSales - $totalReturned;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Data Retrieval / Export Handling
+        |--------------------------------------------------------------------------
+        */
+        $salesQuery = $query->latest('sales.created_at');
+
+        // PDF Export Execution
+        if ($request->boolean('pdf')) {
+            $sales = $salesQuery->get();
             $pdfHeaderdata = \Config::get('constants.downloadsalespdf');
-            $pdf = Pdf::loadView('backend.pdf.sales.salesListpdf', compact('sales', 'pdfHeaderdata'));
+
+            $pdf = Pdf::loadView('backend.pdf.sales.salesListpdf', compact(
+                'sales',
+                'pdfHeaderdata',
+                'totalSales',
+                'totalReturned',
+                'netSales'
+            ));
+
             $pdf = Settings::downloadLandscapepdf($pdf);
-            $fileName = $pdfHeaderdata['filename'] . '-' . date('Y-m-d') . '.pdf';
+            $fileName = $pdfHeaderdata['filename'] . '-' . date('Y-m-d_H-i-s') . '.pdf';
             return $pdf->stream($fileName);
-        } elseif ($request->has('csv')) {
-            $sales = $sales->get();
+        }
+        // CSV Export Execution
+        if ($request->boolean('csv') || $request->has('csv')) {
+            $sales = $salesQuery->get();
             $csvHeaderdata = \Config::get('constants.downloadsalespdf');
-            $fileName = $csvHeaderdata['filename'] . '-' . date('Y-m-d') . '.csv';
+            $fileName = ($csvHeaderdata['filename'] ?? 'Sales-List') . '-' . date('Y-m-d_H-i-s') . '.csv';
+
             $data = [];
-            $ii = $i = 0;
-            // ✅ Header Row
+            $ii = 0;
+
+            // CSV Header Row (Matching index.blade.php columns)
             $data[$ii] = [
                 '#',
                 __('translation.customer_name'),
@@ -129,11 +215,18 @@ class SaleController extends Controller
                 __('translation.invoice_no'),
                 __('translation.cashier'),
                 __('translation.payment_type'),
+                __('translation.payment_status'),
                 __('translation.payment_method'),
-                __('translation.b_ngn') . ' ' . __('translation.total_amount'),
+                __('translation.amount'),
+                __('translation.tax'),
+                __('translation.fullfillment_method'),
+                __('translation.delivery_charges'),
+                __('translation.total_amount'),
+                __('translation.approval_status'),
                 __('translation.transaction_date'),
             ];
 
+            // CSV Data Rows
             foreach ($sales as $sale) {
                 $data[++$ii] = [
                     $ii,
@@ -142,16 +235,33 @@ class SaleController extends Controller
                     $sale->customer->email ?? '-',
                     $sale->invoice_no,
                     $sale->user->name ?? '-',
-                    ($sale->payment_method == null) ? 'Partial Payment' : 'Full Payment',
-                    $sale->payment_methods,
-                    __('translation.b_ngn') . ' ' . number_format($sale->total, 2),
+                    ucfirst($paymentTypes[$sale->payment_type] ?? $sale->payment_type ?? '-'),
+                    ucfirst($sale->payment_status ?? '-'),
+                    ucfirst($sale->payment_methods ?? '-'),
+                    __('translation.b_ngn') . ' ' . number_format($sale->subtotal ?? 0, 2),
+                    __('translation.b_ngn') . ' ' . number_format($sale->tax ?? 0, 2),
+                    Settings::getDataTitle($sale->delivery_type ?? '-'),
+                    __('translation.b_ngn') . ' ' . number_format($sale->delivery_charge ?? 0, 2),
+                    __('translation.b_ngn') . ' ' . number_format($sale->total ?? 0, 2),
+                    ucfirst($sale->payment_approval_status ?? '-'),
                     Settings::getFormattedDatetime($sale->created_at),
                 ];
             }
+
             return Settings::downloadcsvfile($data, $fileName);
         }
-        $sales = $sales->paginate(config('constants.pagination'));
-        return view('backend.sales.index', compact('sales', 'breadcrumb', 'paymentTypes'));
+
+        // Standard View Pagination
+        $sales = $salesQuery->paginate(account_setting('general.pagination'))->appends($request->all());
+
+        return view('backend.sales.index', compact(
+            'breadcrumb',
+            'paymentTypes',
+            'sales',
+            'totalSales',
+            'totalReturned',
+            'netSales'
+        ));
     }
 
     /**
@@ -385,7 +495,7 @@ class SaleController extends Controller
             $sale = Sale::with(['customer', 'items.product', 'payments', 'user', 'warehouse', 'creditDuration', 'store'])->findOrFail($id);
             $pdf = Pdf::loadView('backend.pdf.invoice', compact('sale'));
             $pdf = Settings::downloadpdf($pdf);
-            $fileName = $pdfHeaderdata['filename'] . '-' . $sale->invoice_no . '.pdf';
+            $fileName = Settings::generateFileName($pdfHeaderdata['filename'] ?? 'Invoice', $sale->invoice_no);
             return $pdf->stream($fileName);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage(),], 500);

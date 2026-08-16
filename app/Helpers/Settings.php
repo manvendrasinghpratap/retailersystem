@@ -18,6 +18,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Lang;
 use App\Models\AccountSetting;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class Settings
 {
@@ -27,6 +28,26 @@ class Settings
         $settingData = Setting::Select('setting_value')->where("setting_key", $setting_key)->first();
         return $settingData->setting_value;
     }
+
+    /**
+     * Generate a standardized, human-readable, and web-safe file name.
+     *
+     * @param string $prefix Main identifier (e.g., 'Invoice', 'Receipt')
+     * @param string|int|null $reference Reference number/ID (e.g., $sale->invoice_no)
+     * @param string $extension File extension without dot
+     * @return string
+     */
+    public static function generateFileName(string $prefix, $reference = null, string $extension = 'pdf'): string
+    {
+        $cleanPrefix = Str::slug($prefix);
+        $cleanReference = $reference ? Str::slug($reference) : null;
+        $timestamp = now()->format('Y-m-d_h-i-A');
+
+        $parts = array_filter([$cleanPrefix, $cleanReference, $timestamp]);
+
+        return implode('-', $parts) . '.' . ltrim($extension, '.');
+    }
+
 
     public static function downloadpdf($pdf)
     {

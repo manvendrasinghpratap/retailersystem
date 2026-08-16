@@ -17,9 +17,11 @@ use App\Models\PaymentType;
 use App\Models\CreditDuration;
 use App\Models\SalePayment;
 use App\Models\PaymentMethod;
-use App\Helpers\AccountSettingHelper;
 use App\Models\PurchaseItemTracking;
 use App\Models\SaleItemTracking;
+use App\Helpers\Settings;
+use Exception;
+use App\Models\StockAdjustment;
 
 class BillingController extends Controller
 {
@@ -153,19 +155,15 @@ class BillingController extends Controller
      * - Deducts inventory
      * - Stores sale items
      */
-
     public function completeSale(Request $request)
     {
         $request->validate([
             'items' => 'required|array|min:1',
-
             'items.*.id' => 'required|integer|exists:products,id',
             'items.*.quantity' => 'required|numeric|min:1',
             'items.*.price' => 'required|numeric|min:0',
-
             'items.*.tracking_ids' => 'nullable|array',
             'items.*.tracking_ids.*' => 'integer|exists:purchase_item_trackings,id',
-
             'items.*.barcodes' => 'nullable|array',
             'items.*.barcodes.*' => 'nullable|string',
 
@@ -178,21 +176,28 @@ class BillingController extends Controller
 
             'payments' => 'nullable|array',
             'payments.*.amount' => 'required|numeric|min:0',
-            'payments.*.method' => 'required_with:payments.*.amount|string',
+            'payments.*.method' => 'required_with:payments.*.amount',
 
             'customer_id' => 'nullable|integer',
-            'credit_duration_id' => 'required_if:payment_type,credit|nullable|integer',
+            'credit_duration_id' => 'nullable|required_if:payment_type,credit|integer',
+
+            // 🔹 Delivery / Fulfillment Validation
+            'fulfillment_type' => 'required|in:pickup,delivery',
+            'delivery_address' => 'required_if:fulfillment_type,delivery|nullable|string',
+            'delivery_amount' => 'required_if:fulfillment_type,delivery|nullable|numeric|min:0',
+            'delivery_notes' => 'nullable|string',
         ]);
 
         try {
-
             $storeId = auth()->user()->store_id ?? 0;
             if ($storeId == 0) {
                 return response()->json(['status' => false, 'message' => 'Store not found.']);
             }
 
             if ($request->payment_type === 'credit' && empty($request->customer_id)) {
-                throw ValidationException::withMessages(['customer_id' => 'Customer is required for credit sales.']);
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'customer_id' => 'Customer is required for credit sales.'
+                ]);
             }
 
             $sale = DB::transaction(function () use ($request) {
@@ -207,60 +212,62 @@ class BillingController extends Controller
                 $balanceAmount = 0;
                 $status = 'completed';
                 $payment_status = 'paid';
+                $payment_approval_status = 'approve';
+                $payment_approved_by = auth()->id();
+                $payment_approved_at = now();
+
+                // 🔹 Check if credit duration was selected
+                if (!empty($request->credit_duration_id)) {
+                    $creditDuration = CreditDuration::ofAccount()->active()->find($request->credit_duration_id);
+                    if ($creditDuration) {
+                        $interestRate = $creditDuration->interest;
+                        $interestAmount = $request->interest_amount ?? 0;
+                        $payableAmount = $request->payable_amount ?? $total;
+                        $dueDate = now()->addDays($creditDuration->duration_days);
+                    }
+                }
+
                 /*
                 |--------------------------------------------------------------------------
                 | Credit Sale
                 |--------------------------------------------------------------------------
                 */
                 if ($request->payment_type === 'credit') {
-
-                    $creditDuration = CreditDuration::ofAccount()->active()->findOrFail($request->credit_duration_id);
-                    $interestRate = $creditDuration->interest;
-                    $interestAmount = $request->interest_amount ?? 0; //round(($total * $interestRate) / 100, 2);
-                    $payableAmount = $request->payable_amount ?? 0; //round($total + $interestAmount, 2);
                     $balanceAmount = $payableAmount;
-                    $dueDate = now()->addDays($creditDuration->duration_days);
-
                     $totalPaid = 0;
-                    $status = 'pending';
+                    $status = 'pending'; // Stays pending until manager approves
                     $payment_status = 'unpaid';
+                    $payment_approval_status = 'pending';
+                    $payment_approved_by = null;
+                    $payment_approved_at = null;
                 }
-
                 /*
                 |--------------------------------------------------------------------------
                 | Full Payment
                 |--------------------------------------------------------------------------
                 */ elseif ($request->payment_type === 'full') {
-
                     if (abs($totalPaid - $total) > 0.01) {
-                        throw new \Exception('Payment total mismatch');
+                        throw new \Exception('Payment total mismatch.');
                     }
-
                     $balanceAmount = 0;
                 }
-
                 /*
                 |--------------------------------------------------------------------------
                 | Partial Payment
                 |--------------------------------------------------------------------------
                 */ elseif ($request->payment_type === 'partial') {
                     if (empty($request->payments)) {
-                        throw new \Exception(
-                            'At least one payment method is required.'
-                        );
+                        throw new \Exception('At least one payment method is required.');
                     }
                     if (abs($totalPaid - $total) > 0.01) {
-                        throw new \Exception(
-                            'Split payment total must equal invoice total.'
-                        );
+                        throw new \Exception('Split payment total must equal invoice total.');
                     }
-
                     $balanceAmount = 0;
                 }
 
                 /*
                 |--------------------------------------------------------------------------
-                | Create Sale
+                | Create Sale Record
                 |--------------------------------------------------------------------------
                 */
                 $sale = Sale::create([
@@ -279,22 +286,31 @@ class BillingController extends Controller
                     'status' => $status,
                     'payment_status' => $payment_status,
                     'payment_type' => $request->payment_type,
-                    // Credit Fields
+
+                    // 🔹 Fulfillment / Delivery Fields
+                    'delivery_type' => $request->fulfillment_type,
+                    'delivery_address' => $request->fulfillment_type === 'delivery' ? $request->delivery_address : null,
+                    'delivery_charge' => $request->fulfillment_type === 'delivery' ? ($request->delivery_amount ?? 0) : 0,
+                    'delivery_notes' => $request->delivery_notes,
+
+                    // Credit / Duration Fields
                     'credit_duration_id' => $creditDuration?->id,
                     'due_date' => $dueDate,
                     'interest_rate' => $interestRate,
                     'interest_amount' => $interestAmount,
                     'payable_amount' => $payableAmount,
-                    'user_id' => auth()->id()
+                    'payment_approval_status' => $payment_approval_status,
+                    'user_id' => auth()->id(),
+                    'payment_approved_by' => $payment_approved_by,
+                    'payment_approved_at' => $payment_approved_at,
                 ]);
 
                 /*
                 |--------------------------------------------------------------------------
-                | Sale Items
+                | Sale Items & Stock Handling
                 |--------------------------------------------------------------------------
                 */
                 foreach ($request->items as $item) {
-
                     $inventory = Inventory::where('product_id', $item['id'])->lockForUpdate()->first();
 
                     if (!$inventory) {
@@ -313,45 +329,34 @@ class BillingController extends Controller
                         'total' => $item['quantity'] * $item['price'],
                     ]);
 
+                    // 🔹 Standard (Non-Credit) Sale: Deduct inventory stock immediately
+                    if ($request->payment_type !== 'credit') {
+                        //$inventory->decrement('stock', $item['quantity']);
+                    }
+
                     if (!empty($item['tracking_ids'])) {
-
                         foreach ($item['tracking_ids'] as $trackingId) {
-
-                            $tracking = PurchaseItemTracking::where(
-                                'id',
-                                $trackingId
-                            )
-                                ->lockForUpdate()
-                                ->firstOrFail();
+                            $tracking = PurchaseItemTracking::where('id', $trackingId)->lockForUpdate()->firstOrFail();
 
                             if ((int) $tracking->is_sold !== 0) {
-
-                                throw new \Exception(
-                                    "Barcode {$tracking->barcode} is already sold."
-                                );
+                                throw new \Exception("Barcode {$tracking->barcode} is already sold.");
                             }
 
                             SaleItemTracking::create([
-                                'sale_item_id' =>
-                                    $saleItem->id,
-
-                                'purchase_item_tracking_id' =>
-                                    $tracking->id,
+                                'sale_item_id' => $saleItem->id,
+                                'purchase_item_tracking_id' => $tracking->id,
                             ]);
 
+                            // 🔹 Standard (Non-Credit) Sale: Mark barcode as sold immediately
+                            // if ($request->payment_type !== 'credit') {   //// the reason of this we sold the product if sale is is rejected then we reverse the prosesses
                             $tracking->update([
                                 'is_sold' => 1,
                                 'sold_at' => now(),
                                 'store_id' => auth()->user()->store_id,
                             ]);
+                            // }
                         }
                     }
-
-                    // Uncomment when stock deduction is required
-                    // $inventory->decrement(
-                    //     'stock',
-                    //     $item['quantity']
-                    // );
                 }
 
                 /*
@@ -359,12 +364,17 @@ class BillingController extends Controller
                 | Sale Payments
                 |--------------------------------------------------------------------------
                 */
-                if (!empty($request->payments) && !in_array($request->payment_type, ['credit'])) {
+                if (!empty($request->payments) && $request->payment_type !== 'credit') {
                     foreach ($request->payments as $pay) {
-                        $paymentMethod = PaymentMethod::findOrFail($pay['method']);
+                        $methodName = $pay['method'];
+                        if (is_numeric($pay['method'])) {
+                            $paymentMethod = PaymentMethod::find($pay['method']);
+                            $methodName = $paymentMethod ? $paymentMethod->short_name : $pay['method'];
+                        }
+
                         SalePayment::create([
                             'sale_id' => $sale->id,
-                            'method' => $paymentMethod->short_name,
+                            'method' => $methodName,
                             'amount' => $pay['amount'],
                             'payment_received_by' => auth()->id(),
                         ]);
@@ -374,37 +384,236 @@ class BillingController extends Controller
                 return $sale;
             });
 
-            $sale->load('items');
-            $customer = $request->customer_id ? Customer::find($request->customer_id) : null;
-            /*
-            |--------------------------------------------------------------------------
-            | Email Invoice
-            |--------------------------------------------------------------------------
-            */
-            if (!empty($customer?->email)) {
+            // 🔹 Custom Response Message depending on payment type
 
-                $data = [
-                    'sale' => $sale,
-                    'items' => $sale->items ?? [],
-                    'customer' => $customer,
-                    'total' => $sale->total ?? 0,
-                    'invoice_no' => $sale->invoice_no,
-                    'date' => optional($sale->created_at)->format('Y-m-d'),
-                    'time' => optional($sale->created_at)->format('h:i A'),
-                ];
+            $paymentType = $request->input('payment_type') ?? $request->input('payments.0.method');
+            $isCredit = strtolower(trim($paymentType)) === 'credit';
+            $message = $isCredit
+                ? 'Credit sale recorded. Manager approval is required to confirm and mark this sale as sold.'
+                : __('translation.sale_completed');
 
-                // sendCustomerEmail(
-                //     $customer->email,
-                //     'Invoice #' . $sale->invoice_no,
-                //     'emails.invoice',
-                //     $data
-                // );
-            }
 
-            return response()->json(['success' => true, 'sale_id' => $sale->id, 'message' => 'Sale completed successfully']);
+            return response()->json([
+                'success' => true,
+                'sale_id' => $sale->id,
+                'is_credit' => $isCredit,
+                'message' => $message
+            ]);
 
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'sale_id' => null, 'message' => $e->getMessage()], 400);
+            return response()->json([
+                'success' => false,
+                'sale_id' => null,
+                'message' => $e->getMessage()
+            ], 400);
+        }
+    }
+
+    /**
+     * Handle Manager Approval or Rejection for Credit Sales
+     */
+    public function approveCreditSale_old(Request $request, $id)
+    {
+        $saleDetails = Settings::getDecodeCodeWithHashids($id);
+        $saleId = $saleDetails[0];
+        $sale = Sale::with('items.trackings')->findOrFail($saleId);
+        $request->validate([
+            'action' => 'required|in:approve,reject',
+            'note' => 'required|string|max:1000',
+        ]);
+
+        try {
+            $saleDetails = Settings::getDecodeCodeWithHashids($id);
+            $saleId = $saleDetails[0];
+            $sale = Sale::with('items.trackings')->findOrFail($saleId);
+            // Case-insensitive check to avoid mismatches (e.g., "Credit" vs "credit")
+            if (strtolower($sale->payment_type) !== 'credit' || strtolower($sale->payment_approval_status) !== 'pending') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This sale does not require approval or has already been processed.'
+                ], 422);
+            }
+
+            DB::transaction(function () use ($request, $sale) {
+                if ($request->action === 'reject') {
+                    // 1. Process Stock Deduction & Barcode Tracking Updates
+                    foreach ($sale->items as $item) {
+                        // Mark tracked barcodes as sold
+                        if ($item->trackings && $item->trackings->isNotEmpty()) {
+                            foreach ($item->trackings as $saleTracking) {
+                                // Resolve the actual tracking record ID safely
+                                $trackingId = $saleTracking->purchase_item_tracking_id ?? $saleTracking->id;
+                                $tracking = PurchaseItemTracking::where('id', $trackingId)->lockForUpdate()->first();
+
+                                if ($tracking) {
+                                    if ((int) $tracking->is_sold !== 1) {
+                                        throw new Exception("Barcode '{$tracking->barcode}' is not sold.");
+                                    }
+
+                                    $tracking->update([
+                                        'is_sold' => 0,
+                                        'sold_at' => null,
+                                        'store_id' => null,
+                                    ]);
+                                }
+
+                                // StockAdjustment::create([
+                                //     'account_id' => $accountId,
+                                //     'product_id' => $saleItem->product_id,
+                                //     'type' => 'add',
+                                //     'quantity' => $quantity,
+                                //     'reference_id' => $saleReturn->id,
+                                //     'note' => 'Customer return ' . $saleReturn->return_no . ' - Store ID: ' . $storeId,
+                                //     'created_by' => $userId,
+                                // ]);
+
+
+                            }
+                        }
+                    }
+
+                    // Reject/Cancel the credit request
+                    $sale->update([
+                        'status' => 'cancelled',
+                        'payment_approval_status' => 'reject',
+                        'payment_approved_by' => auth()->id(),
+                        'payment_approved_at' => now(),
+                        'payment_approval_note' => $request->note,
+                    ]);
+
+                } else {
+                    // 2. Update Sale Status to Approved
+                    $sale->update([
+                        'status' => 'completed',
+                        'payment_approval_status' => 'approve',
+                        'payment_approved_by' => auth()->id(),
+                        'payment_approved_at' => now(),
+                        'payment_approval_note' => $request->note,
+                    ]);
+                }
+            });
+
+            $actionText = $request->action === 'approve' ? 'approve' : 'reject';
+
+            return response()->json([
+                'success' => true,
+                'message' => "Credit sale invoice #{$sale->invoice_no} has been {$actionText} successfully."
+            ]);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 400);
+        }
+    }
+
+    public function approveCreditSale(Request $request, $id)
+    {
+        $request->validate([
+            'action' => 'required|in:approve,reject',
+            'note' => 'required|string|max:1000',
+        ]);
+
+        try {
+            // Decode Hash ID to get actual Sale ID
+            $saleDetails = Settings::getDecodeCodeWithHashids($id);
+            if (empty($saleDetails)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid sale ID provided.'
+                ], 404);
+            }
+
+            $saleId = $saleDetails[0];
+            $sale = Sale::with('items.trackings')->findOrFail($saleId);
+
+            // Case-insensitive validation check
+            if (strtolower($sale->payment_type) !== 'credit' || strtolower($sale->payment_approval_status) !== 'pending') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This sale does not require approval or has already been processed.'
+                ], 422);
+            }
+
+            DB::transaction(function () use ($request, $sale) {
+                if ($request->action === 'reject') {
+                    // Since product was already marked as sold at creation, reverse stock & tracking on rejection
+                    foreach ($sale->items as $item) {
+
+                        // 1. Restore Inventory Stock
+                        $inventory = Inventory::where('product_id', $item->product_id)
+                            // ->where('store_id', $sale->store_id)
+                            ->lockForUpdate()
+                            ->first();
+
+                        if ($inventory) {
+                            // $inventory->increment('stock', $item->quantity); as this is already adjust in StockAdjustment service 
+                        }
+
+                        // 2. Mark Tracked Barcodes as Not Sold
+                        if ($item->trackings && $item->trackings->isNotEmpty()) {
+                            foreach ($item->trackings as $saleTracking) {
+                                $trackingId = $saleTracking->purchase_item_tracking_id ?? $saleTracking->id;
+                                $tracking = PurchaseItemTracking::where('id', $trackingId)
+                                    ->lockForUpdate()
+                                    ->first();
+
+                                if ($tracking) {
+                                    $tracking->update([
+                                        'is_sold' => 0,
+                                        'sold_at' => null,
+                                        'store_id' => null,
+                                    ]);
+                                }
+                            }
+                        }
+
+                        // 3. Create Stock Adjustment Entry for Rejection
+                        StockAdjustment::create([
+                            'account_id' => $sale->account_id ?? null,
+                            'product_id' => $item->product_id,
+                            'type' => 'add',
+                            'quantity' => $item->quantity,
+                            'reference_id' => $sale->id,
+                            'note' => 'Credit sale rejected (Invoice #' . $sale->invoice_no . ') - Store ID: ' . $sale->store_id,
+                            'created_by' => auth()->id(),
+                        ]);
+                    }
+
+                    // Mark Sale as Cancelled / Rejected
+                    $sale->update([
+                        'status' => 'cancelled',
+                        'payment_approval_status' => 'reject',
+                        'payment_approved_by' => auth()->id(),
+                        'payment_approved_at' => now(),
+                        'payment_approval_note' => $request->note,
+                    ]);
+
+                } else {
+                    // Mark Sale as Completed / Approved (Stock was already deducted during sale creation)
+                    $sale->update([
+                        'status' => 'completed',
+                        'payment_approval_status' => 'approve',
+                        'payment_approved_by' => auth()->id(),
+                        'payment_approved_at' => now(),
+                        'payment_approval_note' => $request->note,
+                    ]);
+                }
+            });
+
+            $actionText = $request->action === 'approve' ? 'approved' : 'rejected';
+
+            return response()->json([
+                'success' => true,
+                'message' => "Credit sale invoice #{$sale->invoice_no} has been {$actionText} successfully."
+            ]);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 400);
         }
     }
 

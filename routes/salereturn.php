@@ -16,9 +16,9 @@ Route::prefix('admin')->middleware(['auth'])->group(function () {
     Route::post('sale-returns/search-invoice', [SaleReturnController::class, 'searchInvoice'])->name('admin.sale-returns.search-invoice');
     Route::post('sale-returns/find-barcode', [SaleReturnController::class, 'findBarcode'])->name('admin.sale-returns.find-barcode');
     Route::post('sale-returns/store', [SaleReturnController::class, 'store'])->name('admin.sale-returns.store');
-    Route::get('sale-returns/{id}', [SaleReturnController::class, 'show'])->name('admin.sale-returns.show');
     Route::get('sales-return/scan-barcode', [SaleReturnController::class, 'scanBarcode'])->name('admin.sales-return.scan-barcode');
     Route::post('sales-return/assign-customer', [SaleReturnController::class, 'assignCustomer'])->name('admin.sales-return.assign-customer');
+    Route::get('sale-returns/export-pdf', [SaleReturnController::class, 'exportPdf'])->name('admin.sale-returns.exportPdf');
+    Route::get('sale-returns/export-csv', [SaleReturnController::class, 'exportCsv'])->name('admin.sale-returns.exportCsv');
+    Route::get('sale-returns/{id}', [SaleReturnController::class, 'show'])->name('admin.sale-returns.show');
 });
-
-

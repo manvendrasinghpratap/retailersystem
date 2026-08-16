@@ -27,6 +27,10 @@ class SaleReturn extends Model
         'refund_amount' => 'decimal:2',
     ];
 
+    public function scopeOfAccount($query)
+    {
+        return $query->where('account_id', auth()->user()->account_id);
+    }
     public function sale()
     {
         return $this->belongsTo(Sale::class);

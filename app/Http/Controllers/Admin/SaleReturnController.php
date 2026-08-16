@@ -7,8 +7,6 @@ use App\Helpers\Settings;
 use App\Models\Customer;
 use App\Models\PaymentMethod;
 use App\Models\StockAdjustment;
-
-use App\Services\StockService;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\SaleReturn;
@@ -16,11 +14,10 @@ use App\Models\SaleReturnItem;
 use App\Models\Inventory;
 use App\Models\PurchaseItemTracking;
 use App\Models\SaleItemTracking;
-use Illuminate\Validation\Rule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
-
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class SaleReturnController extends Controller
 {
@@ -66,7 +63,7 @@ class SaleReturnController extends Controller
     {
         $breadcrumb = $this->breadcrumbListing ?? [];
 
-        $query = SaleReturn::with(['sale', 'customer', 'items.product'])->where('account_id', auth()->user()->account_id)->latest();
+        $query = SaleReturn::with(['sale', 'customer', 'items.product'])->ofAccount()->latest();
 
         if ($request->filled('return_no')) {
             $query->where('return_no', 'LIKE', '%' . trim($request->return_no) . '%');
@@ -78,17 +75,67 @@ class SaleReturnController extends Controller
                 $q->where('invoice_no', 'LIKE', '%' . $invoiceNo . '%');
             });
         }
-
         if ($request->filled('customer_id')) {
             $query->where('customer_id', $request->customer_id);
         }
-
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
+
+        if ($request->filled('pdf')) {
+            $saleReturns = $query->get();
+            $pdfHeaderdata = \Config::get('constants.saleReturnsReport');
+            $pdf = PDF::loadView('backend.pdf.sale-return.saleReturnsReport', compact('saleReturns', 'pdfHeaderdata', 'breadcrumb'));
+            $pdf = Settings::downloadlandscapepdf($pdf);
+            $fileName = $pdfHeaderdata['filename'] . '-' . date('Y-m-d') . '.pdf';
+            return $pdf->stream($fileName);
+        } elseif ($request->filled('csv')) {
+            $saleReturns = $query->get();
+            $csvHeaderdata = \Config::get('constants.saleReturnsReport');
+            $fileName = $csvHeaderdata['filename'] . '-' . date('Y-m-d') . '.csv';
+            $data = [];
+            $ii = $i = 0;
+            $data[$ii] = [
+                '#',
+                __('translation.return_no'),
+                __('translation.invoice_no'),
+                __('translation.customer_name'),
+                __('translation.products'),
+                __('translation.return_amount'),
+                __('translation.status'),
+                __('translation.created_at'),
+            ];
+
+            foreach ($saleReturns as $return) {
+                $products = $return->items->pluck('product.name')->filter()->implode(', ');
+                $data[++$ii] = [
+                    $ii,
+                    $return->return_no,
+                    $return->sale->invoice_no,
+                    $return->customer->name,
+                    $products,
+                    __('translation.currency') . Settings::getcustomnumberformat($return->total_amount),
+                    $return->status,
+                    !empty($return->created_at) ? "\t" . Settings::getFormattedDatetime($return->created_at) : '-',
+                ];
+            }
+            return Settings::downloadcsvfile($data, $fileName);
+        }
+
         $returns = $query->paginate(account_setting('general.pagination'))->withQueryString();
         return view('backend.admin.sale-return.index', compact('returns', 'breadcrumb'));
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $request->merge(['pdf' => 1]);
+        return $this->index($request);
+    }
+    public function exportCsv(Request $request)
+    {
+        $request->merge(['csv' => 1]);
+        return $this->index($request);
     }
 
     public function create()
@@ -427,8 +474,8 @@ class SaleReturnController extends Controller
                                 'is_reserved' => 1, /// 1 means reserved, 0 means available
                                 'sold_at' => null,
                                 'store_id' => $storeId,
-                                'requisition_id' => null,
-                                'requisition_item_id' => null,
+                                // 'requisition_id' => null, // it means product is requested but not retuen to warehouse
+                                // 'requisition_item_id' => null, // it means product is requested but not retuen to warehouse
                             ]);
                         }
 
@@ -536,29 +583,21 @@ class SaleReturnController extends Controller
         }
     }
 
-
+    /*
+    @description show sale return details
+    @param $id
+    @return view
+    |--------------------------------------------------------------------------
+    | Sale Return Show
+    |--------------------------------------------------------------------------
+    */
 
     public function show($id)
     {
+        $breadcrumb = $this->breadcrumbListing ?? [];
         $id = Settings::getDecodeCode($id);
-
-        $return = SaleReturn::with([
-            'sale',
-            'customer',
-            'items.product',
-            'items.saleItem',
-            'items.trackings',
-        ])
-            ->where(
-                'account_id',
-                auth()->user()->account_id
-            )
-            ->findOrFail($id);
-
-        return view(
-            'backend.admin.sale-return.show',
-            compact('return')
-        );
+        $return = SaleReturn::with(['sale', 'customer', 'items.product', 'items.saleItem', 'items.tracking'])->ofAccount()->findOrFail($id);
+        return view('backend.admin.sale-return.show', compact('return', 'breadcrumb'));
     }
 
     public function saleDetails(Request $request)
