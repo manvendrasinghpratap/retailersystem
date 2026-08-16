@@ -111,25 +111,31 @@
                                         </td>
                                         <td>{{ ucfirst($sale->payment_approval_status ?? '-') }}</td>
                                         <td>{{ \App\Helpers\Settings::getFormattedDatetime($sale->created_at) }}</td>
-                                        <td>
-                                            @if(empty($sale->payment_approved_by) && ($sale->payment_approval_status === 'pending'))
-                                                <a href="javascript:void(0)" class="approve-credit-sale-btn" data-customer-name="{{ $sale->customer->name ?? 'Guest' }}" data-customer-contact="{{ $sale->customer->phone ?? $sale->customer->email ?? '-' }}" data-total-amount="{{ __('translation.b_ngn') }}{{ \App\Helpers\Settings::getcustomnumberformat($sale->total) }}" data-sale-id="{{ \App\Helpers\Settings::getEncodeCodeWithHashids($sale->id) }}" data-invoice-no="{{ $sale->invoice_no }}" title="Approve/Reject Credit Sale">
-                                                    <i class="fas fa-file-signature me-1 text-danger"></i>
-                                                </a>
-                                            @endif
+                                        <td class="text-center">
+                                            <div class="d-inline-flex align-items-center justify-content-center gap-2">
+                                                {{-- Approval / Rejection Action --}}
+                                                @if(empty($sale->payment_approved_by) && ($sale->payment_approval_status === 'pending'))
+                                                    <a href="javascript:void(0)" class="btn btn-sm btn-soft-warning approve-credit-sale-btn px-2 py-1" data-customer-name="{{ $sale->customer->name ?? 'Guest' }}" data-customer-contact="{{ $sale->customer->phone ?? $sale->customer->email ?? '-' }}" data-total-amount="{{ __('translation.b_ngn') }}{{ \App\Helpers\Settings::getcustomnumberformat($sale->total) }}" data-sale-id="{{ \App\Helpers\Settings::getEncodeCodeWithHashids($sale->id) }}" data-invoice-no="{{ $sale->invoice_no }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Approve / Reject Credit Sale">
+                                                        <i class="fas fa-file-signature text-warning"></i>
+                                                    </a>
+                                                @endif
 
-                                            <a href="{{ route('admin.sales.show', \App\Helpers\Settings::getEncodeCodeWithHashids($sale->id)) }}" title="View">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
+                                                {{-- View Details Action --}}
+                                                <a href="{{ route('admin.sales.show', \App\Helpers\Settings::getEncodeCodeWithHashids($sale->id)) }}" class="btn btn-sm btn-soft-primary px-2 py-1" data-bs-toggle="tooltip" data-bs-placement="top" title="View Details">
+                                                    <i class="fas fa-eye text-primary"></i>
+                                                </a>
 
-                                            @if(!empty($sale->payment_approved_by) && ($sale->payment_approval_status === 'approve'))
-                                                <a href="{{ route('downloadinvoice', \App\Helpers\Settings::getEncodeCodeWithHashids($sale->id)) }}" title="Download Invoice" target="_blank">
-                                                    <i class="fas fa-download"></i>
-                                                </a>
-                                                <a href="javascript:void(0)" class="payment-status-btn" data-heading-title="{{ ucfirst($paymentTypes[$sale->payment_type] ?? '-') }} Details" data-sale-id="{{ $sale->id }}" title="Payment Details">
-                                                    <i class="fas fa-credit-card"></i>
-                                                </a>
-                                            @endif
+                                                {{-- Approved Actions (Download & Payment Details) --}}
+                                                @if(!empty($sale->payment_approved_by) && ($sale->payment_approval_status === 'approve'))
+                                                    <a href="{{ route('downloadinvoice', \App\Helpers\Settings::getEncodeCodeWithHashids($sale->id)) }}" class="btn btn-sm btn-soft-success px-2 py-1" target="_blank" data-bs-toggle="tooltip" data-bs-placement="top" title="Download Invoice">
+                                                        <i class="fas fa-download text-success"></i>
+                                                    </a>
+
+                                                    <a href="javascript:void(0)" class="btn btn-sm btn-soft-info payment-status-btn px-2 py-1" data-heading-title="{{ ucfirst($paymentTypes[$sale->payment_type] ?? '-') }} Details" data-sale-id="{{ $sale->id }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Payment Details">
+                                                        <i class="fas fa-credit-card text-info"></i>
+                                                    </a>
+                                                @endif
+                                            </div>
                                         </td>
                                     </tr>
                                 @empty
@@ -278,37 +284,37 @@
                 $('#sale_id').val(sale.id);
 
                 $('#paymentDetails').html(`
-                                                                                                                                                                            <table class="table table-bordered">
-                                                                                                                                                                                <tr><th>Invoice</th><td>${sale.invoice_no}</td></tr>
-                                                                                                                                                                                <tr><th>Customer</th><td>${sale.customer?.name ?? '-'}</td></tr>
-                                                                                                                                                                                <tr><th>Payable Amount</th><td>{{ __('translation.b_ngn') }} ${sale.payable_amount}</td></tr>
-                                                                                                                                                                                <tr><th>Paid Amount</th><td>{{ __('translation.b_ngn') }} ${sale.paid_amount}</td></tr>
-                                                                                                                                                                                <tr><th>Pending Amount</th><td>{{ __('translation.b_ngn') }} ${sale.balance_amount}</td></tr>
-                                                                                                                                                                                <tr><th>Due Date</th><td>${sale.formatted_due_date ?? '-'}</td></tr>
-                                                                                                                                                                            </table>
-                                                                                                                                                                        `);
+                                                                                                                                                                                                <table class="table table-bordered">
+                                                                                                                                                                                                    <tr><th>Invoice</th><td>${sale.invoice_no}</td></tr>
+                                                                                                                                                                                                    <tr><th>Customer</th><td>${sale.customer?.name ?? '-'}</td></tr>
+                                                                                                                                                                                                    <tr><th>Payable Amount</th><td>{{ __('translation.b_ngn') }} ${sale.payable_amount}</td></tr>
+                                                                                                                                                                                                    <tr><th>Paid Amount</th><td>{{ __('translation.b_ngn') }} ${sale.paid_amount}</td></tr>
+                                                                                                                                                                                                    <tr><th>Pending Amount</th><td>{{ __('translation.b_ngn') }} ${sale.balance_amount}</td></tr>
+                                                                                                                                                                                                    <tr><th>Due Date</th><td>${sale.formatted_due_date ?? '-'}</td></tr>
+                                                                                                                                                                                                </table>
+                                                                                                                                                                                            `);
 
                 let history = `
-                                                                                                                                                                            <table class="table table-sm">
-                                                                                                                                                                                <thead>
-                                                                                                                                                                                    <tr>
-                                                                                                                                                                                        <th>{{ __('translation.date') }}</th>
-                                                                                                                                                                                        <th>{{ __('translation.method') }}</th>
-                                                                                                                                                                                        <th>{{ __('translation.b_ngn') }} {{ __('translation.amount') }}</th>
-                                                                                                                                                                                        <th>{{ __('translation.payment_received_by') }}</th>
-                                                                                                                                                                                    </tr>
-                                                                                                                                                                                </thead>
-                                                                                                                                                                                <tbody>`;
+                                                                                                                                                                                                <table class="table table-sm">
+                                                                                                                                                                                                    <thead>
+                                                                                                                                                                                                        <tr>
+                                                                                                                                                                                                            <th>{{ __('translation.date') }}</th>
+                                                                                                                                                                                                            <th>{{ __('translation.method') }}</th>
+                                                                                                                                                                                                            <th>{{ __('translation.b_ngn') }} {{ __('translation.amount') }}</th>
+                                                                                                                                                                                                            <th>{{ __('translation.payment_received_by') }}</th>
+                                                                                                                                                                                                        </tr>
+                                                                                                                                                                                                    </thead>
+                                                                                                                                                                                                    <tbody>`;
 
                 if (sale.payments && sale.payments.length > 0) {
                     sale.payments.forEach(function (row) {
                         history += `
-                                                                                                                                                                                    <tr>
-                                                                                                                                                                                        <td>${row.formatted_date}</td>
-                                                                                                                                                                                        <td>${row.method ? row.method.charAt(0).toUpperCase() + row.method.slice(1) : '-'}</td>
-                                                                                                                                                                                        <td>{{ __('translation.b_ngn') }} ${row.amount}</td>
-                                                                                                                                                                                        <td>${row.payment_received_by?.name ?? '-'}</td>
-                                                                                                                                                                                    </tr>`;
+                                                                                                                                                                                                        <tr>
+                                                                                                                                                                                                            <td>${row.formatted_date}</td>
+                                                                                                                                                                                                            <td>${row.method ? row.method.charAt(0).toUpperCase() + row.method.slice(1) : '-'}</td>
+                                                                                                                                                                                                            <td>{{ __('translation.b_ngn') }} ${row.amount}</td>
+                                                                                                                                                                                                            <td>${row.payment_received_by?.name ?? '-'}</td>
+                                                                                                                                                                                                        </tr>`;
                     });
                 } else {
                     history += `<tr><td colspan="4" class="text-center">No payment history available</td></tr>`;

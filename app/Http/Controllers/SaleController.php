@@ -151,9 +151,13 @@ class SaleController extends Controller
             $query->where('sales.payment_type', $request->payment_type);
         }
 
-        // NEW: Payment Approval Status Filter (Pending, Approved, Rejected)
+        // Payment Approval Status Filter Logic
         if ($request->filled('approval_status')) {
+            // If a specific approval status is selected in the filter dropdown (e.g. 'rejected', 'approve', 'pending')
             $query->where('sales.payment_approval_status', $request->approval_status);
+        } else {
+            // Default listing behavior: Exclude rejected status, show only 'approve' and 'pending'
+            $query->whereIn('sales.payment_approval_status', ['approve', 'pending']);
         }
 
         /*
