@@ -14,8 +14,6 @@
     };
 @endphp
 
-
-
 <nav class="navbar navbar-light navbar-expand-lg topnav-menu">
     {{-- MOBILE TOGGLE --}}
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topnav-menu-content" aria-controls="topnav-menu-content" aria-expanded="false" aria-label="Toggle navigation">
@@ -25,126 +23,151 @@
     <div class="collapse navbar-collapse" id="topnav-menu-content">
         <ul class="navbar-nav">
 
-            {{-- DASHBOARD --}}
+            {{-- 1. DASHBOARD --}}
             <li class="nav-item">
                 <a href="{{ route('dashboard') }}" class="nav-link {{ $isActive('dashboard') ? 'active' : '' }}">
                     <i data-feather="home"></i>
                     <span>@lang('translation.dashboard')</span>
                 </a>
             </li>
-            {{-- INVENTORY --}}
-            <li class="nav-item dropdown {{ $isActive([$role . '.products*', $role . '.categories*', 'admin.master_items.*', 'admin.warehouses.*', 'admin.purchases.*', 'admin.stock_returns.*', 'admin.requisitions.*', $role . '.inventory*']) ? 'active' : '' }}">
-                <a href="javascript:void(0);" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
-                    <i data-feather="package"></i><span>@lang('translation.inventory')</span>
+
+            {{-- 2. SYSTEM & MASTER SETUP --}}
+            <li class="nav-item dropdown {{ $isActive([$role . '.payment-types.*', $role . '.credit-durations.*', $role . '.account-settings.*', $role . '.designations.*', $role . '.modules.*']) ? 'active' : '' }}">
+                <a href="javascript:void(0);" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false">
+                    <i data-feather="settings"></i><span>@lang('translation.master')</span>
                 </a>
                 <div class="dropdown-menu">
-                    <h6 class="dropdown-header">@lang('translation.product_setup')</h6>
-                    <a href="{{ route('admin.master_items.index') }}" class="dropdown-item"><i data-feather="layers" class="menu-icon-sm"></i>@lang('translation.master_items')</a>
-                    <a href="{{ route($role . '.products') }}" class="dropdown-item"><i data-feather="box" class="menu-icon-sm"></i>@lang('translation.products')</a>
-                    <a href="{{ route($role . '.categories.index') }}" class="dropdown-item"><i data-feather="grid" class="menu-icon-sm"></i>@lang('translation.categories')</a>
+                    <h6 class="dropdown-header">@lang('translation.system_configurations')</h6>
+                    <a href="{{ route($role . '.account-settings.index') }}" class="dropdown-item"><i data-feather="sliders" class="menu-icon-sm"></i>@lang('translation.account_settings')</a>
+                    <a href="{{ route($role . '.credit-durations.index') }}" class="dropdown-item"><i data-feather="calendar" class="menu-icon-sm"></i>@lang('translation.credit_duration')</a>
+                    {{--
+                    @if($role === 'admin')
                     <div class="dropdown-divider"></div>
-                    <h6 class="dropdown-header">@lang('translation.storage')</h6>
-                    <a href="{{ route('admin.warehouses.index') }}" class="dropdown-item"><i data-feather="archive" class="menu-icon-sm"></i>@lang('translation.warehouses')</a>
-                    <a href="{{ route($role . '.inventory') }}" class="dropdown-item"><i data-feather="database" class="menu-icon-sm"></i>@lang('translation.stock')</a>
-                    <div class="dropdown-divider"></div>
-                    <h6 class="dropdown-header">@lang('translation.purchasing')</h6>
-                    <a href="{{ route('admin.purchases.index') }}" class="dropdown-item"><i data-feather="shopping-bag" class="menu-icon-sm"></i>@lang('translation.purchases')</a>
-                    <a href="{{ route('admin.stock_returns.index') }}" class="dropdown-item"><i data-feather="corner-up-left" class="menu-icon-sm"></i>@lang('translation.purchase_returns')</a>
-                    <h6 class="dropdown-header">@lang('translation.inventory_requests')</h6>
-                    <a href="{{ route('admin.requisitions.index') }}" class="dropdown-item"><i data-feather="repeat" class="menu-icon-sm"></i>@lang('translation.requisitions')</a>
+                    <h6 class="dropdown-header">@lang('translation.admin_controls')</h6>
+                    <a href="{{ route($role . '.payment-types.index') }}" class="dropdown-item"><i data-feather="credit-card" class="menu-icon-sm"></i>@lang('translation.payment_types')</a>
+                    <a href="{{ route($role . '.designations.index') }}" class="dropdown-item"><i data-feather="briefcase" class="menu-icon-sm"></i>@lang('translation.designations')</a>
+                    <a href="{{ route($role . '.modules.index') }}" class="dropdown-item"><i data-feather="box" class="menu-icon-sm"></i>@lang('translation.modules')</a>
+                    @endif
+                    --}}
                 </div>
             </li>
 
-            {{-- POS --}}
-            <li class="nav-item dropdown {{ $isActive(['admin.requisitions.pending.posting', $role . '.sales-barcode', $role . '.return-barcode', $role . '.damage-barcode', $role . '.deduct-barcode']) ? 'active' : '' }}">
-                <a href="javascript:void(0);" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
-                    <i data-feather="monitor"></i><span>@lang('translation.stock_operations')</span>
+            {{-- 3. POINT OF SALE (POS) --}}
+            {{--
+            <li class="nav-item dropdown {{ $isActive([$role . '.sales-barcode', $role . '.terminal.*']) ? 'active' : '' }}">
+                <a href="javascript:void(0);" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false">
+                    <i data-feather="monitor"></i><span>@lang('translation.pos_terminal')</span>
                 </a>
                 <div class="dropdown-menu">
-                    <h6 class="dropdown-header">@lang('translation.stock_operations')</h6>
-                    <a href="{{ route('admin.requisitions.pending.posting') }}" class="dropdown-item"><i data-feather="plus-square" class="menu-icon-sm"></i>@lang('translation.add_update_stock')</a>
+                    <h6 class="dropdown-header">@lang('translation.checkout')</h6>
+                    <a href="{{ route($role . '.sales-barcode') }}" class="dropdown-item"><i data-feather="shopping-bag" class="menu-icon-sm"></i>@lang('translation.register_pos')</a>
+                </div>
+            </li>
+            ---}}
+
+            {{-- 4. PRODUCT CATALOG --}}
+            <li class="nav-item dropdown {{ $isActive([$role . '.products*', $role . '.categories*', $role . '.master_items.*']) ? 'active' : '' }}">
+                <a href="javascript:void(0);" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false">
+                    <i data-feather="grid"></i><span>@lang('translation.catalog')</span>
+                </a>
+                <div class="dropdown-menu">
+                    <h6 class="dropdown-header">@lang('translation.product_management')</h6>
+                    <a href="{{ route($role . '.master_items.index') }}" class="dropdown-item"><i data-feather="layers" class="menu-icon-sm"></i>@lang('translation.master_items')</a>
+                    <a href="{{ route($role . '.products') }}" class="dropdown-item"><i data-feather="box" class="menu-icon-sm"></i>@lang('translation.products')</a>
+                    <a href="{{ route($role . '.categories.index') }}" class="dropdown-item"><i data-feather="list" class="menu-icon-sm"></i>@lang('translation.categories')</a>
+                </div>
+            </li>
+
+            {{-- 5. STOCK & INVENTORY OPERATIONS --}}
+            <li class="nav-item dropdown {{ $isActive([$role . '.inventory*', $role . '.warehouses.*', $role . '.requisitions.*', $role . '.damage-barcode', $role . '.deduct-barcode', $role . '.return-barcode']) ? 'active' : '' }}">
+                <a href="javascript:void(0);" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false">
+                    <i data-feather="package"></i><span>@lang('translation.inventory')</span>
+                </a>
+                <div class="dropdown-menu">
+                    <h6 class="dropdown-header">@lang('translation.stock_control')</h6>
+                    <a href="{{ route($role . '.inventory') }}" class="dropdown-item"><i data-feather="database" class="menu-icon-sm"></i>@lang('translation.stock_levels')</a>
+                    <a href="{{ route($role . '.warehouses.index') }}" class="dropdown-item"><i data-feather="archive" class="menu-icon-sm"></i>@lang('translation.warehouses')</a>
+
                     <div class="dropdown-divider"></div>
-                    <h6 class="dropdown-header">@lang('translation.stock_adjustments')</h6>
-                    <!-- <a href="{{ route($role . '.return-barcode') }}" class="dropdown-item"><i data-feather="rotate-ccw" class="menu-icon-sm"></i>@lang('translation.return_stock')</a> -->
+                    <h6 class="dropdown-header">@lang('translation.stock_movements')</h6>
+                    <a href="{{ route($role . '.requisitions.index') }}" class="dropdown-item"><i data-feather="repeat" class="menu-icon-sm"></i>@lang('translation.requisitions')</a>
+                    <a href="{{ route($role . '.requisitions.pending.posting') }}" class="dropdown-item"><i data-feather="plus-square" class="menu-icon-sm"></i>@lang('translation.add_update_stock')</a>
+
+                    <div class="dropdown-divider"></div>
+                    <h6 class="dropdown-header">@lang('translation.adjustments')</h6>
                     <a href="{{ route($role . '.damage-barcode') }}" class="dropdown-item"><i data-feather="alert-triangle" class="menu-icon-sm"></i>@lang('translation.damage_stock')</a>
                     <a href="{{ route($role . '.deduct-barcode') }}" class="dropdown-item"><i data-feather="minus-circle" class="menu-icon-sm"></i>@lang('translation.deduct_stock')</a>
                 </div>
             </li>
 
-            {{-- SALES --}}
-            <li class="nav-item dropdown {{ $isActive(['admin.sales.*', 'admin.coupons.*']) ? 'active' : '' }}">
-                <a href="javascript:void(0);" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
-                    <i data-feather="shopping-cart"></i><span>@lang('translation.sales')</span>
+            {{-- 6. PURCHASING & PROCUREMENT --}}
+            <li class="nav-item dropdown {{ $isActive([$role . '.purchases.*', $role . '.stock_returns.*', $role . '.vendors.*']) ? 'active' : '' }}">
+                <a href="javascript:void(0);" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false">
+                    <i data-feather="truck"></i><span>@lang('translation.purchasing')</span>
+                </a>
+                <div class="dropdown-menu">
+                    <h6 class="dropdown-header">@lang('translation.vendors')</h6>
+                    <a href="{{ route($role . '.vendors.index') }}" class="dropdown-item"><i data-feather="users" class="menu-icon-sm"></i>@lang('translation.suppliers_list')</a>
+
+                    <div class="dropdown-divider"></div>
+                    <h6 class="dropdown-header">@lang('translation.orders_and_returns')</h6>
+                    <a href="{{ route($role . '.purchases.index') }}" class="dropdown-item"><i data-feather="file-text" class="menu-icon-sm"></i>@lang('translation.purchase_orders')</a>
+                    <a href="{{ route($role . '.stock_returns.index') }}" class="dropdown-item"><i data-feather="corner-up-left" class="menu-icon-sm"></i>@lang('translation.purchase_returns')</a>
+                </div>
+            </li>
+
+            {{-- 7. SALES & CUSTOMERS --}}
+            <li class="nav-item dropdown {{ $isActive([$role . '.sales.*', $role . '.customers.*', $role . '.coupons.*']) ? 'active' : '' }}">
+                <a href="javascript:void(0);" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false">
+                    <i data-feather="shopping-cart"></i><span>@lang('translation.sales_crm')</span>
                 </a>
                 <div class="dropdown-menu">
                     <h6 class="dropdown-header">@lang('translation.sales')</h6>
-                    <a href="{{ route('admin.sales.index') }}" class="dropdown-item"><i data-feather="bar-chart" class="menu-icon-sm"></i>@lang('translation.sales_record')</a>
+                    <a href="{{ route($role . '.sales.index') }}" class="dropdown-item"><i data-feather="bar-chart" class="menu-icon-sm"></i>@lang('translation.sales_records')</a>
+
                     <div class="dropdown-divider"></div>
-                    <h6 class="dropdown-header">@lang('translation.marketing')</h6>
-                    <a href="{{ route('admin.coupons.index') }}" class="dropdown-item"><i data-feather="tag" class="menu-icon-sm"></i>@lang('translation.coupons')</a>
+                    <h6 class="dropdown-header">@lang('translation.crm')</h6>
+                    <a href="{{ route($role . '.customers.index') }}" class="dropdown-item"><i data-feather="user-check" class="menu-icon-sm"></i>@lang('translation.customers')</a>
+                    <a href="{{ route($role . '.coupons.index') }}" class="dropdown-item"><i data-feather="tag" class="menu-icon-sm"></i>@lang('translation.coupons_promotions')</a>
                 </div>
             </li>
 
-
-
-            {{-- PEOPLE --}}
-            <li class="nav-item dropdown {{ $isActive([$role . '.staff.*', 'admin.customers.*', 'admin.vendors.*']) ? 'active' : '' }}">
-                <a href="javascript:void(0);" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
-                    <i data-feather="users"></i><span>@lang('translation.people')</span>
+            {{-- 8. STAFF & HR --}}
+            <li class="nav-item dropdown {{ $isActive([$role . '.staff.*', 'attendance.*']) ? 'active' : '' }}">
+                <a href="javascript:void(0);" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false">
+                    <i data-feather="users"></i><span>@lang('translation.staff')</span>
                 </a>
                 <div class="dropdown-menu">
-                    <h6 class="dropdown-header">@lang('translation.internal_users')</h6>
-                    <a href="{{ route($role . '.staff.index') }}" class="dropdown-item"><i data-feather="user-check" class="menu-icon-sm"></i>@lang('translation.staff')</a>
-                    <div class="dropdown-divider"></div>
-                    <h6 class="dropdown-header">@lang('translation.business_partners')</h6>
-                    <a href="{{ route('admin.customers.index') }}" class="dropdown-item"><i data-feather="users" class="menu-icon-sm"></i>@lang('translation.customers')</a>
-                    <a href="{{ route('admin.vendors.index') }}" class="dropdown-item"><i data-feather="truck" class="menu-icon-sm"></i>@lang('translation.vendors')</a>
+                    <h6 class="dropdown-header">@lang('translation.team_management')</h6>
+                    <a href="{{ route($role . '.staff.index') }}" class="dropdown-item"><i data-feather="user" class="menu-icon-sm"></i>@lang('translation.employee_list')</a>
+                    <a href="{{ route('attendance.report') }}" class="dropdown-item"><i data-feather="clock" class="menu-icon-sm"></i>@lang('translation.attendance')</a>
                 </div>
             </li>
 
-            {{-- REPORTS --}}
-            <li class="nav-item dropdown {{ $isActive(['reports.*', 'admin.requisitions.pending.posting.history.report*']) ? 'active' : '' }}">
-                <a href="javascript:void(0);" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
-                    <i data-feather="bar-chart-2"></i><span>@lang('translation.reports')</span>
+            {{-- 9. REPORTS & ANALYTICS --}}
+            <li class="nav-item dropdown {{ $isActive(['reports.*', $role . '.requisitions.pending.posting.history.report*']) ? 'active' : '' }}">
+                <a href="javascript:void(0);" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false">
+                    <i data-feather="pie-chart"></i><span>@lang('translation.reports')</span>
                 </a>
                 <div class="dropdown-menu">
-                    <h6 class="dropdown-header">@lang('translation.sales_reports')</h6>
-                    <a href="{{ route('reports.daily.sales') }}" class="dropdown-item"><i data-feather="activity" class="menu-icon-sm"></i>@lang('translation.daily_sales')</a>
-                    <div class="dropdown-divider"></div>
-                    <h6 class="dropdown-header">@lang('translation.staff_reports')</h6>
-                    <a href="{{ route('attendance.report') }}" class="dropdown-item"><i data-feather="clock" class="menu-icon-sm"></i>@lang('translation.attendance_report')</a>
-                    <div class="dropdown-divider"></div>
-                    <h6 class="dropdown-header">@lang('translation.pending_posting_history_report')</h6>
-                    <a href="{{ route('admin.requisitions.pending.posting.history.report') }}" class="dropdown-item"><i data-feather="rotate-ccw" class="menu-icon-sm"></i>@lang('translation.pending_posting_history_report')</a>
+                    <h6 class="dropdown-header">@lang('translation.analytics')</h6>
+                    <a href="{{ route('reports.daily.sales') }}" class="dropdown-item"><i data-feather="activity" class="menu-icon-sm"></i>@lang('translation.daily_sales_report')</a>
+                    <a href="{{ route($role . '.requisitions.pending.posting.history.report') }}" class="dropdown-item"><i data-feather="rotate-ccw" class="menu-icon-sm"></i>@lang('translation.posting_history_report')</a>
                 </div>
             </li>
 
-            {{-- BILLING --}}
+            {{-- 10. BILLING --}}
             <li class="nav-item">
                 <a href="{{ route('billing.index') }}" class="nav-link {{ $isActive('billing.*') ? 'active' : '' }}">
-                    <i data-feather="credit-card"></i><span>@lang('translation.billing')</span>
+                    <i data-feather="dollar-sign"></i>
+                    <span>@lang('translation.billing')</span>
                 </a>
             </li>
 
-            {{-- MASTER SETUP (Hidden) --}}
-            {{-- ===================================================== --}}
-            {{-- Master Setup --}}
-            {{-- ===================================================== --}}
-            <li class="nav-item dropdown {{ $isActive(['admin.payment-types.*']) ? 'active' : '' }}">
-                <a href="javascript:void(0);" class="nav-link dropdown-toggle" data-bs-toggle="dropdown"><i data-feather="settings"></i><span>@lang('translation.master')</span></a>
-                <div class="dropdown-menu">
-                    {{-- Master Entries --}}
-                    <h6 class="dropdown-header">@lang('translation.master_entries')</h6>
-                    <a href="{{ route('admin.payment-types.index') }}" class="dropdown-item" style="display: none;"><i data-feather="credit-card" class="menu-icon-sm"></i>@lang('translation.payment_types')</a>
-                    <a href="{{ route('admin.credit-durations.index') }}" class="dropdown-item"><i data-feather="calendar" class="menu-icon-sm"></i>@lang('translation.credit_duration')</a>
-                    <a href="{{ route('admin.account-settings.index') }}" class="dropdown-item"><i data-feather="settings" class="menu-icon-sm"></i>@lang('translation.account_settings')</a>
-                    <a href="{{ route('admin.designations.index') }}" class="dropdown-item" style="display: none;"><i data-feather="briefcase" class="menu-icon-sm"></i>@lang('translation.designations')</a>
-                    <a href="{{ route('admin.modules.index') }}" class="dropdown-item" style="display: none;"><i data-feather="box" class="menu-icon-sm"></i>@lang('translation.modules')</a>
-                </div>
-            </li>
         </ul>
     </div>
 </nav>
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         if (typeof feather !== 'undefined') {
