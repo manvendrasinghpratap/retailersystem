@@ -7,30 +7,27 @@ use App\Models\Designation;
 use App\Helpers\Settings;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\DB;
 
 class DesignationController extends Controller
 {
-    protected $breadcrumbAddNew;
-    protected $breadcrumbListing;
+    protected array $breadcrumbAddNew;
+    protected array $breadcrumbListing;
 
     public function __construct()
     {
         $this->middleware('auth');
+        // $this->middleware('permission:designation.view')->only(['index', 'viewAjax', 'viewAjaxPdf', 'getStock']);
+        // $this->middleware('permission:designation.create')->only(['create', 'store']);
+        // $this->middleware('permission:designation.cancel')->only(['cancel']);
+        // $this->middleware('permission:designation.export')->only(['exportPdf', 'exportCsv']);
+
         $this->breadcrumbAddNew = [
             'title' => __('translation.designations'),
             'breadcrumb' => [
-                [
-                    'route' => 'admin.dashboard',
-                    'title' => __('translation.dashboard')
-                ],
-                [
-                    'route' => 'admin.designations.index',
-                    'title' => __('translation.designations')
-                ],
-                [
-                    'route' => 'admin.designations.create',
-                    'title' => __('translation.add_new_designation')
-                ]
+                ['route' => 'admin.dashboard', 'title' => __('translation.dashboard')],
+                ['route' => 'admin.designations.index', 'title' => __('translation.designations')],
+                ['route' => 'admin.designations.create', 'title' => __('translation.add_new_designation')]
             ],
             'route1' => 'admin.designations.create',
             'route1Title' => __('translation.add_new_designation'),
@@ -43,18 +40,9 @@ class DesignationController extends Controller
         $this->breadcrumbListing = [
             'title' => __('translation.designations'),
             'breadcrumb' => [
-                [
-                    'route' => 'admin.dashboard',
-                    'title' => __('translation.dashboard')
-                ],
-                [
-                    'route' => 'admin.designations.index',
-                    'title' => __('translation.designations')
-                ],
-                [
-                    'route' => 'admin.designations.create',
-                    'title' => __('translation.add_new_designation')
-                ]
+                ['route' => 'admin.dashboard', 'title' => __('translation.dashboard')],
+                ['route' => 'admin.designations.index', 'title' => __('translation.designations')],
+                ['route' => 'admin.designations.create', 'title' => __('translation.add_new_designation')]
             ],
             'route1' => 'admin.designations.index',
             'route1Title' => __('translation.designations'),
@@ -66,25 +54,28 @@ class DesignationController extends Controller
             'reset_route_title' => __('translation.cancel')
         ];
     }
+
     public function index(Request $request)
     {
         $breadcrumb = $this->breadcrumbAddNew;
-        $designations = Designation::OfAccount()->OfActive();
+
+        // Base scope query
+        $query = Designation::where('account_id', auth()->user()->account_id)
+            ->where('is_deleted', 0);
+
         // Search Filter
         if ($request->filled('name')) {
-            $designations->where('name', 'LIKE', '%' . trim($request->name) . '%');
+            $query->where('name', 'LIKE', '%' . trim($request->name) . '%');
         }
 
         // Status Filter
-        if ($request->status !== null && $request->status !== '') {
-            $designations->where('status', $request->status);
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
         }
 
         // PDF Export
         if ($request->has('pdf')) {
-
-            $designations = $designations->orderBy('name')->get();
-
+            $designations = $query->orderBy('name')->get();
             $pdfHeaderdata = \Config::get('constants.designationListpdf');
 
             $pdf = PDF::loadView(
@@ -92,76 +83,52 @@ class DesignationController extends Controller
                 compact('designations', 'pdfHeaderdata', 'breadcrumb')
             );
 
-            $pdf = Settings::downloadpdf($pdf);
-
-            $fileName = $pdfHeaderdata['filename'] . '-' . date('Y-m-d') . '.pdf';
-
-            return $pdf->stream($fileName);
+            return Settings::downloadpdf($pdf)->stream($pdfHeaderdata['filename'] . '-' . date('Y-m-d') . '.pdf');
         }
 
         // CSV Export
         if ($request->has('csv')) {
-
-            $designations = $designations->orderBy('name')->get();
-
+            $designations = $query->orderBy('name')->get();
             $csvHeaderdata = \Config::get('constants.designationListpdf');
-
             $fileName = $csvHeaderdata['filename'] . '-' . date('Y-m-d') . '.csv';
 
             $data = [];
-
-            $ii = 0;
-
-            // Header
-            $data[$ii] = [
+            $data[0] = [
                 '#',
                 __('translation.designation'),
                 __('translation.status'),
                 __('translation.created_at'),
             ];
 
-            foreach ($designations as $designation) {
-
-                $data[++$ii] = [
-                    $ii,
+            foreach ($designations as $index => $designation) {
+                $data[] = [
+                    $index + 1,
                     $designation->name,
                     $designation->status ? __('translation.active') : __('translation.inactive'),
-                    !empty($designation->created_at)
-                    ? "\t" . Settings::getFormattedDatetime($designation->created_at)
-                    : '-',
+                    $designation->created_at ? "\t" . Settings::getFormattedDatetime($designation->created_at) : '-',
                 ];
             }
 
             return Settings::downloadcsvfile($data, $fileName);
         }
 
-        $designations = $designations
-            ->orderBy('name')
+        $designations = $query->orderBy('name')
             ->paginate(account_setting('general.pagination'));
 
-        return view('backend.admin.designation.index', compact(
-            'designations',
-            'breadcrumb'
-        ));
+        return view('backend.admin.designation.index', compact('designations', 'breadcrumb'));
     }
 
     public function exportPdf(Request $request)
     {
         $request->merge(['pdf' => 1]);
-
         return $this->index($request);
     }
 
     public function exportCsv(Request $request)
     {
         $request->merge(['csv' => 1]);
-
         return $this->index($request);
     }
-
-    /**
-     * Show the form for creating a new resource.
-     */
 
     public function create()
     {
@@ -170,31 +137,28 @@ class DesignationController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
+        // Keep validation outside try-catch to allow standard Laravel redirect back with errors
         $request->validate([
-            'name' => 'required|max:100|unique:designations,name,NULL,id,account_id,' . auth()->user()->account_id,
+            'name' => 'required|string|max:100|unique:designations,name,NULL,id,account_id,' . auth()->user()->account_id . ',is_deleted,0',
             'status' => 'required|in:0,1',
         ]);
 
         try {
-
-            Designation::create([
-                'account_id' => auth()->user()->account_id,
-                'name' => ucwords(trim($request->name)),
-                'status' => $request->status,
-            ]);
+            DB::transaction(function () use ($request) {
+                Designation::create([
+                    'account_id' => auth()->user()->account_id,
+                    'name' => ucwords(trim($request->name)),
+                    'status' => $request->status,
+                ]);
+            });
 
             return Settings::roleRedirect(
                 'designations.index',
                 __('translation.designation_added_successfully')
             );
-
         } catch (\Exception $e) {
-
             return Settings::roleRedirect(
                 'designations.index',
                 __('translation.something_went_wrong'),
@@ -203,9 +167,6 @@ class DesignationController extends Controller
         }
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit($id)
     {
         $breadcrumb = Settings::updateBreadcrumbRoute(
@@ -214,36 +175,30 @@ class DesignationController extends Controller
             ['admin.designations.update', __('translation.update_designation')]
         );
 
-        $id = Settings::getDecodeCode($id);
+        $decodedId = Settings::getDecodeCode($id);
+
+        $designation = Designation::where('account_id', auth()->user()->account_id)
+            ->where('is_deleted', 0)
+            ->findOrFail($decodedId);
+
+        return view('backend.admin.designation.form', compact('breadcrumb', 'designation'));
+    }
+
+    public function update(Request $request)
+    {
+        $id = Settings::getDecodeCode($request->designation_id);
 
         $designation = Designation::where('account_id', auth()->user()->account_id)
             ->where('is_deleted', 0)
             ->findOrFail($id);
 
-        return view('backend.admin.designation.form', [
-            'breadcrumb' => $breadcrumb,
-            'designation' => $designation
+        // Unique check modified to ignore soft-deleted items
+        $request->validate([
+            'name' => 'required|string|max:100|unique:designations,name,' . $designation->id . ',id,account_id,' . auth()->user()->account_id . ',is_deleted,0',
+            'status' => 'required|in:0,1',
         ]);
-    }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request)
-    {
         try {
-
-            $id = Settings::getDecodeCode($request->designation_id);
-
-            $designation = Designation::where('account_id', auth()->user()->account_id)
-                ->where('is_deleted', 0)
-                ->findOrFail($id);
-
-            $request->validate([
-                'name' => 'required|max:100|unique:designations,name,' . $designation->id . ',id,account_id,' . auth()->user()->account_id,
-                'status' => 'required|in:0,1',
-            ]);
-
             $designation->update([
                 'name' => ucwords(trim($request->name)),
                 'status' => $request->status,
@@ -253,9 +208,7 @@ class DesignationController extends Controller
                 'designations.index',
                 __('translation.designation_updated_successfully')
             );
-
         } catch (\Exception $e) {
-
             return Settings::roleRedirect(
                 'designations.index',
                 __('translation.something_went_wrong'),
@@ -267,24 +220,19 @@ class DesignationController extends Controller
     public function softdelete(Request $request)
     {
         try {
-
             $id = Settings::getDecodeCode($request->id);
 
             $deleted = Designation::where('account_id', auth()->user()->account_id)
                 ->where('id', $id)
-                ->update([
-                    'is_deleted' => 1
-                ]);
+                ->update(['is_deleted' => 1]);
 
             return response()->json([
-                'success' => $deleted ? true : false,
+                'success' => (bool) $deleted,
                 'message' => $deleted
                     ? __('translation.deleted_successfully')
                     : __('translation.delete_failed')
             ]);
-
         } catch (\Exception $e) {
-
             return response()->json([
                 'success' => false,
                 'message' => __('translation.something_went_wrong')

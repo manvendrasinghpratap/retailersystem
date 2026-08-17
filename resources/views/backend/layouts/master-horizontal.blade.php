@@ -35,7 +35,7 @@
       @elseif(Auth::user()->user_type_id == 2)
         @include('backend.layouts.menubar')
       @else
-        @include('backend.layouts.othermenubar')
+        @include('backend.layouts.menubar')
       @endif
 
     </div>

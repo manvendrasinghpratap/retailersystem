@@ -108,14 +108,31 @@ class User extends Authenticatable
 
     public function hasPermission(string $permission): bool
     {
+
         return true;
+        if ($this->isAdmin()) {
+            return true;
+        }
         if (!$this->designation_id) {
             return false;
         }
 
+        //dd($this->checkpermission($permission));
         return $this->designation->permissions()
             ->where('permissions.account_id', $this->account_id)
-            ->where('permissions.slug', $permission)
+            ->where('permissions.route_name', $permission)
+            ->orWhere('permissions.slug', $permission)
+            ->where('permissions.status', true)
+            ->exists();
+    }
+
+    public function checkpermission($permission)
+    {
+        echo $permission;
+        return $this->designation->permissions()
+            ->where('permissions.account_id', $this->account_id)
+            ->where('permissions.route_name', $permission)
+            ->orWhere('permissions.slug', $permission)
             ->where('permissions.status', true)
             ->exists();
     }

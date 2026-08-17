@@ -81,8 +81,8 @@ return [
 
     "subscription_plan" => 'Subscription Plan',
     "add_new_subscription" => 'Add New Subscription Plan',
-
     "ngn" => '₦',
+    'naira' => '₦',
     "b_ngn" => '(₦)',
     'currency' => '(₦)',
     "add_new_account" => 'Add New Client',
@@ -601,7 +601,7 @@ return [
     'customer_information' => 'Customer Information',
     'walk_in_customer' => 'Walk-In Customer',
     'credit_information' => 'Credit Information',
-    'credit_duration' => 'Credit Duration',
+    'credit_duration' => 'Credit Line',
     'due_date' => 'Due Date',
     'interest_rate' => 'Interest Rate',
     'subtotal' => 'Subtotal',
@@ -732,4 +732,6 @@ return [
     'posting_history_report' => 'Posting History Report',
     'crm' => 'CRM',
     'team_management' => 'Team Management',
+    'permission_denied' => 'You do not have permission to perform this action.',
+    'analytics' => 'Analytics'
 ];

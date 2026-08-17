@@ -13,16 +13,16 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="card-title d-inline-block">{{ __('translation.filter') }}</h4>
-                     <div class="d-inline-block">
+                    <div class="d-inline-block">
                         @include('backend.components.exportpdfcsv', [
-                        'pdfId' =>'downloaddesignationpdf',
-                        'pdfRoute' => route('admin.designations.export.pdf'),
-                        'pdfClass' => 'downloaddesignationpdf',
-                        'csvId' =>'downloaddesignationcsv',
-                        'csvRoute' => route('admin.designations.export.csv'),
-                        'csvClass' => 'downloaddesignationcsv',
-                        ])             
-                    </div>      
+                            'pdfId' => 'downloaddesignationpdf',
+                            'pdfRoute' => route('admin.designations.export.pdf'),
+                            'pdfClass' => 'downloaddesignationpdf',
+                            'csvId' => 'downloaddesignationcsv',
+                            'csvRoute' => route('admin.designations.export.csv'),
+                            'csvClass' => 'downloaddesignationcsv',
+                        ])
+                    </div>
                 </div>
                 <div class="card-body">
                     <form method="GET">
@@ -66,30 +66,27 @@
                                     <th>{{ __('translation.actions') }}</th>
                                 </tr>
                             </thead>
-
                             <tbody>
                                 @if(!empty($designations) && $designations->count() > 0)
                                     @foreach($designations as $designation)
+                                        @php 
+                                            $encodedId = \App\Helpers\Settings::getEncodeCode($designation->id);
+                                        @endphp
                                         <tr>
-                                            <td>{{ $loop->iteration }}</td>
-                                            <td>{{ $designation->name }}</td>
-                                            <td>
-                                                @if($designation->status == '1')
-                                                    <span class="badge bg-info">{{ __('translation.active') }}</span>
-                                                @else
-                                                    <span class="badge bg-primary">{{ __('translation.inactive') }}</span>
-                                                @endif
-                                            </td>
+                                            <td><a href="{{ route('designations.permissions.edit', ['designation' => $encodedId]) }}" class="fw-bold text-primary">{{ $loop->iteration }}</a></td>
+                                            <td><a href="{{ route('designations.permissions.edit', ['designation' => $encodedId]) }}" class="text-dark fw-medium">{{ $designation->name }}</a></td>
+                                            <td>@if($designation->status == '1')<span class="badge bg-info">{{ __('translation.active') }}</span>@else<span class="badge bg-primary">{{ __('translation.inactive') }}</span>@endif</td>
                                             <td>{{ $designation->created_date }}</td>
                                             <td>
-                                                <x-href-input name="edit" label="Edit" required href="{{ route('admin.designations.edit', ['id' => \App\Helpers\Settings::getEncodeCode($designation->id)]) }}" />
-                                                <x-deletehref-input name="DeleteButton" label="Delete" required href="javascript:void(0)" class="deleteData" data-deleteid="{{ \App\Helpers\Settings::getEncodeCode($designation->id) }}" data-routeurl="{{ route('admin.designations.softdelete', $designation->id) }}" />
+                                                <x-href-input action="permission" name="permission" label="Permissions" href="{{ route('designations.permissions.edit', ['designation' => $encodedId]) }}" />
+                                                <x-href-input action="edit" name="edit" label="Edit" required href="{{ route('admin.designations.edit', ['id' => $encodedId]) }}" />
+                                                <x-deletehref-input name="DeleteButton" label="Delete" required href="javascript:void(0)" class="deleteData" data-deleteid="{{ $encodedId }}" data-routeurl="{{ route('admin.designations.softdelete', $designation->id) }}" />
                                             </td>
                                         </tr>
                                     @endforeach
                                 @else
                                     <tr>
-                                        <td colspan="10" class="text-center">{{ __('translation.no_designations_available') }}</td>
+                                        <td colspan="5" class="text-center">{{ __('translation.no_designations_available') }}</td>
                                     </tr>
                                 @endif
                             </tbody>
@@ -109,11 +106,12 @@
     </div>
 
 @endsection
+
 @section('script')
-<script>
-    $(document).ready(function() {
-       setupPdfDownload('.downloaddesignationpdf', 'data-downloadroutepdf');
-       setupPdfDownload('.downloaddesignationcsv', 'data-downloadroutepdf');
-    });
-</script>
+    <script>
+        $(document).ready(function () {
+            setupPdfDownload('.downloaddesignationpdf', 'data-downloadroutepdf');
+            setupPdfDownload('.downloaddesignationcsv', 'data-downloadroutepdf');
+        });
+    </script>
 @endsection

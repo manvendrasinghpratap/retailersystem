@@ -63,6 +63,9 @@
         @case('add')
             <button class="btn btn-primary btn-sm"><i class="fa fa-plus action-btn text-white" aria-hidden="true" title="Add"></i> {{ $label }}</button>
         @break
+        @case('permission')
+            <i class="fas fa-lock action-btn text-info" title="Permission"></i>
+            @break
         @default
             <i class="fas action-btn text-success" title="View">{{ $label }}</i>
     @endswitch

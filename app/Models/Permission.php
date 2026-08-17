@@ -53,13 +53,13 @@ class Permission extends Model
     /**
      * Permission belongs to many designations.
      */
-    public function designations(): BelongsToMany
-    {
-        return $this->belongsToMany(
-            Designation::class,
-            'designation_permissions'
-        )->withTimestamps();
-    }
+    // public function designations(): BelongsToMany
+    // {
+    //     return $this->belongsToMany(
+    //         Designation::class,
+    //         'designation_permissions'
+    //     )->withTimestamps();
+    // }
 
     /**
      * Scope active permissions.
@@ -67,5 +67,23 @@ class Permission extends Model
     public function scopeActive($query)
     {
         return $query->where('status', true);
+    }
+    // app/Models/Permission.php
+
+    public function designations(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Designation::class,
+            'designation_permissions',
+            'permission_id',
+            'designation_id'
+        )->withPivot('account_id')
+            ->withTimestamps();
+    }
+
+    public function scopeOfAccount($query, $accountId = null)
+    {
+        $accountId = $accountId ?? auth()->user()->account_id;
+        return $query->where('account_id', $accountId);
     }
 }

@@ -86,10 +86,7 @@ class ModuleController extends Controller
         if ($request->has('pdf')) {
             $modules = $modules->orderBy('sort_order')->get();
             $pdfHeaderdata = \Config::get('constants.moduleListpdf');
-            $pdf = PDF::loadView(
-                'backend.pdf.modules.moduleListpdf',
-                compact('modules', 'pdfHeaderdata', 'breadcrumb')
-            );
+            $pdf = PDF::loadView('backend.pdf.modules.moduleListpdf', compact('modules', 'pdfHeaderdata', 'breadcrumb'));
             $pdf = Settings::downloadpdf($pdf);
             $fileName = $pdfHeaderdata['filename'] . '-' . date('Y-m-d') . '.pdf';
             return $pdf->stream($fileName);
@@ -245,18 +242,9 @@ class ModuleController extends Controller
                 'status' => $request->status,
             ]);
 
-            return Settings::roleRedirect(
-                'modules.index',
-                __('translation.module_updated_successfully')
-            );
-
+            return Settings::roleRedirect('modules.index', __('translation.module_updated_successfully'));
         } catch (\Exception $e) {
-
-            return Settings::roleRedirect(
-                'modules.index',
-                __('translation.something_went_wrong'),
-                'error'
-            );
+            return Settings::roleRedirect('modules.index', __('translation.something_went_wrong'), 'error');
         }
     }
 

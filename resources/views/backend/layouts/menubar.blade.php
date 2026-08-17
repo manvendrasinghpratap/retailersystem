@@ -30,41 +30,28 @@
                     <span>@lang('translation.dashboard')</span>
                 </a>
             </li>
-
-            {{-- 2. SYSTEM & MASTER SETUP --}}
-            <li class="nav-item dropdown {{ $isActive([$role . '.payment-types.*', $role . '.credit-durations.*', $role . '.account-settings.*', $role . '.designations.*', $role . '.modules.*']) ? 'active' : '' }}">
-                <a href="javascript:void(0);" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false">
-                    <i data-feather="settings"></i><span>@lang('translation.master')</span>
-                </a>
-                <div class="dropdown-menu">
-                    <h6 class="dropdown-header">@lang('translation.system_configurations')</h6>
-                    <a href="{{ route($role . '.account-settings.index') }}" class="dropdown-item"><i data-feather="sliders" class="menu-icon-sm"></i>@lang('translation.account_settings')</a>
-                    <a href="{{ route($role . '.credit-durations.index') }}" class="dropdown-item"><i data-feather="calendar" class="menu-icon-sm"></i>@lang('translation.credit_duration')</a>
-                    {{--
-                    @if($role === 'admin')
-                    <div class="dropdown-divider"></div>
-                    <h6 class="dropdown-header">@lang('translation.admin_controls')</h6>
-                    <a href="{{ route($role . '.payment-types.index') }}" class="dropdown-item"><i data-feather="credit-card" class="menu-icon-sm"></i>@lang('translation.payment_types')</a>
-                    <a href="{{ route($role . '.designations.index') }}" class="dropdown-item"><i data-feather="briefcase" class="menu-icon-sm"></i>@lang('translation.designations')</a>
-                    <a href="{{ route($role . '.modules.index') }}" class="dropdown-item"><i data-feather="box" class="menu-icon-sm"></i>@lang('translation.modules')</a>
-                    @endif
-                    --}}
-                </div>
-            </li>
-
-            {{-- 3. POINT OF SALE (POS) --}}
-            {{--
-            <li class="nav-item dropdown {{ $isActive([$role . '.sales-barcode', $role . '.terminal.*']) ? 'active' : '' }}">
-                <a href="javascript:void(0);" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false">
-                    <i data-feather="monitor"></i><span>@lang('translation.pos_terminal')</span>
-                </a>
-                <div class="dropdown-menu">
-                    <h6 class="dropdown-header">@lang('translation.checkout')</h6>
-                    <a href="{{ route($role . '.sales-barcode') }}" class="dropdown-item"><i data-feather="shopping-bag" class="menu-icon-sm"></i>@lang('translation.register_pos')</a>
-                </div>
-            </li>
-            ---}}
-
+            @if(auth()->user()->isAdmin())
+                {{-- 2. SYSTEM & MASTER SETUP --}}
+                <li class="nav-item dropdown {{ $isActive([$role . '.payment-types.*', $role . '.credit-durations.*', $role . '.account-settings.*', $role . '.designations.*', $role . '.modules.*']) ? 'active' : '' }}">
+                    <a href="javascript:void(0);" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false">
+                        <i data-feather="settings"></i><span>@lang('translation.master')</span>
+                    </a>
+                    <div class="dropdown-menu">
+                        <h6 class="dropdown-header">@lang('translation.system_configurations')</h6>
+                        <a href="{{ route($role . '.account-settings.index') }}" class="dropdown-item"><i data-feather="sliders" class="menu-icon-sm"></i>@lang('translation.account_settings')</a>
+                        <a href="{{ route($role . '.credit-durations.index') }}" class="dropdown-item"><i data-feather="calendar" class="menu-icon-sm"></i>@lang('translation.credit_duration')</a>
+                        {{--
+                        @if($role === 'admin')
+                        <div class="dropdown-divider"></div>
+                        <h6 class="dropdown-header">@lang('translation.admin_controls')</h6>
+                        <a href="{{ route($role . '.payment-types.index') }}" class="dropdown-item"><i data-feather="credit-card" class="menu-icon-sm"></i>@lang('translation.payment_types')</a>
+                        <a href="{{ route($role . '.designations.index') }}" class="dropdown-item"><i data-feather="briefcase" class="menu-icon-sm"></i>@lang('translation.designations')</a>
+                        <a href="{{ route($role . '.modules.index') }}" class="dropdown-item"><i data-feather="box" class="menu-icon-sm"></i>@lang('translation.modules')</a>
+                        @endif
+                        --}}
+                    </div>
+                </li>
+            @endif
             {{-- 4. PRODUCT CATALOG --}}
             <li class="nav-item dropdown {{ $isActive([$role . '.products*', $role . '.categories*', $role . '.master_items.*']) ? 'active' : '' }}">
                 <a href="javascript:void(0);" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false">
@@ -158,8 +145,8 @@
 
             {{-- 10. BILLING --}}
             <li class="nav-item">
-                <a href="{{ route('billing.index') }}" class="nav-link {{ $isActive('billing.*') ? 'active' : '' }}">
-                    <i data-feather="dollar-sign"></i>
+                <a href="{{ route('billing.index') }}" class="nav-link create-transaction-menu {{ $isActive('billing.*') ? 'active' : '' }}">
+                    <span class="me-1">@lang('translation.naira')</span>
                     <span>@lang('translation.billing')</span>
                 </a>
             </li>

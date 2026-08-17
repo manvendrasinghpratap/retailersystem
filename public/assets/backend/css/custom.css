@@ -1190,3 +1190,20 @@ select:focus:invalid {
 .width90per {
     max-width: 90% !important;
 }
+.create-transaction-menu {
+    background-color: #4dabff;
+    color: #fff !important;
+    border-radius: 6px;
+    font-weight: 600;
+    margin: 2px 8px;
+}
+
+.create-transaction-menu:hover {
+    background-color: #2196f3 !important;
+    color: #fff !important;
+}
+
+.create-transaction-menu.active {
+    background-color: #2196f3;
+    color: #fff !important;
+}

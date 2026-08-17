@@ -22,28 +22,27 @@
                     });
                 },
                 error: function (xhr) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Oops...',
-                        text: 'Something went wrong!',
-                    });
+                    if (xhr.status === 403) {
+                        Swal.fire('Permission Denied!', xhr.responseJSON?.message || 'You do not have permission to perform this action.', 'error');
+                    } else {
+                        Swal.fire('Oops...', 'Something went wrong!', 'error');
+                    }
                 }
             });
         }
     </script>
 @endif
+
 <script>
     function changeStatus(data, id, url = '') {
-        alert(id);
         var selectedStatus = data ? 1 : 0;
         if (url) {
-            var updateUrl = url;
             $.ajax({
-                url: updateUrl,
+                url: url,
                 type: 'POST',
                 data: {
-                    id: customer_id,
-                    status: new_status,
+                    id: id, // Fixed: replaced customer_id
+                    status: selectedStatus, // Fixed: replaced new_status
                     _token: "{{ csrf_token() }}"
                 },
                 success: function (response) {
@@ -58,23 +57,25 @@
                     });
                 },
                 error: function (xhr) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Oops...',
-                        text: 'Something went wrong!',
-                    });
+                    if (xhr.status === 403) {
+                        Swal.fire('Permission Denied!', xhr.responseJSON?.message || 'You do not have permission to perform this action.', 'error');
+                    } else {
+                        Swal.fire('Error!', 'Something went wrong.', 'error');
+                    }
                 }
             });
         }
     }
 
-    ////////////////////////////// To change the  status Begin ////////////////
     $(document).ready(function () {
+
+        ////////////////////////////// Status Change Handler ////////////////
         $(document).on('change', '.changestatus', function () {
             const checkbox = $(this);
             const id = checkbox.data('id');
             const url = checkbox.data('url');
             const status = checkbox.is(':checked') ? 1 : 0;
+
             $.ajax({
                 url: url,
                 method: 'POST',
@@ -89,242 +90,164 @@
                         response.message || 'Status updated successfully.',
                         'success'
                     ).then(function () {
-                        location.reload(); // reload after delete
+                        location.reload();
                     });
-                    console.log(response.message || 'Status updated successfully');
                 },
                 error: function (xhr) {
-                    // Revert checkbox state if error occurs
-                    Swal.fire(
-                        'Error!',
-                        'Something went wrong.',
-                        'error'
-                    );
+                    checkbox.prop('checked', !status); // Revert switch state
+                    if (xhr.status === 403) {
+                        Swal.fire('Permission Denied!', xhr.responseJSON?.message || 'You do not have permission to perform this action.', 'error');
+                    } else {
+                        Swal.fire('Error!', 'Something went wrong.', 'error');
+                    }
                 }
             });
         });
-    });
-    ////////////////////////////// To change the  status End ////////////////
 
-    ////////////////////////////// To delete the record Begin ////////////////
-    $(document).on('click', '.deleteData', function () {
+        ////////////////////////////// Delete Record Handler ////////////////
+        $(document).on('click', '.deleteData', function () {
+            var deleteId = $(this).data('deleteid');
+            var routeUrl = $(this).data('routeurl');
 
-        var deleteId = $(this).data('deleteid');
-        var routeUrl = $(this).data('routeurl');
-        Swal.fire({
-            title: 'Are you sure?',
-            text: "You won't be able to revert this!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, delete it!'
-        }).then((result) => {
-            if (result.isConfirmed) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: routeUrl,
+                        type: 'POST',
+                        data: {
+                            id: deleteId,
+                            _token: '{{ csrf_token() }}'
+                        },
+                        success: function (response) {
+                            Swal.fire(
+                                'Deleted!',
+                                response.message || 'Record has been deleted.',
+                                'success'
+                            ).then(function () {
+                                location.reload();
+                            });
+                        },
+                        error: function (xhr) {
+                            if (xhr.status === 403) {
+                                var errorMessage = xhr.responseJSON?.message || 'You do not have permission to perform this action.';
+                                Swal.fire('Permission Denied!', errorMessage, 'error');
+                            } else {
+                                Swal.fire('Error!', 'Something went wrong.', 'error');
+                            }
+                        }
+                    });
+                }
+            });
+        });
 
-                // AJAX delete request
+        ////////////////////////////// Change Password Handler ////////////////
+        $(document).on('click', '.saveaccountpassword', function (e) {
+            e.preventDefault();
+            let changepassworduserid = $("#changepassworduserid").val().trim();
+            let changepasswordrouteurl = $("#changepasswordrouteurl").val().trim();
+            let password = $("#password").val().trim();
+            let confirmPassword = $("#password_confirmation").val().trim();
+            let isValid = true;
+
+            $(".error_password, .error_password_confirmation").text("");
+
+            if (password === "") {
+                $(".error_password").text("Password is required.");
+                isValid = false;
+            } else if (password.length < 6) {
+                $(".error_password").text("Password must be at least 6 characters.");
+                isValid = false;
+            }
+
+            if (confirmPassword === "") {
+                $(".error_password_confirmation").text("Confirm Password is required.");
+                isValid = false;
+            }
+
+            if (password !== "" && confirmPassword !== "" && password !== confirmPassword) {
+                $(".error_password_confirmation").text("Passwords do not match.");
+                isValid = false;
+            }
+
+            if (isValid) {
+                $('#exampleModal').modal('hide');
                 $.ajax({
-                    url: routeUrl,
+                    url: changepasswordrouteurl,
                     type: 'POST',
                     data: {
-                        id: deleteId,
-                        _token: '{{ csrf_token() }}' // CSRF token
+                        staff_id: changepassworduserid,
+                        password: password,
+                        _token: '{{ csrf_token() }}'
                     },
                     success: function (response) {
-
-                        Swal.fire(
-                            'Deleted!',
-                            response.message || 'Record has been deleted.',
-                            'success'
-                        ).then(function () {
-                            location.reload(); // Reload page after delete
-                        });
-
+                        Swal.fire('Success!', response.message || 'Password updated successfully.', 'success');
                     },
-                    error: function () {
-
-                        Swal.fire(
-                            'Error!',
-                            'Something went wrong.',
-                            'error'
-                        );
-
+                    error: function (xhr) {
+                        if (xhr.status === 403) {
+                            Swal.fire('Permission Denied!', xhr.responseJSON?.message || 'You do not have permission to perform this action.', 'error');
+                        } else {
+                            Swal.fire('Error!', 'Something went wrong.', 'error');
+                        }
                     }
                 });
             }
         });
-    });
 
-    //////  account Change Password Start /////
-
-    $(document).on('click', '.saveaccountpassword', function (e) {
-        e.preventDefault(); // Prevent form submission
-        let changepassworduserid = $("#changepassworduserid").val().trim();
-        let changepasswordrouteurl = $("#changepasswordrouteurl").val().trim();
-        let password = $("#password").val().trim();
-        let confirmPassword = $("#password_confirmation").val().trim();
-        let isValid = true;
-
-        $(".error_password, .error_confirm_password").text(""); // Clear previous errors
-
-        if (password === "") {
-            $(".error_password").text("Password is required.");
-            isValid = false;
-        }
-        else if (password.length < 6) {
-            $(".error_password").text("Password must be at least 6 characters.");
-            isValid = false;
-        }
-
-        if (confirmPassword === "") {
-            $(".error_password_confirmation").text("Confirm Password is required.");
-            isValid = false;
-        }
-
-        if (password !== "" && confirmPassword !== "" && password !== confirmPassword) {
-            $(".error_password_confirmation").text("Passwords do not match.");
-            isValid = false;
-        }
-
-        if (isValid) {
-            $('#exampleModal').modal('hide');
+        ////////////////////////////// Modal / Dropdown Handlers ////////////////
+        $(document).on('click', '.accountsubscriptionpaymentdetails', function (e) {
+            let accountSubscriptionId = $(this).attr('data-subscriptionid');
+            $('#getsubscriptionpricemodalpopup').modal('show');
             $.ajax({
-                url: changepasswordrouteurl,
+                url: "{{ route('administrator.accountsubscriptionpaymentdetails') }}",
                 type: 'POST',
                 data: {
-                    staff_id: changepassworduserid,
-                    password: password,
+                    accountSubscriptionId: accountSubscriptionId,
                     _token: '{{ csrf_token() }}'
                 },
                 success: function (response) {
-                    Swal.fire(
-                        'Success!',
-                        response.message || 'Record has been deleted.',
-                        'success'
-                    );
+                    $('.showsubscriptionpriceinmodalpopup').html(response.html);
                 },
                 error: function (xhr) {
-                    Swal.fire(
-                        'Error!',
-                        'Something went wrong.',
-                        'error'
-                    );
+                    Swal.fire('Error!', 'Something went wrong.', 'error');
                 }
             });
-
-        }
-    });
-
-
-
-    //////  Account Change Password End /////
-
-    $(document).on('click', '.accountsubscriptionpaymentdetails', function (e) {
-        let accountSubscriptionId = $(this).attr('data-subscriptionid');
-        $('#getsubscriptionpricemodalpopup').modal('show');
-        $.ajax({
-            url: "{{ route('administrator.accountsubscriptionpaymentdetails') }}",
-            type: 'POST',
-            data: {
-                accountSubscriptionId: accountSubscriptionId,
-                _token: '{{ csrf_token() }}'
-            },
-            success: function (response) {
-                $('.showsubscriptionpriceinmodalpopup').html(response.html);
-            },
-            error: function (xhr) {
-                Swal.fire(
-                    'Error!',
-                    'Something went wrong.',
-                    'error'
-                );
-            }
-        });
-        // $('.showsubscriptionpriceinmodalpopup').html('showsubscriptionpriceinmodalpopup');
-
-
-    });
-
-    //////  Get Subscription price Start getsubscriptionprice /////
-
-    $(document).on('change', '.getsubscriptionprice', function (e) {
-        $('.posandtransferamount').val(0);
-        $('.calculatepayableamount').val(0);
-        $('.errormsgonexceedpaymen').html('');
-        let subscriptionid = $(".subscription_id").val().trim();
-        $.ajax({
-            url: "{{ route('administrator.getsubscriptionprice') }}",
-            type: 'POST',
-            data: {
-                subscriptionid: subscriptionid,
-                _token: '{{ csrf_token() }}'
-            },
-            success: function (response) {
-                $('.subscrptionprice').val(response.price);
-                $('#mainsubscrptionprice').val(response.price);
-                $('.mainamountpayable').html(response.price)
-                $('.amountpayable').html(response.price)
-                $('.posandtransferamount').val(0);
-                $('.calculatepayableamount').val(0);
-            },
-            error: function (xhr) {
-                Swal.fire(
-                    'Error!',
-                    'Something went wrong.',
-                    'error'
-                );
-            }
         });
 
-    });
-
-    //////  Get Subscription price End /////
-
-    //////  Delete Data Start /////
-
-    $(document).on('click', '.deleteData', function () {
-        var deleteId = $(this).data('deleteid');
-        var routeUrl = $(this).data('routeurl');
-        Swal.fire({
-            title: 'Are you sure?',
-            text: "You won't be able to revert this!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, delete it!'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // if confirmed, do AJAX delete
-                $.ajax({
-                    url: routeUrl,
-                    type: 'POST',
-                    data: {
-                        id: deleteId,
-                        _token: '{{ csrf_token() }}' // CSRF token required
-                    },
-                    success: function (response) {
-                        Swal.fire(
-                            'Deleted!',
-                            response.message || 'Record has been deleted.',
-                            'success'
-                        ).then(function () {
-                            location.reload(); // reload after delete
-                        });
-                    },
-                    error: function (xhr) {
-                        Swal.fire(
-                            'Error!',
-                            'Something went wrong.',
-                            'error'
-                        );
-                    }
-                });
-            }
+        $(document).on('change', '.getsubscriptionprice', function (e) {
+            $('.posandtransferamount').val(0);
+            $('.calculatepayableamount').val(0);
+            $('.errormsgonexceedpaymen').html('');
+            let subscriptionid = $(".subscription_id").val().trim();
+            $.ajax({
+                url: "{{ route('administrator.getsubscriptionprice') }}",
+                type: 'POST',
+                data: {
+                    subscriptionid: subscriptionid,
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function (response) {
+                    $('.subscrptionprice').val(response.price);
+                    $('#mainsubscrptionprice').val(response.price);
+                    $('.mainamountpayable').html(response.price);
+                    $('.amountpayable').html(response.price);
+                    $('.posandtransferamount').val(0);
+                    $('.calculatepayableamount').val(0);
+                },
+                error: function (xhr) {
+                    Swal.fire('Error!', 'Something went wrong.', 'error');
+                }
+            });
         });
-    });
 
-    $(document).ready(function () {
+        ////////////////////////////// ACL Toggle Handler ////////////////
         $(document).on('change', '.acl-toggle', function () {
             let checkbox = $(this);
             let designationid = checkbox.data('designationid');
@@ -333,43 +256,44 @@
             let routeUrl = checkbox.data('routeurl');
 
             if (!routeUrl) {
-                showAlert('error', 'Error', 'Route URL missing');
+                Swal.fire('Error', 'Route URL missing', 'error');
                 return;
             }
 
-            $.post(routeUrl, {
-                _token: "{{ csrf_token() }}",
-                designationid: designationid,
-                routeid: routeid,
-                is_allowed: status
-            })
-
-                .done(function (res) {
-
+            $.ajax({
+                url: routeUrl,
+                type: 'POST',
+                data: {
+                    _token: "{{ csrf_token() }}",
+                    designationid: designationid,
+                    routeid: routeid,
+                    is_allowed: status
+                },
+                success: function (res) {
                     if (!res.success) {
-                        showAlert('error', 'Error', res.message || 'Update failed');
-                        checkbox.prop('checked', !status); // revert
+                        Swal.fire('Error', res.message || 'Update failed', 'error');
+                        checkbox.prop('checked', !status);
                     } else {
-                        showAlert('success', 'Success', res.message || 'Updated successfully');
+                        Swal.fire('Success', res.message || 'Updated successfully', 'success');
                     }
-
-                })
-
-                .fail(function () {
-                    showAlert('error', 'Error', 'Server error');
-                    checkbox.prop('checked', !status); // revert
-                });
-
+                },
+                error: function (xhr) {
+                    checkbox.prop('checked', !status);
+                    if (xhr.status === 403) {
+                        Swal.fire('Permission Denied!', xhr.responseJSON?.message || 'You do not have permission to update this.', 'error');
+                    } else {
+                        Swal.fire('Error', 'Server error', 'error');
+                    }
+                }
+            });
         });
-    });
 
-
-    $(document).ready(function () {
-
+        ////////////////////////////// Master Item Form Submit ////////////////
         $('#masterItemForm').on('submit', function (e) {
             e.preventDefault();
             let form = this;
             let formData = new FormData(form);
+
             $.ajax({
                 url: "{{ route('admin.master_items.store.ajax') }}",
                 type: "POST",
@@ -377,14 +301,10 @@
                 processData: false,
                 contentType: false,
                 beforeSend: function () {
-                    $('#saveMasterItemBtn')
-                        .prop('disabled', true)
-                        .text('Saving...');
+                    $('#saveMasterItemBtn').prop('disabled', true).text('Saving...');
                 },
                 success: function (response) {
-                    $('#saveMasterItemBtn')
-                        .prop('disabled', false)
-                        .text('Save');
+                    $('#saveMasterItemBtn').prop('disabled', false).text('Save');
                     if (response.success) {
                         Swal.fire({
                             icon: 'success',
@@ -395,31 +315,20 @@
                         });
                         form.reset();
                         $('#masterItemModal').modal('hide');
-
                     } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: response.message
-                        });
+                        Swal.fire('Error', response.message, 'error');
                     }
                 },
                 error: function (xhr) {
-                    $('#saveMasterItemBtn')
-                        .prop('disabled', false)
-                        .text('Save');
-                    let message = 'Something went wrong';
-                    if (xhr.responseJSON?.message) {
-                        message = xhr.responseJSON.message;
+                    $('#saveMasterItemBtn').prop('disabled', false).text('Save');
+                    if (xhr.status === 403) {
+                        Swal.fire('Permission Denied!', xhr.responseJSON?.message || 'You do not have permission to create this item.', 'error');
+                    } else {
+                        let message = xhr.responseJSON?.message || 'Something went wrong';
+                        Swal.fire('Error', message, 'error');
                     }
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: message
-                    });
                 }
             });
-
         });
 
     });
