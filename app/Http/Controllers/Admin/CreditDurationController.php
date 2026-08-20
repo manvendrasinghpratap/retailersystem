@@ -25,19 +25,19 @@ class CreditDurationController extends Controller
                     'title' => __('translation.dashboard')
                 ],
                 [
-                    'route' => 'admin.credit-durations.index',
+                    'route' => 'admin.credit-line.index',
                     'title' => __('translation.credit_durations')
                 ],
                 [
-                    'route' => 'admin.credit-durations.create',
+                    'route' => 'admin.credit-line.create',
                     'title' => __('translation.add_credit_duration')
                 ]
             ],
-            'route1' => 'admin.credit-durations.create',
+            'route1' => 'admin.credit-line.create',
             'route1Title' => __('translation.add_credit_duration'),
             'route2Title' => __('translation.add_credit_duration'),
-            'route2' => 'admin.credit-durations.index',
-            'reset_route' => 'admin.credit-durations.index',
+            'route2' => 'admin.credit-line.index',
+            'reset_route' => 'admin.credit-line.index',
             'reset_route_title' => __('translation.cancel')
         ];
 
@@ -49,21 +49,21 @@ class CreditDurationController extends Controller
                     'title' => __('translation.dashboard')
                 ],
                 [
-                    'route' => 'admin.credit-durations.index',
+                    'route' => 'admin.credit-line.index',
                     'title' => __('translation.credit_durations')
                 ],
                 [
-                    'route' => 'admin.credit-durations.create',
+                    'route' => 'admin.credit-line.create',
                     'title' => __('translation.add_credit_duration')
                 ]
             ],
-            'route1' => 'admin.credit-durations.index',
+            'route1' => 'admin.credit-line.index',
             'route1Title' => __('translation.credit_durations'),
             'route2Title' => __('translation.add_credit_duration'),
-            'route2' => 'admin.credit-durations.create',
+            'route2' => 'admin.credit-line.create',
             'route3Title' => __('translation.update_credit_duration'),
-            'route3' => 'admin.credit-durations.edit',
-            'reset_route' => 'admin.credit-durations.index',
+            'route3' => 'admin.credit-line.edit',
+            'reset_route' => 'admin.credit-line.index',
             'reset_route_title' => __('translation.cancel')
         ];
     }
@@ -204,10 +204,10 @@ class CreditDurationController extends Controller
                 'status' => $request->status ?? 1,
                 'created_by' => auth()->id(),
             ]);
-            return Settings::roleRedirect('credit-durations.index', __('translation.credit_duration_added_successfully'));
+            return Settings::roleRedirect('credit-line.index', __('translation.credit_duration_added_successfully'));
 
         } catch (\Exception $e) {
-            return Settings::roleRedirect('credit-durations.index', __('translation.something_went_wrong'), 'error');
+            return Settings::roleRedirect('credit-line.index', __('translation.something_went_wrong'), 'error');
         }
     }
 
@@ -216,7 +216,7 @@ class CreditDurationController extends Controller
      */
     public function edit($id)
     {
-        $breadcrumb = Settings::updateBreadcrumbRoute($this->breadcrumbListing, ['route3', 'route3Title'], ['admin.credit-durations.update', __('translation.update_credit_duration')]);
+        $breadcrumb = Settings::updateBreadcrumbRoute($this->breadcrumbListing, ['route3', 'route3Title'], ['admin.credit-line.update', __('translation.update_credit_duration')]);
         $id = Settings::getDecodeCode($id);
         $creditDuration = CreditDuration::ofAccount()->findOrFail($id);
         return view('backend.admin.creditduration.form', compact('breadcrumb', 'creditDuration'));
@@ -241,9 +241,9 @@ class CreditDurationController extends Controller
                 'interest' => $request->interest,
                 'status' => $request->status ?? 1,
             ]);
-            return Settings::roleRedirect('credit-durations.index', __('translation.credit_duration_updated_successfully'));
+            return Settings::roleRedirect('credit-line.index', __('translation.credit_duration_updated_successfully'));
         } catch (\Exception $e) {
-            return Settings::roleRedirect('credit-durations.index', __('translation.something_went_wrong'), 'error');
+            return Settings::roleRedirect('credit-line.index', __('translation.something_went_wrong'), 'error');
         }
     }
     /**

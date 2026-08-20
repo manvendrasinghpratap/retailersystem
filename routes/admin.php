@@ -124,7 +124,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'route.permission', 
 });
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'route.permission', 'subscription'])->group(function () {
-    Route::prefix('credit-durations')->name('credit-durations.')->group(function () {
+    Route::prefix('credit-line')->name('credit-line.')->group(function () {
         Route::get('/', [CreditDurationController::class, 'index'])->name('index');
         Route::get('/create', [CreditDurationController::class, 'create'])->name('create');
         Route::post('/store', [CreditDurationController::class, 'store'])->name('store');

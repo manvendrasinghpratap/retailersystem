@@ -32,14 +32,14 @@
             </li>
 
             {{-- 2. SYSTEM & MASTER SETUP --}}
-            <li class="nav-item dropdown {{ $isActive([$role . '.payment-types.*', $role . '.credit-durations.*', $role . '.account-settings.*', $role . '.designations.*', $role . '.modules.*']) ? 'active' : '' }}">
+            <li class="nav-item dropdown {{ $isActive([$role . '.payment-types.*', $role . '.credit-line.*', $role . '.account-settings.*', $role . '.designations.*', $role . '.modules.*']) ? 'active' : '' }}">
                 <a href="javascript:void(0);" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false">
                     <i data-feather="settings"></i><span>@lang('translation.master')</span>
                 </a>
                 <div class="dropdown-menu">
                     <h6 class="dropdown-header">@lang('translation.system_configurations')</h6>
                     <a href="{{ route($role . '.account-settings.index') }}" class="dropdown-item"><i data-feather="sliders" class="menu-icon-sm"></i>@lang('translation.account_settings')</a>
-                    <a href="{{ route($role . '.credit-durations.index') }}" class="dropdown-item"><i data-feather="calendar" class="menu-icon-sm"></i>@lang('translation.credit_duration')</a>
+                    <a href="{{ route($role . '.credit-line.index') }}" class="dropdown-item"><i data-feather="calendar" class="menu-icon-sm"></i>@lang('translation.credit_duration')</a>
                     {{--
                     @if($role === 'admin')
                     <div class="dropdown-divider"></div>
