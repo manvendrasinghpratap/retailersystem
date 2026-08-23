@@ -12,8 +12,9 @@ use App\Notifications\ResetUserPasswordNotification;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use App\Models\Permission;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class User extends Authenticatable
+class User extends Authenticatable implements JWTSubject
 {
     use HasFactory, Notifiable;
 
@@ -48,6 +49,38 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+        ];
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | JWT Subject Implementation
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Get the identifier that will be stored in the subject claim of the JWT.
+     *
+     * @return mixed
+     */
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
+    }
+
+    /**
+     * Return a key value array, containing any custom claims to be added to the JWT.
+     *
+     * @return array
+     */
+    public function getJWTCustomClaims(): array
+    {
+        return [
+            'account_id' => $this->account_id,
+            'store_id' => $this->store_id,
+            'user_type_id' => $this->user_type_id,
+            'designation_id' => $this->designation_id,
+            'is_staff' => $this->is_staff,
         ];
     }
 
@@ -108,7 +141,6 @@ class User extends Authenticatable
 
     public function hasPermission(string $permission): bool
     {
-
         return true;
         if ($this->isAdmin()) {
             return true;
@@ -117,7 +149,6 @@ class User extends Authenticatable
             return false;
         }
 
-        //dd($this->checkpermission($permission));
         return $this->designation->permissions()
             ->where('permissions.account_id', $this->account_id)
             ->where('permissions.route_name', $permission)
@@ -189,6 +220,16 @@ class User extends Authenticatable
     public function warehouses()
     {
         return $this->hasMany(Warehouse::class, 'staff_id', 'id');
+    }
+
+    public function account()
+    {
+        return $this->belongsTo(Account::class);
+    }
+
+    public function store()
+    {
+        return $this->belongsTo(Store::class);
     }
 
     /*
@@ -315,14 +356,4 @@ class User extends Authenticatable
         }
         return $query;
     }
-    public function account()
-    {
-        return $this->belongsTo(Account::class);
-    }
-    public function store()
-    {
-        return $this->belongsTo(Store::class);
-    }
-
-
 }

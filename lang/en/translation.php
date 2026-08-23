@@ -710,7 +710,7 @@ return [
     'delivery_notes' => 'Delivery Notes',
     'delivery_address' => 'Delivery Address',
     'sale_completed' => 'Sale completed successfully',
-    'fullfillment_method' => 'Fulfillment Method',
+    'fullfillment_method' => 'Delivery Instruction',
     'catalog' => 'Catalog',
     'register_pos' => 'Register POS',
     'product_catalog' => 'Product Catalog',

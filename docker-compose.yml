@@ -1,0 +1,54 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: retailersystem_app
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - mysql
+    networks:
+      - retailersystem
+
+  mysql:
+    image: mysql:8.0
+    container_name: retailersystem_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: retailersystem
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: retailersystem
+      MYSQL_PASSWORD: retailersystem
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - retailersystem
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: retailersystem_phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: root
+    depends_on:
+      - mysql
+    networks:
+      - retailersystem
+
+networks:
+  retailersystem:
+    driver: bridge
+
+volumes:
+  mysql_data:

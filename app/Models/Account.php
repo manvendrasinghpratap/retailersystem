@@ -12,7 +12,8 @@ class Account extends Model
     protected $fillable = [
         'user_id',
         'name',
-        'status'
+        'status',
+        'is_deleted'
     ];
     public function user()
     {
