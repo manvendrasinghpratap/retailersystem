@@ -59,7 +59,8 @@
     <div class="offcanvas offcanvas-end" tabindex="-1" id="trackingCanvas" style="width:600px;">
         <div class="offcanvas-header">
             <h5 class="offcanvas-title">Product Tracking</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+            <a href="javascript:void(0);" class="btn btn-secondary btn-sm" data-bs-dismiss="offcanvas"><i class="fas fa-arrow-left"></i> {{ __('translation.back') }}</a>
+            <!-- <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button> -->
         </div>
         <div class="offcanvas-body">
             <div class="mb-3">
