@@ -622,6 +622,8 @@ return [
     'interest' => 'Interest',
     'days' => 'Days',
     'something_went_wrong' => 'Something Went Wrong',
+    'subscription_plan_add' => 'Subscription Plan Added Successfully',
+    'sync_acl_success' => 'ACL Synced Successfully',
     'delete_failed' => 'Delete Failed',
     'deleted_successfully' => 'Deleted Successfully',
     'status_updated' => 'Status Updated Successfully',

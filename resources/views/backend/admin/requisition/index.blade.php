@@ -105,7 +105,7 @@
 
                                 @empty
                                     <tr>
-                                        <td colspan="9" class="text-center">{{ __('translation.no_data_found') }}</td>
+                                        <td colspan="10" class="text-center">{{ __('translation.no_data_found') }}</td>
                                     </tr>
                                 @endforelse
                             </tbody>

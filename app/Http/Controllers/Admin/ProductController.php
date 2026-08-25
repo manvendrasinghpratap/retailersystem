@@ -103,8 +103,7 @@ class ProductController extends Controller
     {
         $breadcrumb = $this->breadcrumbAddNew;
         $categories = Category::getCategoriesPluck();
-        // $products = Product::getProducts();
-        $products = Product::getProducts()
+        $products = Product::getProducts()->with('category')
             ->whereNotExists(function ($query) {
                 $query->select(\DB::raw(1))
                     ->from('purchase_item_trackings')
@@ -112,18 +111,16 @@ class ProductController extends Controller
                         'purchase_item_trackings.barcode',
                         'products.barcode'
                     )
-                    ->where('purchase_item_trackings.is_sold', 1);
+                    ->whereIn('purchase_item_trackings.is_sold', [1,2,3,4]);
             });
 
-        if (request('name')) {
+        if ($request->filled('name'))
             $products->where('name', 'LIKE', '%' . request('name') . '%');
-        }
-        if (request('category_id')) {
+        if ($request->filled('category_id'))
             $products->where('category_id', request('category_id'));
-        }
-        if (request('is_active')) {
-            $products->where('status', request('is_active'));
-        }
+        if ($request->filled('is_active'))
+            $products->where('products.status', $request->is_active);
+
         if ($request->pdf) {
             $products = $products->get();
             $pdfHeaderdata = \Config::get('constants.downloadproductpdf');

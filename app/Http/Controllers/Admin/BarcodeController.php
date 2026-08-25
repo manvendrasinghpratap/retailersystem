@@ -287,25 +287,6 @@ class BarcodeController extends Controller
         // ✅ Step 2: Get adjustment type
         $adjustmentType = Settings::getAdjustmentIdFromRoute($routeName);
         $adjustmentData = Settings::getEncodeCode($adjustmentType);
-
-        // ✅ Step 3: Format validation (8–13 digits)
-        // if (!preg_match('/^[0-9]{8,13}$/', $barcode)) {
-        //     return response()->json([
-        //         'status' => false,
-        //         'message' => 'Barcode must be 8 to 13 digits only.',
-        //         'adjustmentType' => $adjustmentType
-        //     ]);
-        // }
-
-        // ✅ Step 4: EAN-13 checksum validation
-        // if (strlen($barcode) === 13 && !Settings::isValidBarcode($barcode)) {
-        //     return response()->json([
-        //         'status' => false,
-        //         'message' => 'Invalid EAN-13 barcode checksum.',
-        //         'adjustmentType' => $adjustmentType
-        //     ]);
-        // }
-
         // Clean barcode received from scanner
         $barcode = trim($barcode);
 
@@ -331,9 +312,8 @@ class BarcodeController extends Controller
             }
 
         } elseif (strlen($barcode) === 13) {
-
             // EAN-13 validation
-            if (!Settings::isValidUPC_A($barcode)) {
+            if (!Settings::isValidEAN13($barcode)) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Invalid EAN-13 barcode checksum. validateBarcode',

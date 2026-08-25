@@ -9,8 +9,11 @@ use App\Models\Route as RouteModel;
 use App\Models\ACL;
 use DB;
 use Config;
+use App\Traits\SyncsACL;
+
 class AclController extends Controller
 {
+    use SyncsACL;
     protected $breadcrumbSync;
     protected $breadcrumbList;
 
@@ -53,6 +56,13 @@ class AclController extends Controller
     }
 
     public function sync()
+    {
+        $this->syncACL(auth()->user()->account_id);
+
+        return redirect()->route('administrator.acl')->with('success', __('translation.sync_acl_success'));
+    }
+
+    public function sync_old_backup(ACLService $aclService)
     {
         DB::transaction(function () {
 

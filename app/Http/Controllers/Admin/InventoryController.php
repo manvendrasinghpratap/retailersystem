@@ -142,24 +142,17 @@ class InventoryController extends Controller
 
         // CSV Export
         if ($request->filled('csv')) {
-
             $inventory = $inventory->get();
-
             $csvHeaderdata = config('constants.downloadinventorypdf');
-
             $fileName = $csvHeaderdata['filename'] . '-' . now()->format('Y-m-d') . '.csv';
-
             $data = [];
-
             $data[] = [
                 '#',
                 __('translation.category_name'),
                 __('translation.product_name'),
                 __('translation.stock'),
             ];
-
             foreach ($inventory as $key => $item) {
-
                 $data[] = [
                     $key + 1,
                     $item->category_name,
@@ -167,16 +160,11 @@ class InventoryController extends Controller
                     $item->total_stock,
                 ];
             }
-
             return Settings::downloadcsvfile($data, $fileName);
         }
-
         $inventory = $inventory->paginate(account_setting('general.pagination'));
-
-        return view(
-            'backend.admin.inventory.index',
-            compact('inventory', 'breadcrumb', 'categories')
-        );
+        // $this->pr($inventory); die();
+        return view('backend.admin.inventory.index', compact('inventory', 'breadcrumb', 'categories'));
     }
 
     public function index_delete(Request $request)

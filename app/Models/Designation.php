@@ -26,7 +26,12 @@ class Designation extends Model
             ->pluck('name', 'id')
             ->toArray();
     }
-
+    public static function getSelectableSpecific($accountId)
+    {
+        return self::where('account_id', $accountId)->where('status', 1)->orderBy('name', 'asc')
+            ->pluck('name', 'id')
+            ->toArray();
+    }
     public static function getDesignationIdOfCashier()
     {
         return self::ofAccount()->where('name', 'Cashier')->first()->id;

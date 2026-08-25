@@ -23,11 +23,13 @@ use App\Models\DefaultSiteConfig;
 use App\Models\UserAccountSubscription;
 use App\Services\StoreService;
 use App\Services\UserService;
+use App\Traits\SyncsACL;
 use DB;
 use PDF;
 
 class MyAccountController extends Controller
 {
+    use SyncsACL;
     protected $breadcrumbAddNew;
     protected $breadcrumbListing;
     protected $breadcrumbSubscribeListing;
@@ -318,7 +320,7 @@ class MyAccountController extends Controller
     */
 
     public function storesubscribe(Request $request)
-    {
+    { 
         $request->validate([
             'account' => 'required',
             'subscription_id' => 'required',
@@ -328,7 +330,6 @@ class MyAccountController extends Controller
         try {
 
             $accountId = Settings::getDecodeCode($request->account);
-
             $subscriptionDetails = SubscriptionPlan::findOrFail($request->subscription_id);
 
             $duration = $subscriptionDetails->duration ?? 1;
@@ -390,11 +391,14 @@ class MyAccountController extends Controller
             /* Update default site config */
             DefaultSiteConfig::where('id', 1)->update(['account_id' => $accountId]);
 
-            return Settings::roleRedirect('accounts', 'Subscription Plan Added Successfully.');
+            /* Sync ACL */
+            $this->syncACL($accountId);
+
+            return Settings::roleRedirect('accounts', __('translation.subscription_plan_add'));
 
         } catch (\Exception $e) {
 
-            return Settings::roleRedirect('accounts', 'Something went wrong!', 'error');
+            return Settings::roleRedirect('accounts', __('translation.something_went_wrong'), 'error');
         }
     }
 
