@@ -72,6 +72,9 @@ class WarehouseController extends Controller
         }
         if ($request->status !== '' && $request->status !== null) {
             $warehouses->where('status', $request->status);
+        } else {
+            $request->merge(['status' => 1]);
+            $warehouses->where('status', 1);
         }
         $warehouses = $warehouses->latest();
         if ($request->has('pdf')) {

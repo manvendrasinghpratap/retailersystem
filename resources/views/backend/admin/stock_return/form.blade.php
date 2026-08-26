@@ -16,8 +16,8 @@
                     <form method="POST" action="{{ route('admin.stock_returns.store') }}" id="returnForm" novalidate>
                         @csrf
                         <div class="row">
-                            <x-select-dropdown name="vendor_id" label="{{ __('translation.vendor') }}" :options="$vendors" id='vendor_id' mainrows='4' class="supplier" required />
                             <x-select-dropdown name="warehouse_id" label="{{ __('translation.warehouse') }}" :options="$warehouses" id='warehouse_id' mainrows='4' class="warehouse" required />
+                            <x-select-dropdown name="vendor_id" label="{{ __('translation.vendor') }}" :options="$vendors" id='vendor_id' mainrows='4' class="supplier" required />
                             <x-text-input name="return_date" label="{{ __('translation.return_date') }}" type="text" required class="flatdatepickr" value="{{ \App\Helpers\Settings::getFormattedDate(date('Y-m-d')) }}" />
                         </div>
                         <table class="table table-bordered mt-3" id="itemsTable">

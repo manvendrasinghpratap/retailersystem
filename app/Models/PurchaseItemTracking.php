@@ -18,6 +18,7 @@ class PurchaseItemTracking extends Model
         'batch_no',
         'expiry_date',
         'quantity',
+        'returned_quantity',
         'status',
         'is_reserved',
         'is_sold',
@@ -32,10 +33,11 @@ class PurchaseItemTracking extends Model
 
     /**
      * Barcode belongs to Purchase Item
-     */
+     */ 
     public function purchaseItem()
     {
-        return $this->belongsTo(PurchaseItem::class);
+        return $this->belongsTo(PurchaseItem::class, 'purchase_item_id');
+        //return $this->belongsTo(PurchaseItem::class);
     }
     public function purchase()
     {
@@ -68,12 +70,14 @@ class PurchaseItemTracking extends Model
     }
     public function requisition()
     {
-        return $this->belongsTo(Requisition::class);
+        //return $this->belongsTo(Requisition::class);
+        return $this->belongsTo(Requisition::class, 'requisition_id');
     }
-
+ 
     public function requisitionItem()
     {
-        return $this->belongsTo(RequisitionItem::class);
+        return $this->belongsTo(RequisitionItem::class, 'requisition_item_id');
+        // return $this->belongsTo(RequisitionItem::class);
     }
     public function scopeAvailable($query)
     {

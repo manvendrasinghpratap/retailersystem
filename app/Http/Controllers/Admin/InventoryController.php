@@ -251,7 +251,11 @@ class InventoryController extends Controller
     }
 
     public function update(Request $request, $token)
-    {
+    {   
+        // $data = Crypt::decrypt($token);
+        // $adjustmentData = Settings::getInventoryAdjustment($data['adjustment']);
+        // echo $adjustmentData['route'];
+        // echo '<pre>'; print_r($data); die();
         try {
             $data = Crypt::decrypt($token);
         } catch (\Exception $e) {
@@ -274,12 +278,14 @@ class InventoryController extends Controller
         $requisition_item_id = $data['requisition_item_id'];
         // ==========================
         // GET REQUISITION ITEM
-        // ==========================
-        $requisitionItem = RequisitionItem::with('masterItem')->find(Settings::getDecodeCode($requisition_item_id));
-        if ($requisitionItem) {
-            $masterItemName = $requisitionItem->masterItem->name ?? null;
-            $qty = (int) ($requisitionItem->qty ?? 0);
-        }
+        // ========================== 
+        if($requisition_item_id !=''){ 
+            $requisitionItem = RequisitionItem::with('masterItem')->find(Settings::getDecodeCode($requisition_item_id));
+            if ($requisitionItem) {
+                $masterItemName = $requisitionItem->masterItem->name ?? null;
+                $qty = (int) ($requisitionItem->qty ?? 0);
+            }
+        } 
 
         // ✅ Load product
         $product = Product::where('account_id', auth()->user()->account_id)->where('barcode', $barcode)->first();
@@ -291,6 +297,9 @@ class InventoryController extends Controller
         $products = Product::where('account_id', auth()->user()->account_id)->where('barcode', $barcode)->pluck('name', 'id')->toArray();
         if ($route == 'Deduct') {
             $form = 'backend.admin.inventory.return_to_warehouse';
+        }
+        if ($route == 'Damage') {
+            $qty = 1;
         }
         return view($form, compact(
             'breadcrumb',

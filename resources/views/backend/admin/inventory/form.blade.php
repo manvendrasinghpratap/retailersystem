@@ -26,10 +26,10 @@
                         {{-- Product --}}
                         <x-select-dropdown name="product_id" :label="__('translation.product')" :options="$products" :selected="count($products) === 1 ? array_key_first($products) : old('product_id', request('product_id'))" required class="form-control products required-select" mainrows="4" />
                         {{-- Quantity --}}
-                        <x-text-input name="quantity" type="text" :label="__('translation.quantity')" :value="$qty ?? ''" class="form-control quantity onlyinteger default-zero" maxlength="5" mainrows="4" required :readonly="isset($requisition_item_id) && !empty($requisition_item_id)" />
+                        <x-text-input name="quantity" type="text" :label="__('translation.quantity')" :value="$qty ?? '1'" class="form-control quantity onlyinteger default-zero" maxlength="5" mainrows="4" required :readonly="isset($requisition_item_id) && !empty($requisition_item_id)"  />
                         {{-- Reason Dropdown --}}
                         @if(in_array($adjustment ?? '', ['damage', 'deduct', 'expired']))
-                        <x-select-dropdown name="reason" :label="__('translation.reason')" :options="[
+                        <x-select-dropdown name="reason" :label="__('translation.reason')" :options="[ 
                                     'expired' => 'Expired',
                                     'spoiled' => 'Spoiled',
                                     'broken' => 'Broken',

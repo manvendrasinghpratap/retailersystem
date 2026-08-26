@@ -9,6 +9,8 @@ use App\Helpers\Settings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Validator;
+use App\Models\PurchaseItemTracking;
+use DB;
 
 class BarcodeController extends Controller
 {
@@ -117,19 +119,13 @@ class BarcodeController extends Controller
     public function deductBarcode(Request $request)
     {
         $breadcrumb = $this->breadcrumbBarcodeReader;
-        return view('backend.admin.product.barcodereader', [
-            'breadcrumb' => $breadcrumb,
-            'categories' => Category::getCategoriesPluck(),
-            'products' => Product::getProductPluck(),
+        return view('backend.admin.product.barcodereader', ['breadcrumb' => $breadcrumb, 'categories' => Category::getCategoriesPluck(), 'products' => Product::getProductPluck(),
         ]);
     }
     public function damageBarcode(Request $request)
     {
         $breadcrumb = $this->breadcrumbBarcodeReader;
-        return view('backend.admin.product.barcodereader', [
-            'breadcrumb' => $breadcrumb,
-            'categories' => Category::getCategoriesPluck(),
-            'products' => Product::getProductPluck(),
+        return view('backend.admin.product.barcodereader', ['breadcrumb' => $breadcrumb, 'categories' => Category::getCategoriesPluck(), 'products' => Product::getProductPluck(),
         ]);
     }
 
@@ -170,27 +166,7 @@ class BarcodeController extends Controller
 
         // ✅ Step 2: Get adjustment type
         $adjustmentType = Settings::getAdjustmentIdFromRoute($routeName);
-        $adjustmentData = Settings::getEncodeCode($adjustmentType);
-
-        // ✅ Step 3: Format validation (8–13 digits)
-        // if (!preg_match('/^[0-9]{8,13}$/', $barcode)) {
-        //     return response()->json([
-        //         'status' => false,
-        //         'message' => 'Barcode must be 8 to 13 digits only.',
-        //         'adjustmentType' => $adjustmentType,
-        //         'returnRoute' => $returnRoute
-        //     ]);
-        // }
-
-        // ✅ Step 4: EAN-13 checksum validation
-        // if (strlen($barcode) === 13 && !Settings::isValidBarcode($barcode)) {
-        //     return response()->json([
-        //         'status' => false,
-        //         'message' => 'Invalid EAN-13 barcode checksum.',
-        //         'adjustmentType' => $adjustmentType,
-        //         'returnRoute' => $returnRoute
-        //     ]);
-        // }
+        $adjustmentData = Settings::getEncodeCode($adjustmentType);      
 
         // Clean barcode received from scanner
         $barcode = trim($barcode);
@@ -272,6 +248,7 @@ class BarcodeController extends Controller
      */
     public function validateBarcode(Request $request)
     {
+        $requisitionData = [];
         // ✅ Step 1: Validate request
         $validated = $request->validate([
             'barcode' => ['required', 'string'],
@@ -320,11 +297,26 @@ class BarcodeController extends Controller
                     'adjustmentType' => $adjustmentType,
                 ]);
             }
+        } 
+ 
+        // ✅ Step 5: Find product (optimized query) 
+        $product = Product::query()->where('barcode', $barcode)->select(['id', 'barcode', 'name','master_item_id'])->first();
+        // $this->pr($product);
+        if($product && $product->master_item_id){
+                $requisitionData = DB::table('purchase_item_trackings as pit')
+                    ->join('purchase_items as pi', 'pit.purchase_item_id', '=', 'pi.id')
+                    ->where('pi.master_item_id', $product->master_item_id)
+                    ->where('pit.is_reserved', 1)
+                    ->where('pit.barcode', $barcode)
+                    ->where('pit.is_sold', 0)
+                    ->select('pit.requisition_id', 'pit.requisition_item_id','pit.barcode')
+                    ->get(); 
+                //$this->pr($requisitionData);
+                if(!empty($requisitionData)){
+                    $requisition_item_id = Settings::getEncodeCode($requisitionData->first()->requisition_item_id);
+                }
         }
-
-        // ✅ Step 5: Find product (optimized query)
-        $product = Product::query()->where('barcode', $barcode)->select(['id', 'barcode', 'name'])->first();
-
+        
         // ✅ Step 6: Prepare payload
         $payloadData = [
             'adjustment' => $adjustmentData,
@@ -351,43 +343,19 @@ class BarcodeController extends Controller
     public function validatePurchaseBarcode(Request $request)
     {
         try {
-            $validator = Validator::make($request->all(), [
-                'barcode' => 'required|string',
-                'routeName' => 'required|string',
-            ]);
+            $validator = Validator::make($request->all(), ['barcode' => 'required|string','routeName' => 'required|string',]);
 
             if ($validator->fails()) {
-                return response()->json([
-                    'status' => false,
-                    'message' => $validator->errors()->first(),
-                ], 422);
+                return response()->json(['status' => false,'message' => $validator->errors()->first(),], 422);
             }
 
             $barcode = trim($request->barcode);
-
-            // Example validation
-            // if (strlen($barcode) !== 13) {
-            //     return response()->json([
-            //         'status' => false,
-            //         'message' => 'Invalid barcode.'
-            //     ]);
-            // }
-            // if (strlen($barcode) == 13 && !Settings::isValidBarcode($barcode)) {
-            //     return response()->json([
-            //         'status' => false,
-            //         'message' => 'Invalid barcode checksum.'
-            //     ]);
-            // }
-
             // Clean barcode received from scanner
             $barcode = trim($barcode);
 
             // Step 3: Allow only UPC-A (12 digits) or EAN-13 (13 digits)
             if (!preg_match('/^(?:[0-9]{12}|[0-9]{13})$/', $barcode)) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Barcode must be a valid 12 or 13 digit barcode.',
-                ]);
+                return response()->json(['status' => false,'message' => 'Barcode must be a valid 12 or 13 digit barcode.',]);
             }
 
             // Step 4: Validate checksum
@@ -395,36 +363,23 @@ class BarcodeController extends Controller
 
                 // UPC-A validation
                 if (!Settings::isValidBarcode($barcode)) {
-                    return response()->json([
-                        'status' => false,
-                        'message' => 'Invalid UPC-A barcode checksum.',
-                    ]);
+                    return response()->json(['status' => false,'message' => 'Invalid UPC-A barcode checksum.',]);
                 }
 
             } elseif (strlen($barcode) === 13) {
 
                 // EAN-13 validation
-                if (!Settings::isValidUPC_A($barcode)) {
-                    return response()->json([
-                        'status' => false,
-                        'message' => 'Invalid EAN-13 barcode checksum.',
-                    ]);
+                if (!Settings::isValidEAN13($barcode)) {
+                    return response()->json(['status' => false,'message' => 'Invalid EAN-13 barcode checksum.',]);
                 }
             }
 
             // SUCCESS
-            return response()->json([
-                'status' => true,
-                'message' => 'Barcode is valid.',
-                'barcode' => $barcode
-            ]);
+            return response()->json(['status' => true,'message' => 'Barcode is valid.','barcode' => $barcode]);
 
         } catch (\Throwable $e) {
 
-            return response()->json([
-                'status' => false,
-                'message' => $e->getMessage()
-            ], 500);
+            return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
         }
     }
 }

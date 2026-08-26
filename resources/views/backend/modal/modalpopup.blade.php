@@ -305,7 +305,7 @@
         <div class="modal-content">
 
             <div class="modal-header">
-                <h5 class="modal-title">{{__('translation.stock_return_details')}}</h5>
+                <h5 class="modal-title">{{__('translation.purchase_return_details')}}</h5>
                 <div class="d-inline-block" style="margin-left:95% !important;">
                     <a href="javascript:void(0)" id="downloadstockreturnitemlistpdf" target="_blank" class="downloadstockreturnitemlistpdf" title="Download as PDF"><i class="fas fa-file-pdf action-btn text-danger" title="PDF"></i></a>
                 </div>

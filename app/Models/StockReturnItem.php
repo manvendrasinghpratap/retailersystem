@@ -11,12 +11,19 @@ class StockReturnItem extends Model
     protected $fillable = [
         'return_id',
         'master_item_id',
+        'purchase_item_tracking_id',
         'qty',
         'price',
         'total',
         'reason'
     ];
 
+    protected $casts = [
+        'qty' => 'integer',
+        'price' => 'decimal:2',
+        'total' => 'decimal:2',
+    ];
+    
     /*
     |--------------------------------------------------------------------------
     | RELATIONSHIPS
@@ -32,7 +39,7 @@ class StockReturnItem extends Model
     // Product
     public function product()
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(MasterItem::class);
     }
 
     public function masterItem()
@@ -46,5 +53,13 @@ class StockReturnItem extends Model
             set: fn($value) => (int) $value,
         );
     }
+
+    public function purchaseItemTracking()
+{
+    return $this->belongsTo(
+        PurchaseItemTracking::class,
+        'purchase_item_tracking_id'
+    );
+}
 
 }
