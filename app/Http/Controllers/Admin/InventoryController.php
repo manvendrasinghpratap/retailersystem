@@ -252,10 +252,6 @@ class InventoryController extends Controller
 
     public function update(Request $request, $token)
     {   
-        // $data = Crypt::decrypt($token);
-        // $adjustmentData = Settings::getInventoryAdjustment($data['adjustment']);
-        // echo $adjustmentData['route'];
-        // echo '<pre>'; print_r($data); die();
         try {
             $data = Crypt::decrypt($token);
         } catch (\Exception $e) {

@@ -172,7 +172,7 @@ class BarcodeController extends Controller
         $barcode = trim($barcode);
 
         // Step 3: Allow only UPC-A (12 digits) or EAN-13 (13 digits)
-        if (!preg_match('/^(?:[0-9]{12}|[0-9]{13})$/', $barcode)) {
+        if (!Settings::isValidBarcode($barcode)) {
             return response()->json([
                 'status' => false,
                 'message' => 'Barcode must be a valid 12 or 13 digit barcode.',
@@ -180,6 +180,15 @@ class BarcodeController extends Controller
                 'returnRoute' => $returnRoute
             ]);
         }
+
+        // if (!preg_match('/^(?:[0-9]{12}|[0-9]{13})$/', $barcode)) {
+        //     return response()->json([
+        //         'status' => false,
+        //         'message' => 'Barcode must be a valid 12 or 13 digit barcode.',
+        //         'adjustmentType' => $adjustmentType,
+        //         'returnRoute' => $returnRoute
+        //     ]);
+        // }
 
         // Step 4: Validate checksum
         if (strlen($barcode) === 12) {
@@ -268,7 +277,7 @@ class BarcodeController extends Controller
         $barcode = trim($barcode);
 
         // Step 3: Allow only UPC-A (12 digits) or EAN-13 (13 digits)
-        if (!preg_match('/^(?:[0-9]{12}|[0-9]{13})$/', $barcode)) {
+        if (!Settings::isValidBarcode($barcode)) {
             return response()->json([
                 'status' => false,
                 'message' => 'Barcode must be a valid 12 or 13 digit barcode.',
@@ -354,7 +363,7 @@ class BarcodeController extends Controller
             $barcode = trim($barcode);
 
             // Step 3: Allow only UPC-A (12 digits) or EAN-13 (13 digits)
-            if (!preg_match('/^(?:[0-9]{12}|[0-9]{13})$/', $barcode)) {
+            if (!Settings::isValidBarcode($barcode)) {
                 return response()->json(['status' => false,'message' => 'Barcode must be a valid 12 or 13 digit barcode.',]);
             }
 

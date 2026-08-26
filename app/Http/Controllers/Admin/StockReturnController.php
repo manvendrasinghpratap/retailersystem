@@ -179,7 +179,6 @@ class StockReturnController extends Controller
 */
     public function store(Request $request)
     {
-        // dd($request->all());
         try {
             /*
             |--------------------------------------------------------------------------
@@ -331,92 +330,58 @@ class StockReturnController extends Controller
                             $query->whereHas('purchase', function ($purchaseQuery) use (
                                 $vendor
                             ) {
-
-                                $purchaseQuery->where(
-                                    'vendor_id',
-                                    $vendor->id
-                                );
+                                $purchaseQuery->where('vendor_id', $vendor->id);
                             });
                         })
-
-                        ->orderBy('id')
-
-                        ->lockForUpdate()
-
-                        ->get();
-
+                        ->orderBy('id')->lockForUpdate()->get();
                     /*
                     |--------------------------------------------------------------------------
                     | CALCULATE ELIGIBLE TRACKING QUANTITY
                     |--------------------------------------------------------------------------
                     */
-
                     $eligibleQty = $trackings->sum(function ($tracking) {
-
                         return (float) $tracking->quantity;
                     });
-
                     /*
                     |--------------------------------------------------------------------------
                     | CHECK PURCHASE TRACKING STOCK
                     |--------------------------------------------------------------------------
                     */
-
                     if ($eligibleQty <= 0) {
-
                         throw new \Exception(
-                            "No eligible purchase stock available "
-                            . "for item {$masterItemId}."
+                            "No eligible purchase stock available for item {$masterItemId}."
                         );
                     }
-
                     if ($requestedQty > $eligibleQty) {
-
                         throw new \Exception(
-                            "Return quantity for item {$masterItemId} "
-                            . "exceeds eligible purchase quantity. "
-                            . "Available: {$eligibleQty}, "
-                            . "Requested: {$requestedQty}."
+                            "Return quantity for item {$masterItemId} exceeds eligible purchase quantity. Available: {$eligibleQty}, Requested: {$requestedQty}."
                         );
                     }
-
                     /*
                     |--------------------------------------------------------------------------
                     | REMAINING QUANTITY TO RETURN
                     |--------------------------------------------------------------------------
                     */
-
                     $remainingQty = $requestedQty;
-
                     /*
                     |--------------------------------------------------------------------------
                     | ALLOCATE RETURN ACROSS TRACKING RECORDS
                     |--------------------------------------------------------------------------
                     */
-
                     foreach ($trackings as $tracking) {
-
                         if ($remainingQty <= 0) {
                             break;
                         }
-
                         $trackingQty = (float) $tracking->quantity;
-
                         if ($trackingQty <= 0) {
                             continue;
                         }
-
                         /*
                         |--------------------------------------------------------------------------
                         | QUANTITY TO TAKE FROM THIS TRACKING
                         |--------------------------------------------------------------------------
                         */
-
-                        $returnQty = min(
-                            $remainingQty,
-                            $trackingQty
-                        );
-
+                        $returnQty = min($remainingQty, $trackingQty);
                         /*
                         |--------------------------------------------------------------------------
                         | GET PURCHASE PRICE
@@ -426,38 +391,24 @@ class StockReturnController extends Controller
                         | It comes from purchase_items.
                         |
                         */
-
                         $purchaseItem = $tracking->purchaseItem;
-
                         if (!$purchaseItem) {
-
                             throw new \Exception(
-                                "Purchase item not found for tracking ID "
-                                . $tracking->id
+                                "Purchase item not found for tracking ID " . $tracking->id
                             );
                         }
-
                         $price = (float) $purchaseItem->cost_price;
-
                         if ($price <= 0) {
-
                             throw new \Exception(
-                                "Invalid purchase price for tracking ID "
-                                . $tracking->id
+                                "Invalid purchase price for tracking ID " . $tracking->id
                             );
                         }
-
                         /*
                         |--------------------------------------------------------------------------
                         | LINE TOTAL
                         |--------------------------------------------------------------------------
                         */
-
-                        $lineTotal = round(
-                            $returnQty * $price,
-                            2
-                        );
-
+                        $lineTotal = round($returnQty * $price, 2);
                         /*
                         |--------------------------------------------------------------------------
                         | SAVE RETURN ITEM
@@ -466,47 +417,25 @@ class StockReturnController extends Controller
                         | ONE ROW PER PURCHASE TRACKING RECORD
                         |
                         */
-
                         StockReturnItem::create([
-
-                            'return_id' =>
-                                $return->id,
-
-                            'master_item_id' =>
-                                $masterItemId,
-
-                            'purchase_item_tracking_id' =>
-                                $tracking->id,
-
-                            'qty' =>
-                                $returnQty,
-
-                            'price' =>
-                                $price,
-
-                            'total' =>
-                                $lineTotal,
-
-                            'reason' =>
-                                $item['reason'] ?? null,
+                            'return_id' => $return->id,
+                            'master_item_id' => $masterItemId,
+                            'purchase_item_tracking_id' => $tracking->id,
+                            'qty' => $returnQty,
+                            'price' => $price,
+                            'total' => $lineTotal,
+                            'reason' => $item['reason'] ?? null,
                         ]);
-
                         /*
                         |--------------------------------------------------------------------------
                         | REDUCE PURCHASE TRACKING QUANTITY
                         |--------------------------------------------------------------------------
                         */
-
-                        $newTrackingQty = round(
-                            $trackingQty - $returnQty,
-                            2
-                        );
- 
+                        $newTrackingQty = round($trackingQty - $returnQty, 2);
                         $tracking->update([
                             'returned_quantity' => 1,
-                            'is_sold' => 2,    // 2 return 
+                            'is_sold' => 2,    // 2 return
                         ]);
-
                         /*
                         |--------------------------------------------------------------------------
                         | UPDATE TRACKING STATUS
@@ -544,11 +473,7 @@ class StockReturnController extends Controller
                         | REMAINING
                         |--------------------------------------------------------------------------
                         */
-
-                        $remainingQty = round(
-                            $remainingQty - $returnQty,
-                            2
-                        );
+                        $remainingQty = round($remainingQty - $returnQty, 2);
                     }
 
                     /*
@@ -558,11 +483,7 @@ class StockReturnController extends Controller
                     */
 
                     if ($remainingQty > 0) {
-
-                        throw new \Exception(
-                            "Unable to allocate complete return quantity "
-                            . "for item {$masterItemId}."
-                        );
+                        throw new \Exception("Unable to allocate complete return quantity for item {$masterItemId}.");
                     }
 
                     /*
@@ -572,27 +493,13 @@ class StockReturnController extends Controller
                     */
 
                     $stockService->moveStock([
-
-                        'account_id' =>
-                            $accountId,
-
-                        'warehouse_id' =>
-                            $warehouse->id,
-
-                        'master_item_id' =>
-                            $masterItemId,
-
-                        'type' =>
-                            5, // Purchase Return
-
-                        'qty' =>
-                            -$requestedQty,
-
-                        'reference_id' =>
-                            $return->id,
-
-                        'remarks' =>
-                            'Purchase Return #' . $returnNo,
+                        'account_id' => $accountId,
+                        'warehouse_id' => $warehouse->id,
+                        'master_item_id' => $masterItemId,
+                        'type' => 5, // Purchase Return
+                        'qty' => -$requestedQty,
+                        'reference_id' => $return->id,
+                        'remarks' => 'Purchase Return #' . $returnNo,
                     ]);
                 }
 
@@ -602,14 +509,8 @@ class StockReturnController extends Controller
                 |--------------------------------------------------------------------------
                 */
 
-                $totalAmount = round(
-                    $totalAmount,
-                    2
-                );
-
-                $return->update([
-                    'total' => $totalAmount,
-                ]);
+                $totalAmount = round($totalAmount, 2);
+                $return->update(['total' => $totalAmount]);
 
                 /*
                 |--------------------------------------------------------------------------
@@ -617,15 +518,8 @@ class StockReturnController extends Controller
                 |--------------------------------------------------------------------------
                 */
 
-                $oldBalance = (float) (
-                    $vendor->current_balance ?? 0
-                );
-
-                $newBalance = round(
-                    $oldBalance - $totalAmount,
-                    2
-                );
-
+                $oldBalance = (float) ($vendor->current_balance ?? 0);
+                $newBalance = round($oldBalance - $totalAmount, 2);
                 /*
                 |--------------------------------------------------------------------------
                 | VENDOR LEDGER
@@ -633,30 +527,14 @@ class StockReturnController extends Controller
                 */
 
                 VendorLedger::create([
-
-                    'account_id' =>
-                        $accountId,
-
-                    'vendor_id' =>
-                        $vendor->id,
-
-                    'type' =>
-                        5, // Purchase Return
-
-                    'reference_id' =>
-                        $return->id,
-
-                    'debit' =>
-                        0,
-
-                    'credit' =>
-                        $totalAmount,
-
-                    'balance' =>
-                        $newBalance,
-
-                    'remarks' =>
-                        'Purchase Return #' . $returnNo,
+                    'account_id' => $accountId,
+                    'vendor_id' => $vendor->id,
+                    'type' => 5, // Purchase Return
+                    'reference_id' => $return->id,
+                    'debit' => 0,
+                    'credit' => $totalAmount,
+                    'balance' => $newBalance,
+                    'remarks' => 'Purchase Return #' . $returnNo,
                 ]);
 
                 /*
@@ -665,9 +543,7 @@ class StockReturnController extends Controller
                 |--------------------------------------------------------------------------
                 */
 
-                $vendor->update([
-                    'current_balance' => $newBalance,
-                ]);
+                $vendor->update(['current_balance' => $newBalance]);
             });
 
             /*
@@ -676,20 +552,10 @@ class StockReturnController extends Controller
             |--------------------------------------------------------------------------
             */
 
-            return Settings::roleRedirect(
-                'stock_returns.index',
-                'Purchase Return Created Successfully.'
-            );
-
+            return Settings::roleRedirect('stock_returns.index', 'Purchase Return Created Successfully.');
         } catch (\Throwable $e) {
-
             report($e);
-
-            return Settings::roleRedirect(
-                'stock_returns.index',
-                $e->getMessage(),
-                'error'
-            );
+            return Settings::roleRedirect('stock_returns.index', $e->getMessage(), 'error');
         }
     }
 
@@ -967,38 +833,24 @@ class StockReturnController extends Controller
         try {
 
             $id = \App\Helpers\Settings::getDecodeCode($request->id);
-
             DB::transaction(function () use ($id) {
-
                 $accountId = auth()->user()->account_id;
                 $userId = auth()->id();
-
                 /*
                 |--------------------------------------------------------------------------
                 | GET RETURN
                 |--------------------------------------------------------------------------
                 */
-
-                $return = StockReturn::with('items')
-                    ->where('account_id', $accountId)
-                    ->lockForUpdate()
-                    ->findOrFail($id);
-
+                $return = StockReturn::with('items')->where('account_id', $accountId)->lockForUpdate()->findOrFail($id);
                 /*
                 |--------------------------------------------------------------------------
                 | ALREADY CANCELLED
                 |--------------------------------------------------------------------------
                 */
-
                 if ((int) $return->status === 0) {
-
-                    throw new \Exception(
-                        'Stock Return already cancelled'
-                    );
+                    throw new \Exception('Stock Return already cancelled');
                 }
-
                 $stockService = app(\App\Services\StockService::class);
-
                 /*
                 |--------------------------------------------------------------------------
                 | REVERSE RETURN ITEMS
@@ -1006,45 +858,26 @@ class StockReturnController extends Controller
                 */
 
                 foreach ($return->items as $item) {
-
                     /*
                     |--------------------------------------------------------------------------
                     | VALIDATE MASTER ITEM
                     |--------------------------------------------------------------------------
                     */
-
                     if (!$item->master_item_id) {
-
-                        throw new \Exception(
-                            'Invalid return item detected'
-                        );
+                        throw new \Exception('Invalid return item detected');
                     }
-
                     /*
                     |--------------------------------------------------------------------------
                     | RESTORE PURCHASE TRACKING
                     |--------------------------------------------------------------------------
                     */
-
                     if (!$item->purchase_item_tracking_id) {
-
-                        throw new \Exception(
-                            'Purchase tracking record not found for return item.'
-                        );
+                        throw new \Exception('Purchase tracking record not found for return item.');
                     }
-
-                    $tracking = PurchaseItemTracking::query()
-                        ->lockForUpdate()
-                        ->find($item->purchase_item_tracking_id);
-
+                    $tracking = PurchaseItemTracking::query()->lockForUpdate()->find($item->purchase_item_tracking_id);
                     if (!$tracking) {
-
-                        throw new \Exception(
-                            'Purchase tracking record not found. Tracking ID: '
-                            . $item->purchase_item_tracking_id
-                        );
+                        throw new \Exception('Purchase tracking record not found. Tracking ID: ' . $item->purchase_item_tracking_id);
                     }
-
                     /*
                     |--------------------------------------------------------------------------
                     | VALIDATE RETURNED QUANTITY
@@ -1052,10 +885,7 @@ class StockReturnController extends Controller
                     */
 
                     $returnedQty = (float) $item->qty;
-
-                    $trackingReturnedQty =
-                        (float) ($tracking->returned_quantity ?? 0);
-
+                    $trackingReturnedQty = (float) ($tracking->returned_quantity ?? 0);
                     /*
                     |--------------------------------------------------------------------------
                     | PREVENT INVALID RESTORATION
@@ -1063,13 +893,8 @@ class StockReturnController extends Controller
                     */
 
                     if ($trackingReturnedQty < $returnedQty) {
-
-                        throw new \Exception(
-                            'Invalid returned quantity for tracking ID '
-                            . $tracking->id
-                        );
+                        throw new \Exception('Invalid returned quantity for tracking ID ' . $tracking->id);
                     }
-
                     /*
                     |--------------------------------------------------------------------------
                     | RESTORE TRACKING
@@ -1081,52 +906,22 @@ class StockReturnController extends Controller
                     | We only reverse returned_quantity and is_sold.
                     |
                     */
+                    $newReturnedQty = round($trackingReturnedQty - $returnedQty, 2);
 
-                    $newReturnedQty = round(
-                        $trackingReturnedQty - $returnedQty,
-                        2
-                    );
-
-                    $tracking->update([
-
-                        'returned_quantity' =>
-                            max(0, $newReturnedQty),
-
-                        'is_sold' =>
-                            $newReturnedQty <= 0
-                                ? 0
-                                : 2,
-                    ]);
-
+                    $tracking->update(['returned_quantity' => max(0, $newReturnedQty), 'is_sold' => $newReturnedQty <= 0 ? 0 : 2]);
                     /*
                     |--------------------------------------------------------------------------
                     | RESTORE WAREHOUSE STOCK
                     |--------------------------------------------------------------------------
                     */
-
                     $stockService->moveStock([
-
-                        'account_id' =>
-                            $accountId,
-
-                        'warehouse_id' =>
-                            $return->warehouse_id,
-
-                        'master_item_id' =>
-                            $item->master_item_id,
-
-                        'type' =>
-                            'adjustment_add',
-
-                        'qty' =>
-                            $returnedQty,
-
-                        'reference_id' =>
-                            $return->id,
-
-                        'remarks' =>
-                            'Cancel Stock Return #'
-                            . $return->return_no,
+                        'account_id' => $accountId,
+                        'warehouse_id' => $return->warehouse_id,
+                        'master_item_id' => $item->master_item_id,
+                        'type' => 'adjustment_add',
+                        'qty' => $returnedQty,
+                        'reference_id' => $return->id,
+                        'remarks' => 'Cancel Stock Return #' . $return->return_no,
                     ]);
                 }
 
@@ -1136,28 +931,16 @@ class StockReturnController extends Controller
                 |--------------------------------------------------------------------------
                 */
 
-                $vendor = Vendor::query()
-                    ->where('account_id', $accountId)
-                    ->lockForUpdate()
-                    ->findOrFail($return->vendor_id);
-
-                $oldBalance = (float) (
-                    $vendor->current_balance ?? 0
-                );
-
+                $vendor = Vendor::query()->where('account_id', $accountId)->lockForUpdate()->findOrFail($return->vendor_id);
+                $oldBalance = (float) ($vendor->current_balance ?? 0);
                 $returnTotal = (float) $return->total;
-
                 /*
                 |--------------------------------------------------------------------------
                 | RESTORE PAYABLE
                 |--------------------------------------------------------------------------
                 */
 
-                $newBalance = round(
-                    $oldBalance + $returnTotal,
-                    2
-                );
-
+                $newBalance = round($oldBalance + $returnTotal, 2);
                 /*
                 |--------------------------------------------------------------------------
                 | VENDOR LEDGER
@@ -1165,31 +948,14 @@ class StockReturnController extends Controller
                 */
 
                 VendorLedger::create([
-
-                    'account_id' =>
-                        $accountId,
-
-                    'vendor_id' =>
-                        $vendor->id,
-
-                    'type' =>
-                        6, // Cancel Purchase Return
-
-                    'reference_id' =>
-                        $return->id,
-
-                    'debit' =>
-                        $returnTotal,
-
-                    'credit' =>
-                        0,
-
-                    'balance' =>
-                        $newBalance,
-
-                    'remarks' =>
-                        'Cancel Stock Return #'
-                        . $return->return_no,
+                    'account_id' => $accountId,
+                    'vendor_id' => $vendor->id,
+                    'type' => 6, // Cancel Purchase Return
+                    'reference_id' => $return->id,
+                    'debit' => $returnTotal,
+                    'credit' => 0,
+                    'balance' => $newBalance,
+                    'remarks' => 'Cancel Stock Return #' . $return->return_no,
                 ]);
 
                 /*
@@ -1197,30 +963,14 @@ class StockReturnController extends Controller
                 | UPDATE VENDOR BALANCE
                 |--------------------------------------------------------------------------
                 */
-
-                $vendor->update([
-
-                    'current_balance' =>
-                        $newBalance,
-                ]);
-
+                $vendor->update(['current_balance' => $newBalance]);
                 /*
                 |--------------------------------------------------------------------------
                 | CANCEL RETURN
                 |--------------------------------------------------------------------------
                 */
 
-                $return->update([
-
-                    'status' =>
-                        0,
-
-                    'cancelled_by' =>
-                        $userId,
-
-                    'cancelled_at' =>
-                        now(),
-                ]);
+                $return->update(['status' => 0,'cancelled_by' => $userId,'cancelled_at' => now(),]);
             });
 
             /*
@@ -1229,28 +979,10 @@ class StockReturnController extends Controller
             |--------------------------------------------------------------------------
             */
 
-            return response()->json([
-
-                'success' =>
-                    true,
-
-                'message' =>
-                    __('translation.stock_return_cancelled_successfully'),
-            ]);
-
+            return response()->json(['success' => true, 'message' => __('translation.stock_return_cancelled_successfully'),]);
         } catch (\Throwable $e) {
-
             report($e);
-
-            return response()->json([
-
-                'success' =>
-                    false,
-
-                'message' =>
-                    $e->getMessage(),
-
-            ], 500);
+            return response()->json(['success' => false,'message' => $e->getMessage(),], 500);
         }
     }
 

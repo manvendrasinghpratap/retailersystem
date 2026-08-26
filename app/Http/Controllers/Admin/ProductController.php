@@ -101,221 +101,122 @@ class ProductController extends Controller
      */
 
     public function index(Request $request)
-{
-    $breadcrumb = $this->breadcrumbAddNew;
+    {
+        $breadcrumb = $this->breadcrumbAddNew;
+        $categories = Category::getCategoriesPluck();
+        /*
+        |--------------------------------------------------------------------------
+        | PRODUCTS
+        |--------------------------------------------------------------------------
+        |
+        | Show product if at least ONE eligible purchase tracking record exists.
+        |
+        | This works for:
+        | - none
+        | - individual
+        | - batch
+        |
+        | For batch tracking, multiple rows can have the same barcode.
+        | Some may be sold/returned/damaged while others are still available.
+        |
+        */
 
-    $categories = Category::getCategoriesPluck();
-
-    /*
-    |--------------------------------------------------------------------------
-    | PRODUCTS
-    |--------------------------------------------------------------------------
-    |
-    | Show product if at least ONE eligible purchase tracking record exists.
-    |
-    | This works for:
-    | - none
-    | - individual
-    | - batch
-    |
-    | For batch tracking, multiple rows can have the same barcode.
-    | Some may be sold/returned/damaged while others are still available.
-    |
-    */
-
-   $products = Product::getProducts()
-    ->with('category')
-    ->whereExists(function ($query) {
-
-        $query->select(\DB::raw(1))
-            ->from('purchase_item_trackings')
-            ->whereColumn(
-                'purchase_item_trackings.barcode',
-                'products.barcode'
-            )
-
-            // Item is not sold
-            ->where('purchase_item_trackings.is_sold', 0)
-
-            // Item is reserved / moved to store
-            ->where('purchase_item_trackings.is_reserved', 1)
-
-            // Item is not returned
-            ->where('purchase_item_trackings.returned_quantity', 0)
-
-            // Purchase is active
-            ->where('purchase_item_trackings.status', 1);
-    });
-
-    /*
-    |--------------------------------------------------------------------------
-    | FILTER : PRODUCT NAME
-    |--------------------------------------------------------------------------
-    */
-
-    if ($request->filled('name')) {
-
-        $products->where(
-            'name',
-            'LIKE',
-            '%' . $request->name . '%'
-        );
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | FILTER : CATEGORY
-    |--------------------------------------------------------------------------
-    */
-
-    if ($request->filled('category_id')) {
-
-        $products->where(
-            'category_id',
-            $request->category_id
-        );
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | FILTER : STATUS
-    |--------------------------------------------------------------------------
-    */
-
-    if ($request->filled('is_active')) {
-
-        $products->where(
-            'products.status',
-            $request->is_active
-        );
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | PDF
-    |--------------------------------------------------------------------------
-    */
-
-    if ($request->pdf) {
-
-        $products = $products->get();
-
-        $pdfHeaderdata = \Config::get(
-            'constants.downloadproductpdf'
-        );
-
-        $pdf = Pdf::loadView(
-            'backend.pdf.products.productpdf',
-            compact(
-                'products',
-                'pdfHeaderdata'
-            )
-        );
-
-        $pdf = Settings::downloadLandscapePdf($pdf);
-
-        $fileName =
-            $pdfHeaderdata['filename']
-            . '-'
-            . date('Y-m-d')
-            . '.pdf';
-
-        return $pdf->stream($fileName);
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | CSV
-    |--------------------------------------------------------------------------
-    */
-
-    elseif ($request->has('csv')) {
-
-        $products = $products->get();
-
-        $csvHeaderdata = \Config::get(
-            'constants.downloadproductpdf'
-        );
-
-        $fileName =
-            $csvHeaderdata['filename']
-            . '-'
-            . date('Y-m-d')
-            . '.csv';
-
-        $data = [];
-
-        $ii = 0;
+        $products = Product::getProducts()
+        ->with('category')
+        ->whereExists(function ($query) {
+            $query->select(\DB::raw(1))
+                ->from('purchase_item_trackings')
+                ->whereColumn(
+                    'purchase_item_trackings.barcode',
+                    'products.barcode'
+                )
+                // Item is not sold
+                ->where('purchase_item_trackings.is_sold', 0)
+                // Item is reserved / moved to store
+                ->where('purchase_item_trackings.is_reserved', 1)
+                // Item is not returned
+                ->where('purchase_item_trackings.returned_quantity', 0)
+                // Purchase is active
+                ->where('purchase_item_trackings.status', 1);
+        });
 
         /*
         |--------------------------------------------------------------------------
-        | HEADER
+        | FILTER : PRODUCT NAME
         |--------------------------------------------------------------------------
         */
 
-        $data[$ii] = [
-            '#',
-            __('translation.category_name'),
-            __('translation.product_name'),
-            __('translation.selling_price'),
-            __('translation.barcode'),
-            __('translation.sku'),
-            __('translation.status'),
-        ];
-
-        /*
-        |--------------------------------------------------------------------------
-        | DATA
-        |--------------------------------------------------------------------------
-        */
-
-        foreach ($products as $product) {
-
-            $data[++$ii] = [
-
-                $ii,
-
-                $product->category->name ?? '-',
-
-                $product->name,
-
-                $product->selling_price,
-
-                $product->barcode,
-
-                $product->sku,
-
-                $product->status == 1
-                    ? __('translation.active')
-                    : __('translation.inactive'),
-            ];
+        if ($request->filled('name')) {
+            $products->where('name','LIKE','%'. $request->name . '%');
         }
 
-        return Settings::downloadcsvfile(
-            $data,
-            $fileName
-        );
+        /*
+        |--------------------------------------------------------------------------
+        | FILTER : CATEGORY
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->filled('category_id')) {
+            $products->where('category_id',$request->category_id);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | FILTER : STATUS
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->filled('is_active')) {
+            $products->where('products.status', $request->is_active);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | PDF
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->pdf) {    
+            $products = $products->get();
+            $pdfHeaderdata = \Config::get('constants.downloadproductpdf');
+            $pdf = Pdf::loadView('backend.pdf.products.productpdf', compact('products','pdfHeaderdata'));
+            $pdf = Settings::downloadLandscapePdf($pdf);
+            $fileName = $pdfHeaderdata['filename'].'-'.date('Y-m-d').'.pdf';
+            return $pdf->stream($fileName);
+        }        
+        elseif ($request->has('csv')) {
+            $products = $products->get();
+            $csvHeaderdata = \Config::get('constants.downloadproductpdf');
+            $fileName = $csvHeaderdata['filename'].'-'.date('Y-m-d').'.csv';
+            $data = [];
+            $ii = 0;
+            $data[$ii] = [
+                '#',
+                __('translation.category_name'),
+                __('translation.product_name'),
+                __('translation.selling_price'),
+                __('translation.barcode'),
+                __('translation.sku'),
+                __('translation.status'),
+            ];
+            foreach ($products as $product) {
+                $data[++$ii] = [
+                    $ii,
+                    $product->category->name ?? '-',
+                    $product->name,
+                    $product->selling_price,
+                    $product->barcode,
+                    $product->sku,
+                    $product->status == 1 ? __('translation.active') : __('translation.inactive'),
+                ];
+            }
+            return Settings::downloadcsvfile($data,$fileName);
+        }
+        $products = $products->paginate(account_setting('general.pagination'));
+        return view('backend.admin.product.index',compact('products','breadcrumb','categories'));
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | PAGINATION
-    |--------------------------------------------------------------------------
-    */
 
-    $products = $products->paginate(
-        account_setting('general.pagination')
-    );
-
-    return view(
-        'backend.admin.product.index',
-        compact(
-            'products',
-            'breadcrumb',
-            'categories'
-        )
-    );
-}
     public function index_delete(Request $request)
     {
         $breadcrumb = $this->breadcrumbAddNew;
