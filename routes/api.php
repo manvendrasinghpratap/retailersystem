@@ -7,6 +7,9 @@ use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\RequisitionController;
 use App\Http\Controllers\Api\SaleController;
 use App\Http\Controllers\Api\WarehouseController;
+use App\Http\Controllers\Api\InventoryController;
+use App\Http\Controllers\Api\ProductController;
+
 /*
 |--------------------------------------------------------------------------
 | Authentication Routes
@@ -109,4 +112,24 @@ Route::prefix('warehouses')->middleware(['api.request', 'auth:api'])->group(func
         Route::get('/stock-listing/export/pdf', [WarehouseController::class, 'exportstocklistingPdf']);
         Route::get('/stock-listing/export/csv', [WarehouseController::class, 'exportstocklistingCsv']);
         Route::get('/{id}', [WarehouseController::class, 'show']);
+});
+
+Route::prefix('inventory')->middleware(['api.request', 'auth:api'])->group(function () {
+        Route::get('/', [InventoryController::class, 'index']);
+        Route::get('/export-pdf', [InventoryController::class, 'exportPdf']);
+        Route::get('/export-csv', [InventoryController::class, 'exportCsv']);
+});
+
+Route::prefix('products')->middleware(['api.request', 'auth:api'])->group(function () {
+        Route::get('/', [ProductController::class, 'index']);  // list 
+        Route::get('edit/{id}', [ProductController::class, 'edit']);  // edit
+        Route::put('update/{id}', [ProductController::class, 'update']);  // update
+        Route::post('/', [ProductController::class, 'store']); // store
+        Route::get('/{id}', [ProductController::class, 'show']);  // show
+        Route::delete('/{id}', [ProductController::class, 'destroy']);  // delete
+        Route::delete('/{id}/soft-delete', [ProductController::class, 'softdelete']);  // soft delete
+        Route::get('/search', [ProductController::class, 'search']);
+        Route::get('/last-price', [ProductController::class, 'getLastPrice']);
+        Route::get('/export/pdf', [ProductController::class, 'exportPdf']);
+        Route::get('/export/csv', [ProductController::class, 'exportCsv']);
 });
