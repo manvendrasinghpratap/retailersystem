@@ -11,18 +11,38 @@ $(function () {
 
     // Reset forms and validation when modal opens
     $('#signin-modal').on('shown.bs.modal', function () {
+
         let form = this.querySelector('form');
+
         form.reset();
+
         $(form).find('.is-invalid').removeClass('is-invalid');
         $(form).find('.error').remove();
 
         if ($('#registration').data('validator')) {
             $('#registration').validate().resetForm();
         }
+
         $.get('/refresh-csrf')
-            .fail(function () {
-                location.reload();
+            .done(function (response) {
+                if (response.token) {
+                    $('meta[name="csrf-token"]').attr('content', response.token);
+
+                    $.ajaxSetup({
+                        headers: {
+                            'X-CSRF-TOKEN': response.token
+                        }
+                    });
+
+                    // If your form has a hidden _token field
+                    $(form).find('input[name="_token"]').val(response.token);
+                }
+            })
+            .fail(function (xhr) {
+                console.log('CSRF refresh failed:', xhr.status, xhr.responseText);
+                // DO NOT reload the page
             });
+
         $('#login-email').trigger('focus');
     });
 

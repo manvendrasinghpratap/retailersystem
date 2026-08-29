@@ -57,7 +57,7 @@ Route::get('syncroutes', function () {
     echo 'routes synced';
 });
 Route::get('admin/acl', [\App\Http\Controllers\Administrator\AclController::class, 'index'])->name('acl');
-Route::get('/refresh-csrf', function () {
+Route::get('refresh-csrf', function () {
     return response()->json(['token' => csrf_token()]);
 });
 
@@ -72,11 +72,11 @@ Route::middleware('auth')->post('/keep-alive', KeepAliveController::class)->name
 //         ->subject('Test Mail');
 // });
 Route::get('logout', [KeepAliveController::class, 'logout'])->name('logout');
-Route::get('/generate-barcode', [BarcodeController::class, 'index']);
+Route::get('generate-barcode', [BarcodeController::class, 'index']);
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
-Route::post('/contact-us', [ContactController::class, 'store'])->name('contact.store');
+Route::post('contact-us', [ContactController::class, 'store'])->name('contact.store');
 
 Route::middleware(['auth', 'subscription'])->get('admin', [DashboardController::class, 'index'])->name('dashboard');
 Route::middleware(['auth', 'route.permission', 'subscription'])->prefix('admin/staff')->group(function () {
