@@ -23,33 +23,25 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         try {
+
             /*
             |--------------------------------------------------------------------------
-            | Date
+            | DATE
             |--------------------------------------------------------------------------
             */
 
-            $date = $request->date
-                ? Settings::formatDate($request->date, 'Y-m-d')
-                : Carbon::now()->format('Y-m-d');
-
+            $date = $request->date ? Settings::formatDate($request->date, 'Y-m-d') : Carbon::now()->format('Y-m-d');
             $selectedDate = Carbon::parse($date);
 
             /*
             |--------------------------------------------------------------------------
-            | Logged-in User / Account
+            | LOGGED-IN USER / ACCOUNT
             |--------------------------------------------------------------------------
             */
-
             $user = auth('api')->user();
-
             if (!$user) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Unauthorized.'
-                ], 401);
+                return response()->json(['status' => false, 'message' => 'Unauthorized.'], 401);
             }
-
             $accountId = $user->account_id;
 
             /*
@@ -58,22 +50,10 @@ class DashboardController extends Controller
             |--------------------------------------------------------------------------
             */
 
-            $sales = Sale::where('account_id', $accountId)
-                ->visibleToUser()
-                ->whereDate('created_at', $date)
-                ->select(
-                    DB::raw('HOUR(created_at) as hour'),
-                    DB::raw('SUM(total) as total_sales')
-                )
-                ->groupBy('hour')
-                ->orderBy('hour')
-                ->get();
-
+            $sales = Sale::where('account_id', $accountId)->visibleToUser()->whereDate('created_at', $date)->select(DB::raw('HOUR(created_at) as hour'), DB::raw('SUM(total) as total_sales'))->groupBy('hour')->orderBy('hour')->get();
             $hours = [];
             $hourlyTotals = array_fill(0, 24, 0);
-
             for ($i = 0; $i < 24; $i++) {
-
                 if ($i == 0) {
                     $label = '12 AM';
                 } elseif ($i < 12) {
@@ -83,14 +63,11 @@ class DashboardController extends Controller
                 } else {
                     $label = ($i - 12) . ' PM';
                 }
-
                 $hours[] = $label;
             }
-
             foreach ($sales as $sale) {
                 $hourlyTotals[(int) $sale->hour] = (float) $sale->total_sales;
             }
-
             /*
             |--------------------------------------------------------------------------
             | WEEKLY SALES
@@ -99,34 +76,15 @@ class DashboardController extends Controller
 
             $weekStart = $selectedDate->copy()->startOfWeek();
             $weekEnd = $selectedDate->copy()->endOfWeek();
-
-            $weeklySales = Sale::where('account_id', $accountId)
-                ->visibleToUser()
-                ->whereBetween('created_at', [$weekStart, $weekEnd])
-                ->select(
-                    DB::raw('DATE(created_at) as sale_date'),
-                    DB::raw('SUM(total) as total_sales')
-                )
-                ->groupBy('sale_date')
-                ->orderBy('sale_date')
-                ->get()
-                ->keyBy('sale_date');
-
+            $weeklySales = Sale::where('account_id', $accountId)->visibleToUser()->whereBetween('created_at', [$weekStart, $weekEnd])->select(DB::raw('DATE(created_at) as sale_date'), DB::raw('SUM(total) as total_sales'))->groupBy('sale_date')->orderBy('sale_date')->get()->keyBy('sale_date');
             $weekLabels = [];
             $weeklyTotals = [];
-
             for ($i = 0; $i < 7; $i++) {
-
                 $day = $weekStart->copy()->addDays($i);
                 $key = $day->format('Y-m-d');
-
                 $weekLabels[] = $day->format('D');
-
-                $weeklyTotals[] = isset($weeklySales[$key])
-                    ? (float) $weeklySales[$key]->total_sales
-                    : 0;
+                $weeklyTotals[] = isset($weeklySales[$key]) ? (float) $weeklySales[$key]->total_sales : 0;
             }
-
             /*
             |--------------------------------------------------------------------------
             | MONTHLY SALES
@@ -135,35 +93,29 @@ class DashboardController extends Controller
 
             $monthStart = $selectedDate->copy()->startOfMonth();
             $monthEnd = $selectedDate->copy()->endOfMonth();
-
-            $monthlySales = Sale::where('account_id', $accountId)
-                ->visibleToUser()
-                ->whereBetween('created_at', [$monthStart, $monthEnd])
-                ->select(
-                    DB::raw('DAY(created_at) as day_no'),
-                    DB::raw('SUM(total) as total_sales')
-                )
-                ->groupBy('day_no')
-                ->orderBy('day_no')
-                ->get()
-                ->keyBy('day_no');
-
+            $monthlySales = Sale::where('account_id', $accountId)->visibleToUser()->whereBetween('created_at', [$monthStart, $monthEnd])->select(DB::raw('DAY(created_at) as day_no'), DB::raw('SUM(total) as total_sales'))->groupBy('day_no')->orderBy('day_no')->get()->keyBy('day_no');
             $monthLabels = [];
             $monthlyTotals = [];
-
             for ($i = 1; $i <= $selectedDate->daysInMonth; $i++) {
-
                 $monthLabels[] = $i;
-
-                $monthlyTotals[] = isset($monthlySales[$i])
-                    ? (float) $monthlySales[$i]->total_sales
-                    : 0;
+                $monthlyTotals[] = isset($monthlySales[$i]) ? (float) $monthlySales[$i]->total_sales : 0;
             }
-
             /*
             |--------------------------------------------------------------------------
             | PRODUCT DAILY
             |--------------------------------------------------------------------------
+            /*
+            |--------------------------------------------------------------------------
+            | PRODUCT DAILY
+            |--------------------------------------------------------------------------
+            |
+            | IMPORTANT:
+            |
+            | Group by master_item_id instead of products.id.
+            |
+            | This combines multiple product records that belong
+            | to the same master product.
+            |
             */
 
             $productDaily = DB::table('sale_items')
@@ -171,16 +123,21 @@ class DashboardController extends Controller
                 ->join('products', 'products.id', '=', 'sale_items.product_id')
                 ->where('sales.account_id', $accountId)
                 ->whereDate('sales.created_at', $selectedDate)
-                ->select(
-                    'products.id',
-                    'products.name',
-                    DB::raw('SUM(sale_items.quantity) as total_items_sold'),
-                    DB::raw('SUM(sale_items.total) as total_revenue')
-                )
-                ->groupBy('products.id', 'products.name')
+                ->select('products.master_item_id', DB::raw('MAX(products.name) as name'), DB::raw('SUM(sale_items.quantity) as total_items_sold'), DB::raw('SUM(sale_items.total) as total_revenue'))
+                ->groupBy('products.master_item_id')
                 ->orderByDesc('total_items_sold')
                 ->get();
 
+            /*
+            |--------------------------------------------------------------------------
+            | PRODUCT DAILY - FORMAT NAME
+            |--------------------------------------------------------------------------
+            */
+
+            $productDaily->transform(function ($item) {
+                $item->name = ucwords($item->name);
+                return $item;
+            });
             /*
             |--------------------------------------------------------------------------
             | PRODUCT WEEKLY
@@ -188,23 +145,24 @@ class DashboardController extends Controller
             */
 
             $productWeekly = DB::table('sale_items')
-                ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
-                ->join('products', 'products.id', '=', 'sale_items.product_id')
+                ->join('sales','sales.id','=','sale_items.sale_id')
+                ->join('products','products.id','=','sale_items.product_id')
                 ->where('sales.account_id', $accountId)
-                ->whereBetween('sales.created_at', [
-                    $weekStart,
-                    $weekEnd
-                ])
-                ->select(
-                    'products.id',
-                    'products.name',
-                    DB::raw('SUM(sale_items.quantity) as total_items_sold'),
-                    DB::raw('SUM(sale_items.total) as total_revenue')
-                )
-                ->groupBy('products.id', 'products.name')
+                ->whereBetween('sales.created_at', [$weekStart, $weekEnd])
+                ->select('products.master_item_id', DB::raw('MAX(products.name) as name'), DB::raw('SUM(sale_items.quantity) as total_items_sold'), DB::raw('SUM(sale_items.total) as total_revenue'))
+                ->groupBy('products.master_item_id')
                 ->orderByDesc('total_items_sold')
                 ->get();
+            /*
+            |--------------------------------------------------------------------------
+            | PRODUCT WEEKLY - FORMAT NAME
+            |--------------------------------------------------------------------------
+            */
 
+            $productWeekly->transform(function ($item) {
+                $item->name = ucwords($item->name);
+                return $item;
+            });
             /*
             |--------------------------------------------------------------------------
             | PRODUCT MONTHLY
@@ -212,144 +170,162 @@ class DashboardController extends Controller
             */
 
             $productMonthly = DB::table('sale_items')
-                ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
-                ->join('products', 'products.id', '=', 'sale_items.product_id')
+                ->join('sales','sales.id','=','sale_items.sale_id')
+                ->join('products','products.id','=','sale_items.product_id')
                 ->where('sales.account_id', $accountId)
-                ->whereBetween('sales.created_at', [
-                    $monthStart,
-                    $monthEnd
-                ])
-                ->select(
-                    'products.id',
-                    'products.name',
-                    DB::raw('SUM(sale_items.quantity) as total_items_sold'),
-                    DB::raw('SUM(sale_items.total) as total_revenue')
-                )
-                ->groupBy('products.id', 'products.name')
+                ->whereBetween('sales.created_at',[$monthStart, $monthEnd])
+                ->select('products.master_item_id', DB::raw('MAX(products.name) as name'), DB::raw('SUM(sale_items.quantity) as total_items_sold'), DB::raw('SUM(sale_items.total) as total_revenue'))
+                ->groupBy('products.master_item_id')
                 ->orderByDesc('total_items_sold')
                 ->get();
-
             /*
             |--------------------------------------------------------------------------
-            | KPI
+            | PRODUCT MONTHLY - FORMAT NAME
             |--------------------------------------------------------------------------
             */
 
-            $totalRevenue = Sale::where('account_id', $accountId)
-                ->visibleToUser()
-                ->whereDate('created_at', $date)
-                ->sum('total');
+            $productMonthly->transform(function ($item) {
+                $item->name = ucwords($item->name);
+                return $item;
+            });
 
-            $totalOrders = Sale::where('account_id', $accountId)
-                ->visibleToUser()
-                ->whereDate('created_at', $date)
-                ->count();
 
+            /*
+            |--------------------------------------------------------------------------
+            | KPI - TOTAL REVENUE
+            |--------------------------------------------------------------------------
+            */
+            $totalRevenue = Sale::where('account_id',$accountId)->visibleToUser()->whereDate('created_at', $date)->sum('total');
+            /*
+            |--------------------------------------------------------------------------
+            | KPI - TOTAL ORDERS
+            |--------------------------------------------------------------------------
+            */
+
+            $totalOrders = Sale::where('account_id',$accountId)->visibleToUser()->whereDate('created_at', $date)->count();
+            /*
+            |--------------------------------------------------------------------------
+            | KPI - TOTAL ITEMS SOLD
+            |--------------------------------------------------------------------------
+            */
             $totalItemsSold = DB::table('sale_items')
-                ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
+                ->join('sales','sales.id','=','sale_items.sale_id')
                 ->where('sales.account_id', $accountId)
                 ->whereDate('sales.created_at', $date)
                 ->sum('sale_items.quantity');
-
-            $totalCustomers = Customer::where('account_id', $accountId)
-                ->count();
-
-            $totalProducts = Product::where('account_id', $accountId)
-                ->count();
-
+            /*
+            |--------------------------------------------------------------------------
+            | KPI - TOTAL CUSTOMERS
+            |--------------------------------------------------------------------------
+            */
+            $totalCustomers = Customer::where('account_id',$accountId)->count();
+            /*
+            |--------------------------------------------------------------------------
+            | KPI - TOTAL PRODUCTS
+            |--------------------------------------------------------------------------
+            |
+            | Count unique master products.
+            |
+            | If master_item_id exists:
+            |     count master_item_id
+            |
+            | If master_item_id is NULL:
+            |     count product.id
+            |
+            */
+            $totalProducts = Product::where('account_id', $accountId)->selectRaw('COUNT(DISTINCT COALESCE(master_item_id, id)) as total')->value('total');
             /*
             |--------------------------------------------------------------------------
             | API RESPONSE
             |--------------------------------------------------------------------------
             */
 
-            return response()->json([
-                'status' => true,
-
-                'message' => 'Dashboard data retrieved successfully.',
-
-                'data' => [
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Selected Date
-                    |--------------------------------------------------------------------------
-                    */
-
-                    'date' => $date,
-
-                    /*
+            return response()->json(['status' => true,'message' => 'Dashboard data retrieved successfully.','data' => ['date' => $date,/*
                     |--------------------------------------------------------------------------
                     | KPI
                     |--------------------------------------------------------------------------
                     */
 
-                    'kpi' => [
-                        'total_revenue' => (float) $totalRevenue,
-                        'total_orders' => (int) $totalOrders,
-                        'total_items_sold' => (float) $totalItemsSold,
-                        'total_customers' => (int) $totalCustomers,
-                        'total_products' => (int) $totalProducts,
-                    ],
-
+                    'kpi' => ['total_revenue' =>(float) $totalRevenue,'total_orders' =>(int) $totalOrders,'total_items_sold' =>(float) $totalItemsSold,'total_customers' =>(int) $totalCustomers,'total_products' =>(int) $totalProducts,],
                     /*
                     |--------------------------------------------------------------------------
-                    | Hourly Sales Chart
+                    | HOURLY SALES CHART
                     |--------------------------------------------------------------------------
                     */
 
                     'hourly_sales' => [
+
                         'categories' => $hours,
+
                         'series' => [
+
                             [
                                 'name' => 'Sales',
                                 'data' => $hourlyTotals,
                             ]
+
                         ],
                     ],
 
+
                     /*
                     |--------------------------------------------------------------------------
-                    | Weekly Sales Chart
+                    | WEEKLY SALES CHART
                     |--------------------------------------------------------------------------
                     */
 
                     'weekly_sales' => [
+
                         'categories' => $weekLabels,
+
                         'series' => [
+
                             [
                                 'name' => 'Sales',
                                 'data' => $weeklyTotals,
                             ]
+
                         ],
                     ],
 
+
                     /*
                     |--------------------------------------------------------------------------
-                    | Monthly Sales Chart
+                    | MONTHLY SALES CHART
                     |--------------------------------------------------------------------------
                     */
 
                     'monthly_sales' => [
+
                         'categories' => $monthLabels,
+
                         'series' => [
+
                             [
                                 'name' => 'Sales',
                                 'data' => $monthlyTotals,
                             ]
+
                         ],
                     ],
 
+
                     /*
                     |--------------------------------------------------------------------------
-                    | Product Sales
+                    | PRODUCT SALES
                     |--------------------------------------------------------------------------
                     */
 
                     'products' => [
-                        'daily' => $productDaily,
-                        'weekly' => $productWeekly,
-                        'monthly' => $productMonthly,
+
+                        'daily' =>
+                            $productDaily,
+
+                        'weekly' =>
+                            $productWeekly,
+
+                        'monthly' =>
+                            $productMonthly,
                     ],
                 ],
             ]);
@@ -357,11 +333,16 @@ class DashboardController extends Controller
         } catch (\Throwable $e) {
 
             return response()->json([
+
                 'status' => false,
-                'message' => 'Unable to retrieve dashboard data.',
+
+                'message' =>
+                    'Unable to retrieve dashboard data.',
+
                 'error' => config('app.debug')
                     ? $e->getMessage()
                     : null,
+
             ], 500);
         }
     }

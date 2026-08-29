@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\ReportController;
 
 
 /*
@@ -39,6 +40,9 @@ Route::prefix('dashboard')->middleware(['api.request', 'auth:api'])->group(funct
 });
 
 
+Route::prefix('reports')->middleware(['api.request', 'auth:api'])->group(function () {
+    Route::get('daily-sales', [ReportController::class, 'dailySales']);
+});
 
 
 // Route::get('/me-test', function (Request $request) { // return response()->json([ // 'server_authorization' => $_SERVER['HTTP_AUTHORIZATION'] ?? null, // 'request_authorization' => $request->header('Authorization'), // 'bearer_token' => $request->bearerToken(), // 'redirect_http_authorization' => $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? null, // ]); // });
