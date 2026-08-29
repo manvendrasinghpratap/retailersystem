@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\RequisitionController;
+use App\Http\Controllers\Api\SaleController;
 /*
 |--------------------------------------------------------------------------
 | Authentication Routes
@@ -45,10 +46,13 @@ Route::prefix('reports')->middleware(['api.request', 'auth:api'])->group(functio
 
 Route::prefix('requisitions')->middleware(['api.request', 'auth:api'])->group(function () {
         // Requisition List
-        Route::get('/', [RequisitionController::class, 'index']);   
-
+        Route::get('/', [RequisitionController::class, 'index']);
+        
         // Create Requisition
-        Route::post('/', [RequisitionController::class, 'store']);
+        Route::get('/create', [RequisitionController::class, 'create']);
+
+        // Store Requisition
+        Route::post('/store', [RequisitionController::class, 'store']);
 
         // Cancel Requisition
         Route::post('/cancel', [RequisitionController::class, 'cancel']);
@@ -76,5 +80,16 @@ Route::prefix('requisitions')->middleware(['api.request', 'auth:api'])->group(fu
 
         // Search Barcode
         Route::post('/barcode/search', [RequisitionController::class, 'searchBarcode']);
-    });
+});
+
+Route::prefix('sales')->middleware(['api.request', 'auth:api'])->group(function () {
+    Route::get('/', [SaleController::class, 'index']);
+    Route::get('/export-pdf', [SaleController::class, 'exportPdf']);
+    Route::get('/export-csv', [SaleController::class, 'exportCsv']);
+    Route::get('/{sale}', [SaleController::class, 'show']);
+    Route::get('/{sale}/payment-details', [SaleController::class, 'paymentDetails']);
+    Route::post('/save-credit-payment', [SaleController::class, 'saveCreditPayment']);
+});
+
+
 // Route::get('/me-test', function (Request $request) { // return response()->json([ // 'server_authorization' => $_SERVER['HTTP_AUTHORIZATION'] ?? null, // 'request_authorization' => $request->header('Authorization'), // 'bearer_token' => $request->bearerToken(), // 'redirect_http_authorization' => $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? null, // ]); // });
