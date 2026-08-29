@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\RequisitionController;
 use App\Http\Controllers\Api\SaleController;
+use App\Http\Controllers\Api\WarehouseController;
 /*
 |--------------------------------------------------------------------------
 | Authentication Routes
@@ -91,5 +92,21 @@ Route::prefix('sales')->middleware(['api.request', 'auth:api'])->group(function 
     Route::post('/save-credit-payment', [SaleController::class, 'saveCreditPayment']);
 });
 
-
-// Route::get('/me-test', function (Request $request) { // return response()->json([ // 'server_authorization' => $_SERVER['HTTP_AUTHORIZATION'] ?? null, // 'request_authorization' => $request->header('Authorization'), // 'bearer_token' => $request->bearerToken(), // 'redirect_http_authorization' => $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? null, // ]); // });
+Route::prefix('warehouses')->middleware(['api.request', 'auth:api'])->group(function () {
+        Route::get('/', [WarehouseController::class, 'index']);
+        Route::post('/', [WarehouseController::class, 'store']);
+        Route::put('/{id}', [WarehouseController::class, 'update']);
+        Route::delete('/{id}', [WarehouseController::class, 'softdelete']);
+        Route::patch('/{id}/status', [WarehouseController::class, 'statusUpdate']);
+        Route::get('/warehouse-product-stock', [WarehouseController::class, 'getProductStock']);
+        Route::get('/stock-listing', [WarehouseController::class, 'stockListing']);
+        Route::post('/stock-transfer', [WarehouseController::class, 'transferStore']);
+        Route::get('/{id}/products', [WarehouseController::class, 'getWarehouseProducts']);
+        Route::get('/export/pdf', [WarehouseController::class, 'warehousePdf']);
+        Route::get('/export/csv', [WarehouseController::class, 'warehouseCsv']);
+        Route::get('/{id}/products/export/pdf', [WarehouseController::class, 'warehouseproductPdf']);
+        Route::get('/{id}/products/export/csv', [WarehouseController::class, 'warehouseproductCsv']);
+        Route::get('/stock-listing/export/pdf', [WarehouseController::class, 'exportstocklistingPdf']);
+        Route::get('/stock-listing/export/csv', [WarehouseController::class, 'exportstocklistingCsv']);
+        Route::get('/{id}', [WarehouseController::class, 'show']);
+});
