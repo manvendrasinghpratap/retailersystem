@@ -139,7 +139,7 @@
                 <div class="dropdown-menu">
                     <h6 class="dropdown-header">@lang('translation.analytics')</h6>
                     <a href="{{ route('reports.daily.sales') }}" class="dropdown-item"><i data-feather="activity" class="menu-icon-sm"></i>@lang('translation.daily_sales_report')</a>
-                    <a href="{{ route($role . '.requisitions.pending.posting.history.report') }}" class="dropdown-item"><i data-feather="rotate-ccw" class="menu-icon-sm"></i>@lang('translation.posting_history_report')</a>
+                    <a href="{{ route($role . '.requisitions.pending.posting.history') }}" class="dropdown-item"><i data-feather="rotate-ccw" class="menu-icon-sm"></i>@lang('translation.posting_history_report')</a>
                 </div>
             </li>
 
