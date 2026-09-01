@@ -97,7 +97,16 @@
                 return;
             }
             let warehouse = $('#from_warehouse_id').val();
-
+            let master_item_id = activeRow.find('.selectProduct').val();
+            // Product must be selected first
+            if (!master_item_id) {
+                Swal.fire(
+                    'Error',
+                    'Please select a product first.',
+                    'error'
+                );
+                return;
+            }
             // Already scanned tracking ids
             let scannedIds = $('.hiddenTracking').map(function () {
                 return $(this).val();
@@ -109,6 +118,7 @@
                     _token: "{{ csrf_token() }}",
                     barcode: barcode,
                     warehouse_id: warehouse,
+                    master_item_id: master_item_id,
                     scanned_ids: scannedIds
                 },
                 function (res) {

@@ -251,7 +251,291 @@ class InventoryController extends Controller
     }
 
     public function update(Request $request, $token)
+    {
+        //  $data = Crypt::decrypt($token);
+        //  $this->pr($data);die();  
+
+    /*
+    |--------------------------------------------------------------------------
+    | DECRYPT TOKEN
+    |--------------------------------------------------------------------------
+    */
+
+    try {
+
+        $data = Crypt::decrypt($token);
+
+    } catch (\Exception $e) {
+
+        return redirect()
+            ->route('admin.barcode')
+            ->with('error', 'Invalid link');
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | BASIC DATA
+    |--------------------------------------------------------------------------
+    */
+
+    $barcode = $data['barcode'] ?? null;
+    $productId = $data['product_id'] ?? null;
+    $requisition_item_id = $data['requisition_item_id'] ?? null;
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | VALIDATE TOKEN DATA
+    |--------------------------------------------------------------------------
+    */
+
+    if (empty($barcode) || empty($productId)) {
+
+        return redirect()
+            ->route('admin.barcode')
+            ->with('error', 'Invalid product information.');
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | WAREHOUSES
+    |--------------------------------------------------------------------------
+    */
+
+    $warehouses = Warehouse::active()
+        ->ofAccount()
+        ->orderBy('name', 'asc')
+        ->pluck('name', 'id')
+        ->prepend(
+            __('translation.to_warehouse'),
+            ''
+        );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | STORES
+    |--------------------------------------------------------------------------
+    */
+
+    $stores = Store::active()
+        ->ofAccount()
+        ->ofMyStore()
+        ->orderBy('name', 'asc')
+        ->pluck('name', 'id')
+        ->prepend(
+            __('translation.my_store'),
+            ''
+        );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | DEFAULT VALUES
+    |--------------------------------------------------------------------------
+    */
+
+    $form = 'backend.admin.inventory.form';
+
+    $masterItemName = null;
+    $qty = null;
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | INVENTORY ADJUSTMENT
+    |--------------------------------------------------------------------------
+    */
+
+    $adjustmentData = Settings::getInventoryAdjustment(
+        $data['adjustment'] ?? null
+    );
+
+    if (empty($adjustmentData['adjustment'])) {
+
+        return Settings::roleRedirect(
+            'inventory',
+            'Something went wrong!',
+            'error'
+        );
+    }
+
+    $route = $adjustmentData['route'];
+    $adjustment = $adjustmentData['adjustment'];
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | GET REQUISITION ITEM
+    |--------------------------------------------------------------------------
+    */
+
+    if (!empty($requisition_item_id)) {
+
+        try {
+
+            $decodedRequisitionItemId =
+                Settings::getDecodeCode($requisition_item_id);
+
+            $requisitionItem = RequisitionItem::with('masterItem')
+                ->find($decodedRequisitionItemId);
+
+        } catch (\Exception $e) {
+
+            return redirect()
+                ->route('admin.barcode')
+                ->with('error', 'Invalid requisition item.');
+        }
+
+
+        if (!$requisitionItem) {
+
+            return redirect()
+                ->route('admin.barcode')
+                ->with('error', 'Requisition item not found.');
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | REQUISITION ITEM INFORMATION
+        |--------------------------------------------------------------------------
+        */
+
+        $masterItemName =
+            $requisitionItem->masterItem->name ?? null;
+
+        $qty = (int) ($requisitionItem->qty ?? 0);
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | LOAD EXACT PRODUCT
+    |--------------------------------------------------------------------------
+    |
+    | IMPORTANT:
+    | Do NOT search by barcode only.
+    |
+    | The same barcode can belong to multiple products.
+    |
+    | Therefore we match:
+    |
+    | account_id
+    | product_id
+    | barcode
+    |
+    */
+
+    $product = Product::where(
+            'account_id',
+            auth()->user()->account_id
+        )
+        ->where('id', $productId)
+        ->where('barcode', $barcode)
+        ->first();
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | PRODUCT NOT FOUND
+    |--------------------------------------------------------------------------
+    */
+
+    if (!$product) {
+
+        return redirect()
+            ->route('admin.barcode')
+            ->with(
+                'error',
+                'Product not found or barcode does not match the selected product.'
+            );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ONLY ALLOW THE EXACT PRODUCT
+    |--------------------------------------------------------------------------
+    |
+    | Do NOT do:
+    |
+    | Product::where('barcode', $barcode)
+    |
+    | because that can return multiple products.
+    |
+    */
+
+    $products = [
+        $product->id => $product->name
+    ];
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | FORM BASED ON ROUTE
+    |--------------------------------------------------------------------------
+    */
+
+    if ($route == 'Deduct') {
+
+        $form = 'backend.admin.inventory.return_to_warehouse';
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | DAMAGE
+    |--------------------------------------------------------------------------
+    */
+
+    if ($route == 'Damage') {
+
+        $qty = 1;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | BREADCRUMB
+    |--------------------------------------------------------------------------
+    */
+
+    $breadcrumb = $this->breadcrumbListing;
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | RETURN VIEW
+    |--------------------------------------------------------------------------
+    */
+
+    return view(
+        $form,
+        compact(
+            'breadcrumb',
+            'products',
+            'route',
+            'warehouses',
+            'stores',
+            'adjustment',
+            'product',
+            'barcode',
+            'productId',
+            'masterItemName',
+            'qty',
+            'requisition_item_id'
+        )
+    );
+    }
+
+
+    public function update_31_august(Request $request, $token)
     {   
+        $data = Crypt::decrypt($token);
+        $this->pr($data);die();
         try {
             $data = Crypt::decrypt($token);
         } catch (\Exception $e) {

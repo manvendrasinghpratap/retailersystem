@@ -336,7 +336,22 @@
                     }
 
                     try { new Audio('/beep.wav').play(); } catch (e) { }
+                    /*
+                    |--------------------------------------------------------------------------
+                    | MULTIPLE PRODUCTS WITH SAME BARCODE
+                    |--------------------------------------------------------------------------
+                    */
 
+                    if (res.multiple_products === true) {
+                        showMultipleProductPopup(res.data);
+                        return;
+                    }
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | NORMAL SINGLE PRODUCT
+                    |--------------------------------------------------------------------------
+                    */
                     addToCart(res.data);
 
                 })
@@ -1023,5 +1038,351 @@
         $('#delivery_amount').on('input change', function () {
             calculateTotals();
         });
+
+        // =========================================================
+// 🔹 MULTIPLE PRODUCTS POPUP
+// =========================================================
+    function showMultipleProductPopup(products) {
+
+    if (!products || !products.length) {
+        showAlert(
+            'error',
+            'Error',
+            'No product available for this barcode.'
+        );
+        return;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | REMOVE PRODUCTS ALREADY IN CART
+    |--------------------------------------------------------------------------
+    */
+
+    const cartProductIds = cart.map(item => String(item.id));
+
+    const availableProducts = products.filter(function (product) {
+
+        return !cartProductIds.includes(String(product.id));
+
+    });
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ALL PRODUCTS ALREADY ADDED
+    |--------------------------------------------------------------------------
+    */
+
+    if (!availableProducts.length) {
+
+        showAlert(
+            'error',
+            'Already Added',
+            'All products with this barcode have already been added to the cart.'
+        );
+
+        return;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ONLY ONE PRODUCT REMAINS
+    |--------------------------------------------------------------------------
+    |
+    | If there was originally more than one product but only one
+    | remains after removing cart products, we can add it directly.
+    |
+    */
+
+    if (availableProducts.length === 1) {
+
+        addToCart(availableProducts[0]);
+
+        return;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | BUILD POPUP
+    |--------------------------------------------------------------------------
+    */
+
+    let html = `
+        <div class="text-start">
+
+            <div class="alert alert-warning mb-3">
+                <strong>Multiple products found with this barcode.</strong>
+                <br>
+                Please select the product you want to sell.
+            </div>
+
+            <div class="list-group">
+    `;
+
+
+    availableProducts.forEach(function (product, index) {
+
+        const price = parseFloat(product.price) || 0;
+        const stock = parseInt(product.stock) || 0;
+
+        html += `
+            <label
+                class="list-group-item list-group-item-action"
+                style="cursor:pointer;"
+            >
+
+                <div class="d-flex align-items-center">
+
+                    <div class="me-3">
+
+                        <input
+                            type="radio"
+                            name="duplicate_barcode_product"
+                            value="${index}"
+                            class="form-check-input duplicate-product-radio"
+                            ${index === 0 ? 'checked' : ''}
+                        >
+
+                    </div>
+
+                    <div class="flex-grow-1">
+
+                        <div class="fw-bold">
+                            ${product.name || 'N/A'}
+                        </div>
+
+                        <div class="small text-muted">
+                            Barcode:
+                            ${product.barcode || '-'}
+                        </div>
+
+                        <div class="small">
+
+                            Stock:
+                            <strong>${stock}</strong>
+
+                            &nbsp;&nbsp;|&nbsp;&nbsp;
+
+                            Price:
+                            <strong>
+                                ${currency} ${price.toFixed(2)}
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </label>
+        `;
+    });
+
+
+    html += `
+            </div>
+
+        </div>
+    `;
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | SHOW POPUP
+    |--------------------------------------------------------------------------
+    */
+
+    Swal.fire({
+
+        title: 'Multiple Products Found',
+
+        html: html,
+
+        icon: 'warning',
+
+        width: '600px',
+
+        showCancelButton: true,
+
+        confirmButtonText: 'Add Selected Product',
+
+        cancelButtonText: 'Cancel',
+
+        focusConfirm: false,
+
+        preConfirm: function () {
+
+            const selectedIndex = $(
+                'input[name="duplicate_barcode_product"]:checked'
+            ).val();
+
+
+            if (
+                selectedIndex === undefined ||
+                selectedIndex === null
+            ) {
+
+                Swal.showValidationMessage(
+                    'Please select a product.'
+                );
+
+                return false;
+            }
+
+
+            return availableProducts[selectedIndex];
+
+        }
+
+    }).then(function (result) {
+
+        if (!result.isConfirmed || !result.value) {
+            return;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | ADD SELECTED PRODUCT
+        |--------------------------------------------------------------------------
+        */
+
+        addToCart(result.value);
+
+    });
+}
+
+    function showMultipleProductPopup_delete_1sep(products) {
+
+        if (!products || !products.length) {
+            showAlert(
+                'error',
+                'Error',
+                'No product available for this barcode.'
+            );
+            return;
+        }
+
+
+        let html = `
+            <div class="text-start">
+                <div class="alert alert-warning mb-3">
+                    <strong>Multiple products found with this barcode.</strong>
+                    <br>
+                    Please select the product you want to sell.
+                </div>
+
+                <div class="list-group">
+        `;
+
+
+        products.forEach(function (product, index) {
+
+            let price = parseFloat(product.price) || 0;
+            let stock = parseInt(product.stock) || 0;
+
+            html += `
+                <label
+                    class="list-group-item list-group-item-action"
+                    style="cursor:pointer;"
+                >
+                    <div class="d-flex align-items-center">
+
+                        <div class="me-3">
+                            <input
+                                type="radio"
+                                name="duplicate_barcode_product"
+                                value="${index}"
+                                class="form-check-input duplicate-product-radio"
+                                ${index === 0 ? 'checked' : ''}
+                            >
+                        </div>
+
+                        <div class="flex-grow-1">
+
+                            <div class="fw-bold">
+                                ${product.name || 'N/A'}
+                            </div>
+
+                            <div class="small text-muted">
+                                Barcode: ${product.barcode || '-'}
+                            </div>
+
+                            <div class="small">
+                                Stock:
+                                <strong>${stock}</strong>
+                                &nbsp;&nbsp;|&nbsp;&nbsp;
+                                Price:
+                                <strong>${currency} ${price.toFixed(2)}</strong>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </label>
+            `;
+        });
+
+
+        html += `
+                </div>
+            </div>
+        `;
+
+
+        Swal.fire({
+            title: 'Multiple Products Found',
+            html: html,
+            icon: 'warning',
+            width: '600px',
+
+            showCancelButton: true,
+
+            confirmButtonText: 'Add Selected Product',
+            cancelButtonText: 'Cancel',
+
+            focusConfirm: false,
+
+            preConfirm: function () {
+
+                let selectedIndex = $(
+                    'input[name="duplicate_barcode_product"]:checked'
+                ).val();
+
+                if (
+                    selectedIndex === undefined ||
+                    selectedIndex === null
+                ) {
+
+                    Swal.showValidationMessage(
+                        'Please select a product.'
+                    );
+
+                    return false;
+                }
+
+                return products[selectedIndex];
+            }
+
+        }).then(function (result) {
+
+            if (!result.isConfirmed || !result.value) {
+                return;
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | ADD SELECTED PRODUCT TO CART
+            |--------------------------------------------------------------------------
+            */
+
+            addToCart(result.value);
+
+        });
+    }
     </script>
 @endsection

@@ -352,7 +352,9 @@ class ProductController extends Controller
     }
 
     public function create(Request $request, $token = null)
-    {
+    { 
+        //$data = Crypt::decrypt($token);
+        //$this->pr($data); die();
         $barcode = $productId = $route = $adjustment = $requisition_item_id = null;
         $masterItemName = null;
         $qty = $categoryId = $description = null;

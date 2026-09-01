@@ -1275,6 +1275,45 @@ class RequisitionController extends Controller
     }
 
     public function searchBarcode(Request $request)
+{
+    $request->validate([
+        'warehouse_id' => 'required|integer',
+        'barcode' => 'required|string',
+        'master_item_id' => 'required|integer',
+    ]);
+
+    $query = PurchaseItemTracking::with('purchaseItem.masterItem')
+        ->available()
+        ->where('warehouse_id', $request->warehouse_id)
+        ->where('barcode', $request->barcode)
+        ->whereHas('purchaseItem', function ($q) use ($request) {
+            $q->where('master_item_id', $request->master_item_id);
+        });
+
+    if (!empty($request->scanned_ids)) {
+        $query->whereNotIn('id', $request->scanned_ids);
+    }
+
+    $tracking = $query->orderBy('id')->first();
+
+    if (!$tracking) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Barcode does not match the selected product or is not available.'
+        ]);
+    }
+
+    return response()->json([
+        'success' => true,
+        'tracking_id' => $tracking->id,
+        'barcode' => $tracking->barcode,
+        'tracking_type' => $tracking->tracking_type,
+        'master_item_id' => $tracking->purchaseItem->master_item_id,
+        'master_item_name' => $tracking->purchaseItem->masterItem->name,
+    ]);
+}
+
+    public function searchBarcode_working(Request $request)
     {
         $query = PurchaseItemTracking::with('purchaseItem.masterItem')
             ->available()

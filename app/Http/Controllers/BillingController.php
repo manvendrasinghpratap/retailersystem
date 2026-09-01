@@ -101,6 +101,278 @@ class BillingController extends Controller
      */
     public function scanProduct(Request $request)
     {
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDATE REQUEST
+        |--------------------------------------------------------------------------
+        */
+
+        $request->validate([
+            'barcode' => 'required|string',
+        ]);
+
+        $barcode = trim($request->barcode);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | FIND AVAILABLE TRACKING RECORDS
+        |--------------------------------------------------------------------------
+        |
+        | Barcode is NOT unique in your system.
+        |
+        | Therefore we first find all available tracking records
+        | for this barcode.
+        |
+        */
+
+        $trackings = PurchaseItemTracking::with([
+            'purchaseItem'
+        ])
+            ->where('barcode', $barcode)
+            ->where('status', 1)
+            ->where('is_sold', 0)
+            ->get();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | NO AVAILABLE TRACKING
+        |--------------------------------------------------------------------------
+        */
+
+        if ($trackings->isEmpty()) {
+
+            return response()->json([
+                'status' => false,
+                'message' => 'This barcode is not available for sale.',
+            ], 200);
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | GET UNIQUE MASTER ITEM IDS
+        |--------------------------------------------------------------------------
+        */
+
+        $masterItemIds = $trackings
+            ->map(function ($tracking) {
+
+                return $tracking->purchaseItem->master_item_id ?? null;
+
+            })
+            ->filter()
+            ->unique()
+            ->values();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | FIND PRODUCTS
+        |--------------------------------------------------------------------------
+        |
+        | IMPORTANT:
+        |
+        | We do NOT use:
+        |
+        | ->where('barcode', $barcode)->first()
+        |
+        | because multiple products can have the same barcode.
+        |
+        */
+
+        $products = Product::with([
+            'category:id,name',
+            'stock'
+        ])
+            ->ofAccount()
+            ->active()
+            ->where('barcode', $barcode)
+            ->whereIn('master_item_id', $masterItemIds)
+            ->select([
+                'id',
+                'name',
+                'selling_price',
+                'category_id',
+                'barcode',
+                'master_item_id',
+            ])
+            ->get();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | NO PRODUCT FOUND
+        |--------------------------------------------------------------------------
+        */
+
+        if ($products->isEmpty()) {
+
+            return response()->json([
+                'status' => false,
+                'message' =>
+                    __('translation.product_not_found')
+                    . ' OR '
+                    . __('translation.this_barcode_is_not_allowed_for_this_operation'),
+            ], 200);
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | BUILD PRODUCT DATA
+        |--------------------------------------------------------------------------
+        */
+
+        $data = [];
+
+
+        foreach ($products as $product) {
+
+            /*
+            |--------------------------------------------------------------------------
+            | FIND TRACKING RECORD(S) FOR THIS PRODUCT
+            |--------------------------------------------------------------------------
+            */
+
+            $productTrackings = $trackings->filter(function ($tracking) use ($product) {
+
+                return optional($tracking->purchaseItem)->master_item_id
+                    == $product->master_item_id;
+
+            });
+
+
+            if ($productTrackings->isEmpty()) {
+                continue;
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | AVAILABLE STOCK
+            |--------------------------------------------------------------------------
+            */
+
+            $stock = $product->stock->stock ?? 0;
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | ADD PRODUCT
+            |--------------------------------------------------------------------------
+            */
+
+            $data[] = [
+
+                'id' => $product->id,
+
+                'name' => $product->name,
+
+                'price' => (float) $product->selling_price,
+
+                'category_name' =>
+                    $product->category->name ?? '-',
+
+                'stock' => $stock,
+
+                'barcode' =>
+                    $product->barcode,
+
+                'master_item_id' =>
+                    $product->master_item_id,
+
+                /*
+                | Return all available tracking IDs belonging
+                | to this product.
+                */
+                'tracking_ids' =>
+                    $productTrackings
+                        ->pluck('id')
+                        ->values()
+                        ->toArray(),
+
+                /*
+                | Number of available tracking records
+                */
+                'available_tracking_count' =>
+                    $productTrackings->count(),
+            ];
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | NO VALID PRODUCT AFTER MATCHING
+        |--------------------------------------------------------------------------
+        */
+
+        if (empty($data)) {
+
+            return response()->json([
+                'status' => false,
+                'message' =>
+                    __('translation.product_not_found')
+                    . ' OR '
+                    . __('translation.this_barcode_is_not_allowed_for_this_operation'),
+            ], 200);
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | CHECK MULTIPLE PRODUCTS
+        |--------------------------------------------------------------------------
+        */
+
+        $multipleProducts = count($data) > 1;
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | SINGLE PRODUCT
+        |--------------------------------------------------------------------------
+        |
+        | If only one product has this barcode and is available,
+        | frontend can add it directly.
+        |
+        */
+
+        if (!$multipleProducts) {
+
+            $productData = $data[0];
+
+            return response()->json([
+                'status' => true,
+                'multiple_products' => false,
+                'data' => $productData,
+            ], 200);
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | MULTIPLE PRODUCTS
+        |--------------------------------------------------------------------------
+        |
+        | Same barcode belongs to multiple available products.
+        |
+        | Frontend should show a popup and let the user select one.
+        |
+        */
+
+        return response()->json([
+            'status' => true,
+            'multiple_products' => true,
+            'message' => 'Multiple products found for this barcode. Please select a product.',
+            'barcode' => $barcode,
+            'data' => $data,
+        ], 200);
+    }
+    
+    public function scanProduct_working_1_sep(Request $request)
+    {
         $request->validate([
             'barcode' => 'required|string'
         ]);

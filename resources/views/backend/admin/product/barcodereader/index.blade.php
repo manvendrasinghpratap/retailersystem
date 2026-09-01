@@ -76,7 +76,6 @@
             if (!barcode) {
                 return;
             }
-
             fetch("{{ route('admin.barcode.validateBarcodeRequisitionId') }}", {
                 method: "POST",
                 headers: {
@@ -94,7 +93,7 @@
             })
                 .then(async (response) => {
                     const data = await response.json();
-                    // console.log(data); alert('dd'); return false;
+                   //  console.log(data); alert('dd'); return false;
                     // Laravel validation failed (422)
                     if (!response.ok) {
 
@@ -129,9 +128,9 @@
 
                     // Success
                     new Audio('/beep.wav').play();
-
+                    //alert(data.status); return false; 0131330056891
                     let route = data.status
-                        ? "{{ route('admin.inventory.update', 'TOKEN') }}"
+                        ? "{{ route('admin.products.create', 'TOKEN') }}"
                         : "{{ route('admin.products.create', 'TOKEN') }}";
 
                     let url = route.replace('TOKEN', encodeURIComponent(data.payload));
@@ -143,7 +142,7 @@
                 })
                 .catch((error) => {
 
-                    console.error(error);
+                   // console.error(error);
 
                     Swal.fire({
                         icon: 'error',

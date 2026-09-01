@@ -132,6 +132,320 @@ class BarcodeController extends Controller
 
     public function validateBarcodeRequisitionId(Request $request)
     {
+            /*
+            |--------------------------------------------------------------------------
+            | STEP 1: VALIDATE REQUEST
+            |--------------------------------------------------------------------------
+            */
+        //$this->pr($request->all()); die();
+            $validator = Validator::make($request->all(), [
+                'barcode' => ['required', 'string'],
+                'routeName' => ['required', 'string'],
+                'requisition_item_id' => ['required', 'integer'],
+                'purchase_item_tracking_barcode' => ['required', 'string'],
+                'returnRoute' => ['required', 'string'],
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'validation' => true,
+                    'redirect' => $request->input('returnRoute'),
+                    'message' => $validator->errors()->first(),
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+
+            $validated = $validator->validated();
+
+            $barcode = trim($validated['barcode']);
+            $routeName = $validated['routeName'];
+            $requisition_item_id = $validated['requisition_item_id'];
+            $purchase_item_tracking_barcode = $validated['purchase_item_tracking_barcode'];
+            $returnRoute = html_entity_decode($validated['returnRoute']);
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | STEP 2: DECODE PURCHASE TRACKING BARCODE
+            |--------------------------------------------------------------------------
+            */
+            try {
+                
+                $requisition_item_id = Settings::getDecodeCode($requisition_item_id);
+                $purchase_item_tracking_barcode = Settings::getDecodeCode($purchase_item_tracking_barcode);
+                
+            } catch (\Exception $e) {
+                
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Invalid purchase tracking barcode.',
+                    'returnRoute' => $returnRoute
+                ]);
+            }
+           
+
+            /*
+            |--------------------------------------------------------------------------
+            | STEP 3: GET ADJUSTMENT TYPE
+            |--------------------------------------------------------------------------
+            */
+
+            $adjustmentType =
+                Settings::getAdjustmentIdFromRoute($routeName);
+
+            $adjustmentData =
+                Settings::getEncodeCode($adjustmentType);
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | STEP 4: VALIDATE BARCODE
+            |--------------------------------------------------------------------------
+            */
+
+            if (!Settings::isValidBarcode($barcode)) {
+
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Barcode must be a valid 12 or 13 digit barcode.',
+                    'adjustmentType' => $adjustmentType,
+                    'returnRoute' => $returnRoute
+                ]);
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | STEP 5: VALIDATE CHECKSUM
+            |--------------------------------------------------------------------------
+            */
+
+            if (strlen($barcode) === 12) {
+
+                if (!Settings::isValidBarcode($barcode)) {
+
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Invalid UPC-A barcode checksum.',
+                        'adjustmentType' => $adjustmentType,
+                        'returnRoute' => $returnRoute
+                    ]);
+                }
+
+            } elseif (strlen($barcode) === 13) {
+
+                if (!Settings::isValidEAN13($barcode)) {
+
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Invalid EAN-13 barcode checksum.',
+                        'adjustmentType' => $adjustmentType,
+                        'returnRoute' => $returnRoute
+                    ]);
+                }
+            }
+
+ 
+            /*
+            |--------------------------------------------------------------------------
+            | STEP 6: VERIFY SCANNED BARCODE
+            |--------------------------------------------------------------------------
+            */
+
+            if ($purchase_item_tracking_barcode != $barcode) {
+
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Barcode is not matching with purchase item tracking barcode.',
+                    'adjustmentType' => $adjustmentType,
+                    'returnRoute' => $returnRoute
+                ]);
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | STEP 7: FIND EXACT PURCHASE ITEM TRACKING
+            |--------------------------------------------------------------------------
+            |
+            | IMPORTANT:
+            |
+            | DO NOT search Product by barcode alone.
+            |
+            | We first identify the exact tracking record using:
+            |
+            | barcode
+            | +
+            | requisition_item_id
+            |
+            */
+
+            $tracking = PurchaseItemTracking::with([
+                'purchaseItem.masterItem'
+            ])
+                ->where('barcode', $barcode)
+                ->where(
+                    'requisition_item_id',
+                    $requisition_item_id
+                )
+                ->first();
+
+// echo '===================>'.$purchase_item_tracking_barcode; 
+// echo '<br><br>requisition_item_id----->'.$requisition_item_id; 
+//             //'095723022590'
+//             $this->pr($tracking);
+//             die('ssssssssssssssoxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxoooooo');
+            /*
+            |--------------------------------------------------------------------------
+            | TRACKING NOT FOUND
+            |--------------------------------------------------------------------------
+            */
+
+            if (!$tracking) {
+
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Barcode is not assigned to this requisition item.',
+                    'adjustmentType' => $adjustmentType,
+                    'returnRoute' => $returnRoute
+                ]);
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | STEP 8: GET MASTER ITEM
+            |--------------------------------------------------------------------------
+            */
+
+            $masterItemId =
+                $tracking->purchaseItem->master_item_id ?? null;
+
+
+            if (!$masterItemId) {
+
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unable to identify product for this barcode.',
+                    'adjustmentType' => $adjustmentType,
+                    'returnRoute' => $returnRoute
+                ]);
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | STEP 9: FIND EXACT PRODUCT
+            |--------------------------------------------------------------------------
+            |
+            | IMPORTANT:
+            |
+            | This depends on your Product model/table having master_item_id.
+            |
+            */
+
+            $product = Product::query()
+                ->where(
+                    'account_id',
+                    auth()->user()->account_id
+                )
+                ->where(
+                    'master_item_id',
+                    $masterItemId
+                )
+                ->where(
+                    'barcode',
+                    $barcode
+                )
+                ->select([
+                    'id',
+                    'master_item_id',
+                    'barcode',
+                    'name'
+                ])
+                ->first();
+ 
+// $product = Product::query()->where('barcode', $barcode)->select(['id', 'barcode', 'name'])->first();
+            /*
+            |--------------------------------------------------------------------------
+            | PRODUCT NOT FOUND
+            |--------------------------------------------------------------------------
+            */
+
+            // if (!$product) {
+
+            //     return response()->json([
+            //         'status' => false,
+            //         'message' => 'Product not found for this requisition item.',
+            //         'adjustmentType' => $adjustmentType,
+            //         'returnRoute' => html_entity_decode($returnRoute)
+            //     ]);
+            // }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | STEP 10: PREPARE PAYLOAD
+            |--------------------------------------------------------------------------
+            */
+
+            $payloadDatadata = [
+                'adjustment' => $adjustmentData,
+                'adjustmentType' => $adjustmentType,
+                'barcode' => $barcode,
+
+                // EXACT PRODUCT
+                'product_id' => $product?->id,
+
+                // REQUISITION ITEM
+                'requisition_item_id' => $requisition_item_id,
+
+                // TRACKING RECORD
+                'purchase_item_tracking_id' => $tracking->id,
+
+                'returnRoute' => $returnRoute
+            ];
+
+            $payloadData = [
+            'adjustment' => $adjustmentData,
+            'adjustmentType' => $adjustmentType,
+            'barcode' => $barcode,
+            'product_id' => $product?->id,
+            'requisition_item_id' => Settings::getEncodeCode($requisition_item_id),
+            'purchase_item_tracking_id' => Settings::getEncodeCode($tracking->id),
+            'returnRoute' => $returnRoute
+            ];
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | STEP 11: ENCRYPT PAYLOAD
+            |--------------------------------------------------------------------------
+            */
+
+            $payload = Crypt::encrypt($payloadData);
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | STEP 12: RESPONSE
+            |--------------------------------------------------------------------------
+            */
+           return response()->json([
+            'status' => !is_null($product),
+            'message' => $product
+                ? 'Product found.'
+                : 'Product not found. Please add product first.',
+            'product' => $product,
+            'payload' => $payload,
+            'adjustmentType' => $adjustmentType,
+            'returnRoute' => $returnRoute
+        ]);
+    }
+
+    public function validateBarcodeRequisitionId_working(Request $request)
+    { 
         // ✅ Step 1: Validate request
 
         $validator = Validator::make($request->all(), [
@@ -180,16 +494,7 @@ class BarcodeController extends Controller
                 'returnRoute' => $returnRoute
             ]);
         }
-
-        // if (!preg_match('/^(?:[0-9]{12}|[0-9]{13})$/', $barcode)) {
-        //     return response()->json([
-        //         'status' => false,
-        //         'message' => 'Barcode must be a valid 12 or 13 digit barcode.',
-        //         'adjustmentType' => $adjustmentType,
-        //         'returnRoute' => $returnRoute
-        //     ]);
-        // }
-
+        
         // Step 4: Validate checksum
         if (strlen($barcode) === 12) {
 
