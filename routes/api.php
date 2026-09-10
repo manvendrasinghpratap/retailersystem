@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\WarehouseController;
 use App\Http\Controllers\Api\InventoryController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\StaffController;
+use App\Http\Controllers\Api\ProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -150,4 +151,12 @@ Route::prefix('staff')->middleware(['api.request', 'auth:api'])->group(function 
         Route::patch('/{id}/status', [StaffController::class, 'statusUpdate']);
         Route::patch('/{id}/password', [StaffController::class, 'updatePassword']);
         Route::delete('/{id}', [StaffController::class, 'destroy']);
+});
+
+Route::prefix('profile')->middleware(['api.request', 'auth:api'])->group(function () {
+        Route::get('/', [ProfileController::class, 'show']);
+        Route::put('/', [ProfileController::class, 'update']);
+        Route::patch('/', [ProfileController::class, 'update']);
+        Route::patch('/password', [ProfileController::class, 'updatePassword']);
+        Route::delete('/', [ProfileController::class, 'destroy']);
 });
