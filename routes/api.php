@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\SaleController;
 use App\Http\Controllers\Api\WarehouseController;
 use App\Http\Controllers\Api\InventoryController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\StaffController;
 
 /*
 |--------------------------------------------------------------------------
@@ -133,4 +134,20 @@ Route::prefix('products')->middleware(['api.request', 'auth:api'])->group(functi
         Route::get('/last-price', [ProductController::class, 'getLastPrice']);
         Route::get('/export/pdf', [ProductController::class, 'exportPdf']);
         Route::get('/export/csv', [ProductController::class, 'exportCsv']);
+});
+ 
+    /*
+    |--------------------------------------------------------------------------
+    | Staff Management
+    |--------------------------------------------------------------------------
+    */
+Route::prefix('staff')->middleware(['api.request', 'auth:api'])->group(function () {  
+        Route::get('/', [StaffController::class, 'index']);
+        Route::get('/list', [StaffController::class, 'list']);
+        Route::get('/{id}', [StaffController::class, 'show']);
+        Route::post('/', [StaffController::class, 'store']);
+        Route::put('/{id}', [StaffController::class, 'update']);
+        Route::patch('/{id}/status', [StaffController::class, 'statusUpdate']);
+        Route::patch('/{id}/password', [StaffController::class, 'updatePassword']);
+        Route::delete('/{id}', [StaffController::class, 'destroy']);
 });
