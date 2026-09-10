@@ -47,6 +47,7 @@ class RegisteredUserController extends Controller
 
         return redirect(route('dashboard', absolute: false));
     }
+    
     public function modelstore(Request $request): RedirectResponse
     { 
         $request->validate([

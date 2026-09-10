@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\ProductController;
 Route::prefix('auth')->middleware('api.request')->group(function () {
         // Login does not require JWT
         Route::post('/login', [AuthController::class, 'login']);
+        Route::post('/register', [AuthController::class, 'apiRegister']);
         // JWT protected routes
         Route::middleware('auth:api')->group(function () {
             Route::post('/logout', [AuthController::class, 'logout']);
