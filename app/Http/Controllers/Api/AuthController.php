@@ -80,6 +80,7 @@ class AuthController extends Controller
         | Successful Login
         |--------------------------------------------------------------------------
         */
+        $user->idle_timout = 10 * 60; //10 minutes
         return response()->json([
             'status' => true,
             'message' => 'Login successful.',
@@ -88,6 +89,7 @@ class AuthController extends Controller
                 'token_type' => 'Bearer',
                 'expires_in' => Auth::guard('api')->factory()->getTTL() * 60,
                 'user' => $user,
+                'idle_timout' => 10 * 60,
             ],
         ], 200);
     }
