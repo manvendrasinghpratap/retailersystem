@@ -9,27 +9,26 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.2",
-        "barryvdh/laravel-dompdf": "*",
+        "php": "^8.3",
+        "barryvdh/laravel-dompdf": "^3.1",
         "intervention/image": "^3.11",
         "intervention/image-laravel": "^1.5",
-        "laravel/framework": "^12.0",
-        "laravel/sanctum": "^4.0",
-        "laravel/tinker": "^2.10.1",
+        "laravel/framework": "^13.0",
+        "laravel/tinker": "^3.0",
         "milon/barcode": "^13.1",
-        "tymon/jwt-auth": "^2.0",
-        "vinkla/hashids": "^13.0"
+        "tymon/jwt-auth": "^2.3",
+        "vinkla/hashids": "^14.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
-        "laravel/breeze": "^2.3",
+        "laravel/breeze": "^2.4",
         "laravel/pail": "^1.2.2",
         "laravel/pint": "^1.24",
         "laravel/sail": "^1.41",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.6",
-        "pestphp/pest": "^3.8",
-        "pestphp/pest-plugin-laravel": "^3.2"
+        "pestphp/pest": "^4.0",
+        "pestphp/pest-plugin-laravel": "^4.0"
     },
     "autoload": {
         "psr-4": {
@@ -38,9 +37,9 @@
             "Database\\Seeders\\": "database/seeders/"
         },
         "files": [
-        "app/Helpers/Settings.php",
-		 "app/Helpers/EmailHelper.php",
-		 "app/Helpers/account_setting.php"
+            "app/Helpers/Settings.php",
+            "app/Helpers/EmailHelper.php",
+            "app/Helpers/account_setting.php"
         ]
     },
     "autoload-dev": {
