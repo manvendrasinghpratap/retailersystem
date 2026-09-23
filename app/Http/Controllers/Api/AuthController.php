@@ -13,6 +13,16 @@ use Illuminate\Auth\Events\Registered;
 
 class AuthController extends Controller
 {
+
+    public function loginform()
+    {
+        $data['address'] = '12 Willow Creek Court, Parkvill MD 21234'; 
+        return response()->json([
+            'status' => true,
+            'message' => 'Login form.',
+            'data' => $data
+        ]);
+    }
     /**
      * Login
      */
@@ -81,6 +91,17 @@ class AuthController extends Controller
         |--------------------------------------------------------------------------
         */
         $user->idle_timout = 10 * 60; //10 minutes
+        $user->logout_popup_time = 9 * 60; // 9 minutes
+        $user->logout_message = 'Your session is about to expire. Please refresh the page to continue.'; // 9 minutes
+        $user->logout_button_text = 'Refresh';
+        $user->logout_cancel_text = 'Cancel';
+        $user->logout_icon = 'warning';
+        $user->logout_position = 'top-right';
+        $user->logout_message = 'Your session has expired. Please login again.';
+        $user->logout_button_text = 'Login';
+        $user->logout_cancel_text = 'Cancel';
+        $user->logout_icon = 'warning';
+        $user->logout_position = 'top-right';
         return response()->json([
             'status' => true,
             'message' => 'Login successful.',
@@ -90,6 +111,13 @@ class AuthController extends Controller
                 'expires_in' => Auth::guard('api')->factory()->getTTL() * 60,
                 'user' => $user,
                 'idle_timout' => 10 * 60,
+                'logout_popup_time' => 9 * 60,  
+                'logout_popup_text' => 'Your session is about to expire. Please refresh the page to continue.', 
+                'logout_popup_button_text' => 'Refresh',
+                'logout_popup_cancel_text' => 'Cancel',   
+                'logout_popup_icon' => 'warning',
+                'logout_popup_position' => 'top-right', 
+                'logout_message' => 'Your session has expired. Please login again.',
             ],
         ], 200);
     }

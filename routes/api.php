@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\ProfileController;
 
 Route::prefix('auth')->middleware('api.request')->group(function () {
         // Login does not require JWT
+        Route::get('/loginform', [AuthController::class, 'loginform']);
         Route::post('/login', [AuthController::class, 'login']);
         Route::post('/register', [AuthController::class, 'apiRegister']);
         // JWT protected routes
